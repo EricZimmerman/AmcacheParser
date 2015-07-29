@@ -7,11 +7,13 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
+using AmcacheParser.Classes;
 using Fclp;
 using Microsoft.Win32;
 using erzReg = Registry;
 using NLog;
 using NLog.Config;
+using NLog.Fluent;
 using NLog.Targets;
 
 namespace AmcacheParser
@@ -141,12 +143,137 @@ namespace AmcacheParser
                 var fileKey = reg.GetKey(@"Root\File");
                 var programsKey = reg.GetKey(@"Root\Programs");
 
+                var ProgramsEntries = new List<ProgramsEntry>();
+
+                //First, we get data for all the Program entries under Programs key
+
+                foreach (var registryKey in programsKey.SubKeys)
+                {
+                    var ProgramName0 = "";
+                    var ProgramVersion1 = "";
+                    var Guid10 = "";
+                    var UninstallGuid11 = "";
+                    var Guid12 = "";
+                    var Dword13 = 0;
+                    var Dword14 = 0;
+                    var Dword15 = 0;
+                    var UnknownBytes = new byte[0];
+                    long Qword17 = 0;
+                    var Dword18 = 0;
+                    var VenderName2 = "";
+                    var LocaleID3 = "";
+                    var Dword5 = 0;
+                    var InstallSource6 = "";
+                    var UninstallKey7 = "";
+                    DateTimeOffset EpochA = DateTimeOffset.FromUnixTimeSeconds(0);
+                    DateTimeOffset EpochB = DateTimeOffset.FromUnixTimeSeconds(0);
+                    var PathListd = "";
+                    var Guidf = "";
+                    var RawFiles = "";
+
+                    foreach (var value in registryKey.Values)
+                    {
+                        switch (value.ValueName)
+                        {
+                            case "0":
+                                ProgramName0 = value.ValueData;
+                                break;
+                            case "1":
+                                ProgramVersion1 = value.ValueData;
+                                break;
+                            case "2":
+                                VenderName2 = value.ValueData;
+                                break;
+                            case "3":
+                                LocaleID3 = value.ValueData;
+                                break;
+                            case "5":
+                                Dword5 = int.Parse(value.ValueData);
+                                break;
+                            case "6":
+                                InstallSource6 = value.ValueData;
+                                break;
+                            case "7":
+                                UninstallKey7 = value.ValueData;
+                                break;
+                            case "a":
+                                EpochA = DateTimeOffset.FromUnixTimeSeconds(long.Parse(value.ValueData));
+
+                                break;
+                            case "b":
+                                EpochB =
+                               DateTimeOffset.FromUnixTimeSeconds(long.Parse(value.ValueData));
+                                break;
+                            case "d":
+                                PathListd = value.ValueData;
+                                break;
+                            case "f":
+                                Guidf = value.ValueData;
+                                break;
+                            case "10":
+                                Guid10 = value.ValueData;
+                                break;
+                            case "11":
+                                UninstallGuid11 = value.ValueData;
+                                break;
+                            case "12":
+                                Guid12 = value.ValueData;
+                                break;
+                            case "13":
+                                Dword13= int.Parse(value.ValueData);
+                                break;
+                            case "14":
+                                Dword13 = int.Parse(value.ValueData);
+                                break;
+                            case "15":
+                                Dword13 = int.Parse(value.ValueData);
+                                break;
+                            case "16":
+                                UnknownBytes = value.ValueDataRaw;
+                                break;
+                            case "17":
+                                Qword17 = long.Parse(value.ValueData);
+                                break;
+                            case "18":
+                                Dword18 = int.Parse(value.ValueData);
+                                break;
+                            case "Files":
+                                RawFiles = value.ValueData;
+                                break;
+                            default:
+                                _logger.Warn($"Unknown value name in Program: {value.ValueName}");
+                                break;
+                        }
+                    }
+
+                        var pe = new ProgramsEntry(ProgramName0, ProgramVersion1, VenderName2, LocaleID3, InstallSource6, UninstallKey7, Guid10, Guid12, UninstallGuid11, Dword5, Dword13, Dword14, Dword15, UnknownBytes, Qword17, Dword18, EpochA, EpochB, PathListd, Guidf, RawFiles,registryKey.KeyName,registryKey.LastWriteTime.Value);
+
+                        ProgramsEntries.Add(pe);
+                  
+                 }
+
+                //Dump stuff from Programs to a file for testing, etc
+                //ProgramsEntries.ForEach(f=>File.AppendAllText(@"C:\temp\programs.txt", $"{f.ProgramName_0} EpochA: {f.InstallDateEpoch_a} EpochB: {f.InstallDateEpoch_a}\r\n"));
+
+
+                //For each Programs entry, add the related Files entries from Files\Volume subkey
+
+                var unassociatedFiles = new List<FileEntry>();
+
                 foreach (var registryKey in fileKey.SubKeys)
                 {
                     //These are the guids for volumes
                     foreach (var subKey in registryKey.SubKeys)
                     {
                         counter += 1;
+
+                        var prodName = "";
+                        var fullPath = "";
+                        var progID = "";
+                        var sha = "";
+                        DateTimeOffset lm2 = new DateTimeOffset(1970,1,1,0,0,0,TimeSpan.FromHours(0));
+
+                        var hasLinkedProgram = false;
 
                         //these are the files executed from the volume
                         foreach (var keyValue in subKey.Values)
@@ -156,6 +283,7 @@ namespace AmcacheParser
                             switch (keyVal)
                             {
                                 case ProductName:
+                                    prodName = keyValue.ValueData;
                                     break;
                                 case CompanyName:
                                     break;
@@ -192,89 +320,51 @@ namespace AmcacheParser
                                 case Created:
                                     break;
                                 case FullPath:
-                                  //_logger.Info($"{keyValue.ValueData}: {subKey.LastWriteTime}");
+                                    fullPath = keyValue.ValueData;
                                     break;
                                 case Unknown5:
                                     break;
                                 case LastModified2:
+                                    lm2 = DateTimeOffset.FromFileTime(long.Parse(keyValue.ValueData));
                                     break;
                                 case ProgramID:
-                                    var pKey = reg.GetKey($"Root\\Programs\\{keyValue.ValueData}");
-                                    if (pKey != null)
-                                    {
-                                        //_logger.Info(pKey.Values.Single(t => t.ValueName == "0").ValueData);
+                                    progID = keyValue.ValueData;
 
-                                        foreach (var value in pKey.Values)
-                                        {
-                                            switch (value.ValueName)
-                                            {
-                                                case "0":
-                                                    _logger.Warn($"{value.ValueData}");
-                                                    break;
-                                                case "1":
-                                                    break;
-                                                case "2":
-                                                    break;
-                                                case "3":
-                                                    break;
-                                                case "5":
-                                                    break;
-                                                case "6":
-                                                    break;
-                                                case "7":
-                                                    break;
-                                                case "a":
-                                                    break;
-                                                case "b":
-                                                    break;
-                                                case "d":
-                                                    break;
-                                                case "f":
-                                                    break;
-                                                case "10":
-                                                    break;
-                                                case "11":
-                                                    break;
-                                                case "12":
-                                                    break;
-                                                case "13":
-                                             
-                                                    break;
-                                                case "14":
-                                                  
-                                                    break;
-                                                case "15":
-                                                
-                                                    break;
-                                                case "16":
-                                                    break;
-                                                case "17":
-                                                    break;
-                                                case "18":
-                                                    break;
-                                                case "Files":
-                                                    break;
-                                                default:
-                                                    _logger.Warn($"Unknown value name in Program: {value.ValueName}");
-                                                    break;
-                                            }
-                                        }
-                                            
-
-                                    }
-                                    else
+                                    var program = ProgramsEntries.SingleOrDefault(t => t.ProgramID == progID);
+                                    if (program != null)
                                     {
-                                        _logger.Error($"{subKey.KeyName} has no linking Program value");
+                                        //_logger.Info(program.ProgramVersion_1);
+                                        hasLinkedProgram = true;
                                     }
+//                                    else
+//                                    {
+//                                        _logger.Error($"{subKey.KeyName} has no linking Program value");
+//                                    }
                                     
                                     break;
                                 case SHA1:
+                                    sha = keyValue.ValueData;
                                     break;
                                 default:
                                     _logger.Warn($"Unknown value name: 0x{keyVal:X}");
                                     break;
                             }
                         }
+
+                        var fe = new FileEntry(prodName, progID, sha, fullPath, lm2,registryKey.KeyName,registryKey.LastWriteTime.Value,subKey.KeyName,subKey.LastWriteTime.Value);
+
+                        if (hasLinkedProgram)
+                        {
+                            var program = ProgramsEntries.SingleOrDefault(t => t.ProgramID == fe.ProgramID);
+                            program.FileEntries.Add(fe);
+                        }
+                        else
+                        {
+                            unassociatedFiles.Add(fe);
+                        }
+
+                        
+
                     }
                 }
 
