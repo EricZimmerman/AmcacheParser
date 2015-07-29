@@ -66,11 +66,11 @@ namespace AmcacheParser
                 "\r\n\r\nAuthor: Eric Zimmerman (saericzimmerman@gmail.com)" +
                 "\r\nhttps://github.com/EricZimmerman/AmcacheParser";
 
-            var footer = @"Examples: AmcacheParser.exe -f ""C:\Temp\UsrClass 1.dat"" --ls URL" + "\r\n\t " +
-                         @" AmcacheParser.exe -f ""C:\Temp\someFile.txt"" --lr guid" + "\r\n\t " +
-                         @" AmcacheParser.exe -f ""C:\Temp\someOtherFile.txt"" --lr cc -sa" + "\r\n\t " +
-                         @" AmcacheParser.exe -f ""C:\Temp\someOtherFile.txt"" --lr cc -sa -m 15 -x 22" + "\r\n\t " +
-                         @" AmcacheParser.exe -f ""C:\Temp\UsrClass 1.dat"" --ls mui -sl" + "\r\n\t ";
+            var footer = @"Examples: AmcacheParser.exe -f ""C:\Temp\amcache\AmcacheWin10.hve"" " + "\r\n\t " +
+                         @" AmcacheParser.exe -f ""C:\Temp\amcache\AmcacheWin10.hve"" " + "\r\n\t " +
+                         @" AmcacheParser.exe -f ""C:\Temp\amcache\AmcacheWin10.hve"" " + "\r\n\t " +
+                         @" AmcacheParser.exe -f ""C:\Temp\amcache\AmcacheWin10.hve"" " + "\r\n\t " +
+                         @" AmcacheParser.exe -f ""C:\Temp\amcache\AmcacheWin10.hve"" " + "\r\n\t ";
 
             p.SetupHelp("?", "help").WithHeader(header).Callback(text => _logger.Info(text + "\r\n" + footer));
 
@@ -121,12 +121,12 @@ namespace AmcacheParser
             {
                 _logger.Error($"There was an error: {ex.Message}");
             }
-
-
+            
 #if DEBUG
+            _logger.Info("");
+            _logger.Info("");
             _logger.Warn("Press a key to exit");
             Console.ReadKey();
-
 #endif
         }
 
