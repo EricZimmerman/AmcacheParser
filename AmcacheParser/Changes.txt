@@ -1,0 +1,6 @@
+﻿0.5.0
+
+
+TODO
+
+- Whitelist based on SHA-1
