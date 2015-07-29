@@ -9,7 +9,7 @@ namespace Amcache.Classes
             string compName, int langId,
             string fileVerString, string peHash, string fileVerNum, string fileDesc, long unknown1, long unknown2,
             int unknown3, int unknown4, string switchback, int fileSize, DateTimeOffset compTime, int peHeaderSize,
-            DateTimeOffset lm, DateTimeOffset created, int pecheck)
+            DateTimeOffset lm, DateTimeOffset created, int pecheck, int unknown6)
         {
             PEHeaderChecksum = pecheck;
             LastModified = lm;
@@ -21,18 +21,25 @@ namespace Amcache.Classes
             FileDescription = fileDesc;
             ProductName = productName;
             ProgramID = programID;
-            SHA1 = sha1.Substring(4);
+
+            SHA1 = string.Empty;
+            if (sha1.Length > 4)
+            {
+                SHA1 = sha1.Substring(4).ToLowerInvariant();
+            }
+            
             FullPath = fullPath;
             LastModified2 = lastMod2;
             FileID = fileID;
-            LastWriteTimestamp = lastWrite;
+            FileIDLastWriteTimestamp = lastWrite;
             VolumeID = volumeID;
-            VolumeLastWriteTimestamp = volumeLastWrite;
+            VolumeIDLastWriteTimestamp = volumeLastWrite;
             Unknown1 = unknown1;
             Unknown2 = unknown2;
             Unknown3 = unknown3;
             Unknown4 = unknown4;
             Unknown5 = unknown5;
+            Unknown6 = unknown6;
             CompanyName = compName;
             LanguageID = langId;
             FileVersionString = fileVerString;
@@ -57,12 +64,13 @@ namespace Amcache.Classes
         public int Unknown3 { get; }
         public int Unknown4 { get; }
         public int Unknown5 { get; }
+        public int Unknown6 { get; }
         public int LanguageID { get; }
         public int FileSize { get; }
         public int PEHeaderSize { get; }
         public int PEHeaderChecksum { get; }
-        public DateTimeOffset VolumeLastWriteTimestamp { get; }
-        public DateTimeOffset LastWriteTimestamp { get; }
+        public DateTimeOffset VolumeIDLastWriteTimestamp { get; }
+        public DateTimeOffset FileIDLastWriteTimestamp { get; }
         public DateTimeOffset CompileTime { get; }
         public DateTimeOffset LastModified { get; }
         public DateTimeOffset LastModified2 { get; }

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
 using Amcache.Classes;
@@ -32,6 +33,7 @@ namespace Amcache
         private const int Unknown5 = 0x16;
         private const int LastModified2 = 0x17;
         private const int ProgramID = 0x100;
+        private const int Unknown6 = 0x106;
         private const int SHA1 = 0x101;
         private static Logger _logger;
 
@@ -100,7 +102,15 @@ namespace Amcache
                             UninstallKey7 = value.ValueData;
                             break;
                         case "a":
-                            EpochA = DateTimeOffset.FromUnixTimeSeconds(long.Parse(value.ValueData));
+                            try
+                            {
+                                EpochA = DateTimeOffset.FromUnixTimeSeconds(long.Parse(value.ValueData));
+                            }
+                            catch (Exception ex)
+                            {
+                            Debug.WriteLine(registryKey.KeyPath);
+                            }
+                            
                             break;
                         case "b":
                             EpochB =
@@ -148,6 +158,7 @@ namespace Amcache
                     }
                 }
 
+
                 var pe = new ProgramsEntry(ProgramName0, ProgramVersion1, VenderName2, LocaleID3, InstallSource6,
                     UninstallKey7, Guid10, Guid12, UninstallGuid11, Dword5, Dword13, Dword14, Dword15, UnknownBytes,
                     Qword17, Dword18, EpochA, EpochB, PathListd, Guidf, RawFiles, registryKey.KeyName,
@@ -180,11 +191,13 @@ namespace Amcache
                     var peHash = "";
                     var progID = "";
                     var sha = "";
-                    var unknown5 = 0;
+                    
                     long unknown1 = 0;
                     long unknown2 = 0;
                     var unknown3 = 0;
                     var unknown4 = 0;
+                    var unknown5 = 0;
+                    var unknown6 = 0;
                     var fileSize = 0;
                     var peHeaderSize = 0;
                     var peHeaderChecksum = 0;
@@ -263,6 +276,10 @@ namespace Amcache
                             case Unknown5:
                                 unknown5 = int.Parse(keyValue.ValueData);
                                 break;
+                            case Unknown6:
+                                unknown6 = int.Parse(keyValue.ValueData);
+                                break;
+
                             case LastModified2:
                                 lm2 = DateTimeOffset.FromFileTime(long.Parse(keyValue.ValueData));
                                 break;
@@ -285,11 +302,16 @@ namespace Amcache
                         }
                     }
 
+                    if (fullPath.Length == 0)
+                    {
+                        continue;
+                    }
+
                     var fe = new FileEntry(prodName, progID, sha, fullPath, lm2, registryKey.KeyName,
                         registryKey.LastWriteTime.Value, subKey.KeyName, subKey.LastWriteTime.Value,
                         unknown5, compName, langId, fileVerString, peHash, fileVerNum, fileDesc, unknown1, unknown2,
                         unknown3, unknown4, switchBack, fileSize, compTime, peHeaderSize,
-                        lm, created, peHeaderChecksum);
+                        lm, created, peHeaderChecksum, unknown6);
 
                     if (hasLinkedProgram)
                     {

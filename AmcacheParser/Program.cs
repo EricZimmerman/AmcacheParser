@@ -1,12 +1,15 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using Fclp;
 using Microsoft.Win32;
 using NLog;
 using NLog.Config;
 using NLog.Targets;
+using ServiceStack;
 
 namespace AmcacheParser
 {
@@ -67,8 +70,8 @@ namespace AmcacheParser
                 "\r\nhttps://github.com/EricZimmerman/AmcacheParser";
 
             var footer = @"Examples: AmcacheParser.exe -f ""C:\Temp\amcache\AmcacheWin10.hve"" " + "\r\n\t " +
-                         @" AmcacheParser.exe -f ""C:\Temp\amcache\AmcacheWin10.hve"" " + "\r\n\t " +
-                         @" AmcacheParser.exe -f ""C:\Temp\amcache\AmcacheWin10.hve"" " + "\r\n\t " +
+                         @" AmcacheParser.exe -f ""C:\Temp\amcache\AmcacheWin10.hve"" -i" + "\r\n\t " +
+                         @" AmcacheParser.exe -f ""C:\Temp\amcache\AmcacheWin10.hve"" -w ""c:\temp\whitelist.txt"" " + "\r\n\t " +
                          @" AmcacheParser.exe -f ""C:\Temp\amcache\AmcacheWin10.hve"" " + "\r\n\t " +
                          @" AmcacheParser.exe -f ""C:\Temp\amcache\AmcacheWin10.hve"" " + "\r\n\t ";
 
@@ -111,11 +114,81 @@ namespace AmcacheParser
 
                 _sw.Stop();
 
+                HashSet<string> whitelistHashes = new HashSet<string>();
+
+                if (p.Object.Whitelist.Length > 0)
+                {
+
+                    if (File.Exists(p.Object.Whitelist))
+                    {
+                        foreach (var readLine in File.ReadLines(p.Object.Whitelist))
+                        {
+                            whitelistHashes.Add(readLine.ToLowerInvariant());
+                        }
+                    }
+                    else
+                    {
+                        _logger.Warn($"'{p.Object.Whitelist}' does not exist");
+                    }
+                }
+
+                _logger.Info("");
+                _logger.Info("");
+                _logger.Warn("Unassociated entries");
+
+                var cleanList = am.UnassociatedFileEntries.Where(t => !whitelistHashes.Contains(t.SHA1)).ToList();
+                var totalProgramFileEntries = 0;
+
+                foreach (var fe in cleanList)
+                {
+                    _logger.Info($"{fe.FileID} {fe.FileIDLastWriteTimestamp}: {fe.FullPath} SHA-1: {fe.SHA1} File size: {fe.FileSize:N0}" +
+                                 $" Created: {fe.Created} Last modified: {fe.LastModified} Last modified2: {fe.LastModified2} Compiled: {fe.CompileTime} File desc: {fe.FileDescription}");
+                }
+
+                File.WriteAllText(@"C:\temp\temp.txt", cleanList.ToCsv());
+
+            
+
+                if (p.Object.IncludeLinked)
+                {
+                    _logger.Info("");
+                    _logger.Warn("Program entries");
+
+                    File.WriteAllText(@"C:\temp\temp2.txt", am.ProgramsEntries.ToCsv());
+
+                    foreach (var pe in am.ProgramsEntries)
+                    {
+                        var cleanList2 = pe.FileEntries.Where(t => !whitelistHashes.Contains(t.SHA1)).ToList();
+                        totalProgramFileEntries += cleanList2.Count;
+
+                        if (cleanList2.Count > 0)
+                        {
+                            _logger.Info($"{pe.ProgramID} {pe.LastWriteTimestamp}: {pe.ProgramName_0}");
+                        }
+
+                        foreach (var fe in cleanList2)
+                        {
+                            _logger.Info($"{fe.FileID} {fe.FileIDLastWriteTimestamp}: {fe.FullPath} SHA-1: {fe.SHA1} File size: {fe.FileSize:N0}" +
+                                  $" Created: {fe.Created} Last modified: {fe.LastModified} Last modified2: {fe.LastModified2} Compiled: {fe.CompileTime} File desc: {fe.FileDescription}");
+                        }
+                    }
+                }
+
                 var suffix = am.UnassociatedFileEntries.Count == 1 ? "y" : "ies";
 
                 _logger.Info("");
+
+                var linked = "";
+                if (p.Object.IncludeLinked)
+                {
+                    linked = $"and {totalProgramFileEntries:N0} program file entries (across {am.ProgramsEntries.Count:N0} program entries) ";
+                }
+
+                if (whitelistHashes.Count>0)
+                { _logger.Info($"Whitelist hash count: {whitelistHashes.Count:N0}");}
+
                 _logger.Info(
-                    $"Found {am.UnassociatedFileEntries.Count:N0} unassociated file entr{suffix} and {am.ProgramsEntries.Count:N0} program entries in {_sw.Elapsed.TotalSeconds:N3} seconds.");
+                    $"Found {cleanList.Count:N0} unassociated file entr{suffix} {linked}in {_sw.Elapsed.TotalSeconds:N3} seconds.");
             }
             catch (Exception ex)
             {
