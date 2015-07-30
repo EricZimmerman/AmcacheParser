@@ -4,12 +4,12 @@ namespace Amcache.Classes
 {
     public class FileEntry
     {
-        public FileEntry(string productName, string programID, string sha1, string fullPath, DateTimeOffset lastMod2,
+        public FileEntry(string productName, string programID, string sha1, string fullPath, DateTimeOffset? lastMod2,
             string volumeID, DateTimeOffset volumeLastWrite, string fileID, DateTimeOffset lastWrite, int unknown5,
-            string compName, int langId,
+            string compName, int? langId,
             string fileVerString, string peHash, string fileVerNum, string fileDesc, long unknown1, long unknown2,
-            int unknown3, int unknown4, string switchback, int fileSize, DateTimeOffset compTime, int peHeaderSize,
-            DateTimeOffset lm, DateTimeOffset created, int pecheck, int unknown6)
+            int unknown3, int unknown4, string switchback, int? fileSize, DateTimeOffset? compTime, int? peHeaderSize,
+            DateTimeOffset? lm, DateTimeOffset? created, int? pecheck, int unknown6)
         {
             PEHeaderChecksum = pecheck;
             LastModified = lm;
@@ -66,15 +66,15 @@ namespace Amcache.Classes
         public int Unknown4 { get; }
         public int Unknown5 { get; }
         public int Unknown6 { get; }
-        public int LanguageID { get; }
-        public int FileSize { get; }
-        public int PEHeaderSize { get; }
-        public int PEHeaderChecksum { get; }
+        public int? LanguageID { get; }
+        public int? FileSize { get; }
+        public int? PEHeaderSize { get; }
+        public int? PEHeaderChecksum { get; }
         public DateTimeOffset VolumeIDLastWriteTimestamp { get; }
         public DateTimeOffset FileIDLastWriteTimestamp { get; }
-        public DateTimeOffset CompileTime { get; }
-        public DateTimeOffset LastModified { get; }
-        public DateTimeOffset LastModified2 { get; }
-        public DateTimeOffset Created { get; }
+        public DateTimeOffset? CompileTime { get; }
+        public DateTimeOffset? LastModified { get; }
+        public DateTimeOffset? LastModified2 { get; }
+        public DateTimeOffset? Created { get; }
     }
 }

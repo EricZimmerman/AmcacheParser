@@ -72,8 +72,8 @@ namespace Amcache
                 var Dword5 = 0;
                 var InstallSource6 = "";
                 var UninstallKey7 = "";
-                var EpochA = DateTimeOffset.FromUnixTimeSeconds(0);
-                var EpochB = DateTimeOffset.FromUnixTimeSeconds(0);
+                DateTimeOffset? EpochA = null;
+                DateTimeOffset? EpochB = null;
                 var PathListd = "";
                 var Guidf = "";
                 var RawFiles = "";
@@ -106,17 +106,28 @@ namespace Amcache
                         case "a":
                             try
                             {
-                                EpochA = DateTimeOffset.FromUnixTimeSeconds(long.Parse(value.ValueData));
+                                var seca = long.Parse(value.ValueData);
+                            if (seca > 0)
+                            {
+                               
+                                    EpochA = DateTimeOffset.FromUnixTimeSeconds(seca);
+                              
+                            }
                             }
                             catch (Exception ex)
                             {
                                 //sometimes the number is way too big
                             }
-                            
+
                             break;
                         case "b":
-                            EpochB =
-                                DateTimeOffset.FromUnixTimeSeconds(long.Parse(value.ValueData));
+                           var seconds = long.Parse(value.ValueData);
+                            if (seconds > 0)
+                            {
+                                EpochB =
+                                    DateTimeOffset.FromUnixTimeSeconds(seconds);
+                            }
+                            
                             break;
                         case "d":
                             PathListd = value.ValueData;
@@ -160,7 +171,6 @@ namespace Amcache
                     }
                 }
 
-
                 var pe = new ProgramsEntry(ProgramName0, ProgramVersion1, VenderName2, LocaleID3, InstallSource6,
                     UninstallKey7, Guid10, Guid12, UninstallGuid11, Dword5, Dword13, Dword14, Dword15, UnknownBytes,
                     Qword17, Dword18, EpochA, EpochB, PathListd, Guidf, RawFiles, registryKey.KeyName,
@@ -179,7 +189,7 @@ namespace Amcache
                 foreach (var subKey in registryKey.SubKeys)
                 {
                     var prodName = "";
-                    var langId = 0;
+                    int? langId = null;
                     var fileVerString = "";
                     var fileVerNum = "";
                     var fileDesc = "";
@@ -196,14 +206,14 @@ namespace Amcache
                     var unknown4 = 0;
                     var unknown5 = 0;
                     var unknown6 = 0;
-                    var fileSize = 0;
-                    var peHeaderSize = 0;
-                    var peHeaderChecksum = 0;
+                    int? fileSize = null;
+                    int? peHeaderSize = null;
+                    int? peHeaderChecksum = null;
 
-                    var created = new DateTimeOffset(1970, 1, 1, 0, 0, 0, TimeSpan.FromHours(0));
-                    var lm = new DateTimeOffset(1970, 1, 1, 0, 0, 0, TimeSpan.FromHours(0));
-                    var lm2 = new DateTimeOffset(1970, 1, 1, 0, 0, 0, TimeSpan.FromHours(0));
-                    var compTime = new DateTimeOffset(1970, 1, 1, 0, 0, 0, TimeSpan.FromHours(0));
+                    DateTimeOffset? created = null;
+                    DateTimeOffset? lm = null;
+                    DateTimeOffset? lm2 = null;
+                    DateTimeOffset? compTime = null;
 
                     var hasLinkedProgram = false;
 

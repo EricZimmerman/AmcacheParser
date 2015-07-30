@@ -4,12 +4,14 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using Amcache.Classes;
+using CsvHelper;
+using CsvHelper.Configuration;
 using Fclp;
 using Microsoft.Win32;
 using NLog;
 using NLog.Config;
 using NLog.Targets;
-using ServiceStack;
 
 namespace AmcacheParser
 {
@@ -52,10 +54,6 @@ namespace AmcacheParser
                 .As('f')
                 .WithDescription("Amcache.hve file to parse. This is required").Required();
 
-//            p.Setup(arg => arg.Extension)
-//                .As('e')
-//                .WithDescription("File extension to include. Default is all extensions. dll would include only files ending in .dll, exe would include only .exe files");
-
             p.Setup(arg => arg.IncludeLinked)
                 .As('i').SetDefault(false)
                 .WithDescription("Include file entries for Programs entries");
@@ -64,16 +62,19 @@ namespace AmcacheParser
                 .As('w')
                 .WithDescription("Path to file containing SHA-1 hashes to exclude from the results");
 
+            p.Setup(arg => arg.SaveTo)
+                .As('s').Required()
+                .WithDescription("Directory where results will be saved. Required");
+
             var header =
                 $"AmcacheParser version {Assembly.GetExecutingAssembly().GetName().Version}" +
                 "\r\n\r\nAuthor: Eric Zimmerman (saericzimmerman@gmail.com)" +
                 "\r\nhttps://github.com/EricZimmerman/AmcacheParser";
 
-            var footer = @"Examples: AmcacheParser.exe -f ""C:\Temp\amcache\AmcacheWin10.hve"" " + "\r\n\t " +
-                         @" AmcacheParser.exe -f ""C:\Temp\amcache\AmcacheWin10.hve"" -i" + "\r\n\t " +
-                         @" AmcacheParser.exe -f ""C:\Temp\amcache\AmcacheWin10.hve"" -w ""c:\temp\whitelist.txt"" " + "\r\n\t " +
-                         @" AmcacheParser.exe -f ""C:\Temp\amcache\AmcacheWin10.hve"" " + "\r\n\t " +
-                         @" AmcacheParser.exe -f ""C:\Temp\amcache\AmcacheWin10.hve"" " + "\r\n\t ";
+            var footer = @"Examples: AmcacheParser.exe -f ""C:\Temp\amcache\AmcacheWin10.hve"" -s C:\temp" + "\r\n\t " +
+                         @" AmcacheParser.exe -f ""C:\Temp\amcache\AmcacheWin10.hve"" -i on -s C:\temp" + "\r\n\t " +
+                         @" AmcacheParser.exe -f ""C:\Temp\amcache\AmcacheWin10.hve"" -w ""c:\temp\whitelist.txt"" -s C:\temp" +
+                         "\r\n\t ";
 
             p.SetupHelp("?", "help").WithHeader(header).Callback(text => _logger.Info(text + "\r\n" + footer));
 
@@ -112,15 +113,14 @@ namespace AmcacheParser
             {
                 _sw.Start();
 
-                var am = new Amcache.Amcache(p.Object.File,p.Object.RecoverDeleted);
+                var am = new Amcache.Amcache(p.Object.File, p.Object.RecoverDeleted);
 
                 _sw.Stop();
 
-                HashSet<string> whitelistHashes = new HashSet<string>();
+                var whitelistHashes = new HashSet<string>();
 
                 if (p.Object.Whitelist.Length > 0)
                 {
-
                     if (File.Exists(p.Object.Whitelist))
                     {
                         foreach (var readLine in File.ReadLines(p.Object.Whitelist))
@@ -134,81 +134,136 @@ namespace AmcacheParser
                     }
                 }
 
-                _logger.Info("");
-
                 var cleanList = am.UnassociatedFileEntries.Where(t => !whitelistHashes.Contains(t.SHA1)).ToList();
                 var totalProgramFileEntries = 0;
 
-                foreach (var fe in cleanList)
+                if (Directory.Exists(p.Object.SaveTo) == false)
                 {
-                    _logger.Info($"{fe.ProgramName} {fe.FileIDLastWriteTimestamp}: {fe.FullPath} SHA-1: {fe.SHA1} File size: {fe.FileSize:N0}" +
-                                 $" Created: {fe.Created} Last modified: {fe.LastModified} Last modified2: {fe.LastModified2} Compiled: {fe.CompileTime} File desc: {fe.FileDescription}");
+                    try
+                    {
+                        Directory.CreateDirectory(p.Object.SaveTo);
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.Error(
+                            $"There was an error creating directory '{p.Object.SaveTo}'. Error: {ex.Message} Exiting");
+                        return;
+                    }
                 }
 
-                File.WriteAllText(@"C:\temp\temp.txt", cleanList.ToCsv());
+                foreach (var pe in am.ProgramsEntries)
+                {
+                    var cleanList2 = pe.FileEntries.Where(t => !whitelistHashes.Contains(t.SHA1)).ToList();
+                    totalProgramFileEntries += cleanList2.Count;
+                }
 
-            
+                var ts = DateTime.Now.ToString("yyyyMMddHHmmss");
+                var hiveName = Path.GetFileNameWithoutExtension(p.Object.File);
+
+                var outbase = $"{ts}_{hiveName}_Unassociated file entries.tsv";
+                var outFile = Path.Combine(p.Object.SaveTo, outbase);
+
+                using (var sw = new StreamWriter(outFile))
+                {
+                    sw.AutoFlush = true;
+
+                    var csv = new CsvWriter(sw);
+                    csv.Configuration.RegisterClassMap<FECacheOutputMap>();
+                    csv.Configuration.Delimiter = "\t";
+
+                    csv.WriteHeader<FileEntry>();
+                    csv.WriteRecords(cleanList);
+                }
 
                 if (p.Object.IncludeLinked)
                 {
-                    File.WriteAllText(@"C:\temp\temp2.txt", am.ProgramsEntries.ToCsv());
+                    outbase = $"{ts}_{hiveName}_Program entries.tsv";
+                    outFile = Path.Combine(p.Object.SaveTo, outbase);
 
-                    foreach (var pe in am.ProgramsEntries)
+                    using (var sw = new StreamWriter(outFile))
                     {
-                        var cleanList2 = pe.FileEntries.Where(t => !whitelistHashes.Contains(t.SHA1)).ToList();
-                        totalProgramFileEntries += cleanList2.Count;
+                        sw.AutoFlush = true;
 
-                        foreach (var fe in cleanList2)
+                        var csv = new CsvWriter(sw);
+                        csv.Configuration.RegisterClassMap<PECacheOutputMap>();
+                        csv.Configuration.Delimiter = "\t";
+
+                        csv.WriteHeader<ProgramsEntry>();
+                        csv.WriteRecords(am.ProgramsEntries);
+                    }
+
+                    outbase = $"{ts}_{hiveName}_Associated file entries.tsv";
+                    outFile = Path.Combine(p.Object.SaveTo, outbase);
+
+                    using (var sw = new StreamWriter(outFile))
+                    {
+                        var csv = new CsvWriter(sw);
+                        csv.Configuration.RegisterClassMap<FECacheOutputMap>();
+                        csv.Configuration.Delimiter = "\t";
+
+                        csv.WriteHeader<FileEntry>();
+
+                        sw.AutoFlush = true;
+
+                        foreach (var pe in am.ProgramsEntries)
                         {
-                            _logger.Info($"{fe.ProgramName} {fe.FileIDLastWriteTimestamp}: {fe.FullPath} SHA-1: {fe.SHA1} File size: {fe.FileSize:N0}" +
-                                  $" Created: {fe.Created} Last modified: {fe.LastModified} Last modified2: {fe.LastModified2} Compiled: {fe.CompileTime} File desc: {fe.FileDescription}");
+                            var cleanList2 = pe.FileEntries.Where(t => !whitelistHashes.Contains(t.SHA1)).ToList();
+
+                            csv.WriteRecords(cleanList2);
                         }
                     }
                 }
 
                 var suffix = am.UnassociatedFileEntries.Count == 1 ? "y" : "ies";
 
-                _logger.Info("");
 
                 var linked = "";
                 if (p.Object.IncludeLinked)
                 {
-                    linked = $"and {totalProgramFileEntries:N0} program file entries (across {am.ProgramsEntries.Count:N0} program entries) ";
+                    linked =
+                        $"and {totalProgramFileEntries:N0} program file entries (across {am.ProgramsEntries.Count:N0} program entries) ";
                 }
 
+
+             
                 _logger.Info("");
 
-                _logger.Info($"Total file entries found: {am.TotalFileEntries:N0}. Search time: {_sw.Elapsed.TotalSeconds:N3} seconds.");
+                _logger.Info($"Total file entries found: {am.TotalFileEntries:N0}.");
 
                 _logger.Info(
                     $"Found {cleanList.Count:N0} unassociated file entr{suffix} {linked}");
 
                 if (whitelistHashes.Count > 0)
                 {
-                    
-                    var per = (double)(totalProgramFileEntries + cleanList.Count) / am.TotalFileEntries;
+                    var per = (double) (totalProgramFileEntries + cleanList.Count)/am.TotalFileEntries;
 
                     _logger.Info("");
-                    
+
                     _logger.Info($"Whitelist hash count: {whitelistHashes.Count:N0}");
 
                     _logger.Info("");
 
-                    _logger.Info($"Percentage of total shown based on whitelist: {per:P3} ({(1-per):P3} savings)");
+                    _logger.Info($"Percentage of total shown based on whitelist: {per:P3} ({(1 - per):P3} savings)");
                 }
+                _logger.Info("");
 
+                _logger.Info($"Results saved to: {p.Object.SaveTo}");
+
+                _logger.Info("");
+                _logger.Info(
+                 $"Total search time: {_sw.Elapsed.TotalSeconds:N3} seconds.");
             }
             catch (Exception ex)
             {
                 _logger.Error($"There was an error: {ex.Message}");
             }
-            
-#if DEBUG
-            _logger.Info("");
-            _logger.Info("");
-            _logger.Warn("Press a key to exit");
-            Console.ReadKey();
-#endif
+
+//#if DEBUG
+//            _logger.Info("");
+//            _logger.Info("");
+//            _logger.Warn("Press a key to exit");
+//            Console.ReadKey();
+//#endif
         }
 
         private static void SetupNLog()
@@ -236,7 +291,57 @@ namespace AmcacheParser
         public string File { get; set; }
         //       public string Extension { get; set; } = string.Empty;
         public string Whitelist { get; set; } = string.Empty;
+        public string SaveTo { get; set; } = string.Empty;
         public bool IncludeLinked { get; set; } = false;
         public bool RecoverDeleted { get; set; } = false;
+    }
+
+    public sealed class FECacheOutputMap : CsvClassMap<FileEntry>
+    {
+        public FECacheOutputMap()
+        {
+            Map(m => m.ProgramName);
+            Map(m => m.ProgramID);
+            Map(m => m.VolumeID);
+            Map(m => m.VolumeIDLastWriteTimestamp).TypeConverterOption("MM-dd-yyyy HH:mm:ss");
+            Map(m => m.FileID);
+            Map(m => m.FileIDLastWriteTimestamp).TypeConverterOption("MM-dd-yyyy HH:mm:ss");
+            Map(m => m.SHA1);
+            Map(m => m.FullPath);
+            Map(m => m.FileSize);
+            Map(m => m.FileVersionString);
+            Map(m => m.FileVersionNumber);
+            Map(m => m.FileDescription);
+
+            Map(m => m.PEHeaderSize);
+            Map(m => m.PEHeaderHash);
+            Map(m => m.PEHeaderChecksum);
+
+            Map(m => m.Created);
+            Map(m => m.LastModified);
+            Map(m => m.LastModified2);
+            Map(m => m.CompileTime);
+            Map(m => m.LanguageID);
+        }
+    }
+
+    public sealed class PECacheOutputMap : CsvClassMap<ProgramsEntry>
+    {
+        public PECacheOutputMap()
+        {
+            Map(m => m.ProgramID);
+            Map(m => m.LastWriteTimestamp);
+            Map(m => m.ProgramName_0);
+            Map(m => m.ProgramVersion_1);
+            Map(m => m.VendorName_2);
+
+            Map(m => m.InstallDateEpoch_a).TypeConverterOption("MM-dd-yyyy HH:mm:ss");
+            Map(m => m.InstallDateEpoch_b).TypeConverterOption("MM-dd-yyyy HH:mm:ss");
+
+            Map(m => m.LanguageCode_3);
+            Map(m => m.InstallSource_6);
+            Map(m => m.UninstallRegistryKey_7);
+            Map(m => m.PathsList_d);
+        }
     }
 }

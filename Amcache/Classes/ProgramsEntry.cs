@@ -8,7 +8,7 @@ namespace Amcache.Classes
         public ProgramsEntry(string programName, string programVer, string vendorName, string langCode,
             string installSource, string uninstallRegKey, string guid10, string guid12, string uninstallGuid11,
             int unknownD5, int unknownD13, int unknownD14, int unknownD15, byte[] unknown16,
-            long unknownQ17, int unknownD18, DateTimeOffset installA, DateTimeOffset installB, string pathList,
+            long unknownQ17, int unknownD18, DateTimeOffset? installA, DateTimeOffset? installB, string pathList,
             string uninstallGuidf, string rawFilesList, string programID, DateTimeOffset lastwrite)
         {
             FilesLinks = new List<FilesProgramEntry>();
@@ -66,8 +66,8 @@ namespace Amcache.Classes
         public byte[] UnknownBytes_16 { get; }
         public long UnknownQWord_17 { get; }
         public int UnknownDword_18 { get; }
-        public DateTimeOffset InstallDateEpoch_a { get; }
-        public DateTimeOffset InstallDateEpoch_b { get; }
+        public DateTimeOffset? InstallDateEpoch_a { get; }
+        public DateTimeOffset? InstallDateEpoch_b { get; }
         public string PathsList_d { get; }
         public string UninstallGuid_f { get; }
         public List<FilesProgramEntry> FilesLinks { get; }
