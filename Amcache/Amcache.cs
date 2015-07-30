@@ -37,12 +37,14 @@ namespace Amcache
         private const int SHA1 = 0x101;
         private static Logger _logger;
 
-        public Amcache(string hive)
+        public Amcache(string hive, bool recoverDeleted)
         {
             _logger = LogManager.GetCurrentClassLogger();
 
-            var reg = new RegistryHive(hive);
-            reg.RecoverDeleted = true;
+            var reg = new RegistryHive(hive)
+            {
+                RecoverDeleted = recoverDeleted
+            };
             reg.ParseHive();
 
             var fileKey = reg.GetKey(@"Root\File");
@@ -108,7 +110,7 @@ namespace Amcache
                             }
                             catch (Exception ex)
                             {
-                            Debug.WriteLine(registryKey.KeyPath);
+                                //sometimes the number is way too big
                             }
                             
                             break;
@@ -153,7 +155,7 @@ namespace Amcache
                             RawFiles = value.ValueData;
                             break;
                         default:
-                            _logger.Warn($"Unknown value name in Program: {value.ValueName}");
+                            _logger.Warn($"Unknown value name in Program at path {registryKey.KeyPath}: {value.ValueName}");
                             break;
                     }
                 }
@@ -166,10 +168,6 @@ namespace Amcache
 
                 ProgramsEntries.Add(pe);
             }
-
-            //Dump stuff from Programs to a file for testing, etc
-            //ProgramsEntries.ForEach(f=>File.AppendAllText(@"C:\temp\programs.txt", $"{f.ProgramName_0} EpochA: {f.InstallDateEpoch_a} EpochB: {f.InstallDateEpoch_a}\r\n"));
-
 
             //For each Programs entry, add the related Files entries from Files\Volume subkey, put the rest in unassociated
 
@@ -279,7 +277,6 @@ namespace Amcache
                             case Unknown6:
                                 unknown6 = int.Parse(keyValue.ValueData);
                                 break;
-
                             case LastModified2:
                                 lm2 = DateTimeOffset.FromFileTime(long.Parse(keyValue.ValueData));
                                 break;
@@ -297,7 +294,7 @@ namespace Amcache
                                 sha = keyValue.ValueData;
                                 break;
                             default:
-                                _logger.Warn($"Unknown value name: 0x{keyVal:X}");
+                                _logger.Warn($"Unknown value name when processing FileEntry at path '{registryKey.KeyPath}': 0x{keyVal:X}");
                                 break;
                         }
                     }
@@ -306,6 +303,8 @@ namespace Amcache
                     {
                         continue;
                     }
+
+                    TotalFileEntries += 1;
 
                     var fe = new FileEntry(prodName, progID, sha, fullPath, lm2, registryKey.KeyName,
                         registryKey.LastWriteTime.Value, subKey.KeyName, subKey.LastWriteTime.Value,
@@ -316,10 +315,12 @@ namespace Amcache
                     if (hasLinkedProgram)
                     {
                         var program = ProgramsEntries.SingleOrDefault(t => t.ProgramID == fe.ProgramID);
+                        fe.ProgramName = program.ProgramName_0;
                         program.FileEntries.Add(fe);
                     }
                     else
                     {
+                        fe.ProgramName = "Unassociated";
                         UnassociatedFileEntries.Add(fe);
                     }
                 }
@@ -328,5 +329,7 @@ namespace Amcache
 
         public List<FileEntry> UnassociatedFileEntries { get; }
         public List<ProgramsEntry> ProgramsEntries { get; }
+
+        public int TotalFileEntries { get; }
     }
 }

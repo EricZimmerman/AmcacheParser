@@ -59,6 +59,7 @@ namespace Amcache.Classes
         public string FileID { get; }
         public string VolumeID { get; }
         public string SwitchBackContext { get; }
+        public string ProgramName { get; set; }
         public long Unknown1 { get; }
         public long Unknown2 { get; }
         public int Unknown3 { get; }

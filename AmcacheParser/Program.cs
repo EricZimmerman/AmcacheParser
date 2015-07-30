@@ -57,7 +57,7 @@ namespace AmcacheParser
 //                .WithDescription("File extension to include. Default is all extensions. dll would include only files ending in .dll, exe would include only .exe files");
 
             p.Setup(arg => arg.IncludeLinked)
-                .As('i').SetDefault(true)
+                .As('i').SetDefault(false)
                 .WithDescription("Include file entries for Programs entries");
 
             p.Setup(arg => arg.Whitelist)
@@ -102,6 +102,8 @@ namespace AmcacheParser
 
             _logger.Info(header);
             _logger.Info("");
+            _logger.Info($"Command line: {string.Join(" ", args)}");
+            _logger.Info("");
 
             _sw = new Stopwatch();
             _sw.Start();
@@ -110,7 +112,7 @@ namespace AmcacheParser
             {
                 _sw.Start();
 
-                var am = new Amcache.Amcache(p.Object.File);
+                var am = new Amcache.Amcache(p.Object.File,p.Object.RecoverDeleted);
 
                 _sw.Stop();
 
@@ -133,15 +135,13 @@ namespace AmcacheParser
                 }
 
                 _logger.Info("");
-                _logger.Info("");
-                _logger.Warn("Unassociated entries");
 
                 var cleanList = am.UnassociatedFileEntries.Where(t => !whitelistHashes.Contains(t.SHA1)).ToList();
                 var totalProgramFileEntries = 0;
 
                 foreach (var fe in cleanList)
                 {
-                    _logger.Info($"{fe.FileID} {fe.FileIDLastWriteTimestamp}: {fe.FullPath} SHA-1: {fe.SHA1} File size: {fe.FileSize:N0}" +
+                    _logger.Info($"{fe.ProgramName} {fe.FileIDLastWriteTimestamp}: {fe.FullPath} SHA-1: {fe.SHA1} File size: {fe.FileSize:N0}" +
                                  $" Created: {fe.Created} Last modified: {fe.LastModified} Last modified2: {fe.LastModified2} Compiled: {fe.CompileTime} File desc: {fe.FileDescription}");
                 }
 
@@ -151,9 +151,6 @@ namespace AmcacheParser
 
                 if (p.Object.IncludeLinked)
                 {
-                    _logger.Info("");
-                    _logger.Warn("Program entries");
-
                     File.WriteAllText(@"C:\temp\temp2.txt", am.ProgramsEntries.ToCsv());
 
                     foreach (var pe in am.ProgramsEntries)
@@ -161,14 +158,9 @@ namespace AmcacheParser
                         var cleanList2 = pe.FileEntries.Where(t => !whitelistHashes.Contains(t.SHA1)).ToList();
                         totalProgramFileEntries += cleanList2.Count;
 
-                        if (cleanList2.Count > 0)
-                        {
-                            _logger.Info($"{pe.ProgramID} {pe.LastWriteTimestamp}: {pe.ProgramName_0}");
-                        }
-
                         foreach (var fe in cleanList2)
                         {
-                            _logger.Info($"{fe.FileID} {fe.FileIDLastWriteTimestamp}: {fe.FullPath} SHA-1: {fe.SHA1} File size: {fe.FileSize:N0}" +
+                            _logger.Info($"{fe.ProgramName} {fe.FileIDLastWriteTimestamp}: {fe.FullPath} SHA-1: {fe.SHA1} File size: {fe.FileSize:N0}" +
                                   $" Created: {fe.Created} Last modified: {fe.LastModified} Last modified2: {fe.LastModified2} Compiled: {fe.CompileTime} File desc: {fe.FileDescription}");
                         }
                     }
@@ -184,11 +176,27 @@ namespace AmcacheParser
                     linked = $"and {totalProgramFileEntries:N0} program file entries (across {am.ProgramsEntries.Count:N0} program entries) ";
                 }
 
-                if (whitelistHashes.Count>0)
-                { _logger.Info($"Whitelist hash count: {whitelistHashes.Count:N0}");}
+                _logger.Info("");
+
+                _logger.Info($"Total file entries found: {am.TotalFileEntries:N0}. Search time: {_sw.Elapsed.TotalSeconds:N3} seconds.");
 
                 _logger.Info(
-                    $"Found {cleanList.Count:N0} unassociated file entr{suffix} {linked}in {_sw.Elapsed.TotalSeconds:N3} seconds.");
+                    $"Found {cleanList.Count:N0} unassociated file entr{suffix} {linked}");
+
+                if (whitelistHashes.Count > 0)
+                {
+                    
+                    var per = (double)(totalProgramFileEntries + cleanList.Count) / am.TotalFileEntries;
+
+                    _logger.Info("");
+                    
+                    _logger.Info($"Whitelist hash count: {whitelistHashes.Count:N0}");
+
+                    _logger.Info("");
+
+                    _logger.Info($"Percentage of total shown based on whitelist: {per:P3} ({(1-per):P3} savings)");
+                }
+
             }
             catch (Exception ex)
             {
@@ -228,6 +236,7 @@ namespace AmcacheParser
         public string File { get; set; }
         //       public string Extension { get; set; } = string.Empty;
         public string Whitelist { get; set; } = string.Empty;
-        public bool IncludeLinked { get; set; } = true;
+        public bool IncludeLinked { get; set; } = false;
+        public bool RecoverDeleted { get; set; } = false;
     }
 }
