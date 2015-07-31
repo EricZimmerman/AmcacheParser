@@ -78,105 +78,113 @@ namespace Amcache
                 var Guidf = "";
                 var RawFiles = "";
 
-                foreach (var value in registryKey.Values)
+                try
                 {
-                    switch (value.ValueName)
+                    foreach (var value in registryKey.Values)
                     {
-                        case "0":
-                            ProgramName0 = value.ValueData;
-                            break;
-                        case "1":
-                            ProgramVersion1 = value.ValueData;
-                            break;
-                        case "2":
-                            VenderName2 = value.ValueData;
-                            break;
-                        case "3":
-                            LocaleID3 = value.ValueData;
-                            break;
-                        case "5":
-                            Dword5 = int.Parse(value.ValueData);
-                            break;
-                        case "6":
-                            InstallSource6 = value.ValueData;
-                            break;
-                        case "7":
-                            UninstallKey7 = value.ValueData;
-                            break;
-                        case "a":
-                            try
-                            {
-                                var seca = long.Parse(value.ValueData);
-                            if (seca > 0)
-                            {
-                               
-                                    EpochA = DateTimeOffset.FromUnixTimeSeconds(seca);
-                              
-                            }
-                            }
-                            catch (Exception ex)
-                            {
-                                //sometimes the number is way too big
-                            }
+                        switch (value.ValueName)
+                        {
+                            case "0":
+                                ProgramName0 = value.ValueData;
+                                break;
+                            case "1":
+                                ProgramVersion1 = value.ValueData;
+                                break;
+                            case "2":
+                                VenderName2 = value.ValueData;
+                                break;
+                            case "3":
+                                LocaleID3 = value.ValueData;
+                                break;
+                            case "5":
+                                Dword5 = int.Parse(value.ValueData);
+                                break;
+                            case "6":
+                                InstallSource6 = value.ValueData;
+                                break;
+                            case "7":
+                                UninstallKey7 = value.ValueData;
+                                break;
+                            case "a":
+                                try
+                                {
+                                    var seca = long.Parse(value.ValueData);
+                                    if (seca > 0)
+                                    {
 
-                            break;
-                        case "b":
-                           var seconds = long.Parse(value.ValueData);
-                            if (seconds > 0)
-                            {
-                                EpochB =
-                                    DateTimeOffset.FromUnixTimeSeconds(seconds);
-                            }
-                            
-                            break;
-                        case "d":
-                            PathListd = value.ValueData;
-                            break;
-                        case "f":
-                            Guidf = value.ValueData;
-                            break;
-                        case "10":
-                            Guid10 = value.ValueData;
-                            break;
-                        case "11":
-                            UninstallGuid11 = value.ValueData;
-                            break;
-                        case "12":
-                            Guid12 = value.ValueData;
-                            break;
-                        case "13":
-                            Dword13 = int.Parse(value.ValueData);
-                            break;
-                        case "14":
-                            Dword13 = int.Parse(value.ValueData);
-                            break;
-                        case "15":
-                            Dword13 = int.Parse(value.ValueData);
-                            break;
-                        case "16":
-                            UnknownBytes = value.ValueDataRaw;
-                            break;
-                        case "17":
-                            Qword17 = long.Parse(value.ValueData);
-                            break;
-                        case "18":
-                            Dword18 = int.Parse(value.ValueData);
-                            break;
-                        case "Files":
-                            RawFiles = value.ValueData;
-                            break;
-                        default:
-                            _logger.Warn($"Unknown value name in Program at path {registryKey.KeyPath}: {value.ValueName}");
-                            break;
+                                        EpochA = DateTimeOffset.FromUnixTimeSeconds(seca);
+
+                                    }
+                                }
+                                catch (Exception ex)
+                                {
+                                    //sometimes the number is way too big
+                                }
+
+                                break;
+                            case "b":
+                                var seconds = long.Parse(value.ValueData);
+                                if (seconds > 0)
+                                {
+                                    EpochB =
+                                        DateTimeOffset.FromUnixTimeSeconds(seconds);
+                                }
+
+                                break;
+                            case "d":
+                                PathListd = value.ValueData;
+                                break;
+                            case "f":
+                                Guidf = value.ValueData;
+                                break;
+                            case "10":
+                                Guid10 = value.ValueData;
+                                break;
+                            case "11":
+                                UninstallGuid11 = value.ValueData;
+                                break;
+                            case "12":
+                                Guid12 = value.ValueData;
+                                break;
+                            case "13":
+                                Dword13 = int.Parse(value.ValueData);
+                                break;
+                            case "14":
+                                Dword13 = int.Parse(value.ValueData);
+                                break;
+                            case "15":
+                                Dword13 = int.Parse(value.ValueData);
+                                break;
+                            case "16":
+                                UnknownBytes = value.ValueDataRaw;
+                                break;
+                            case "17":
+                                Qword17 = long.Parse(value.ValueData);
+                                break;
+                            case "18":
+                                Dword18 = int.Parse(value.ValueData);
+                                break;
+                            case "Files":
+                                RawFiles = value.ValueData;
+                                break;
+                            default:
+                                _logger.Warn($"Unknown value name in Program at path {registryKey.KeyPath}: {value.ValueName}");
+                                break;
+                        }
                     }
+
+                    var pe = new ProgramsEntry(ProgramName0, ProgramVersion1, VenderName2, LocaleID3, InstallSource6,
+                        UninstallKey7, Guid10, Guid12, UninstallGuid11, Dword5, Dword13, Dword14, Dword15, UnknownBytes,
+                        Qword17, Dword18, EpochA, EpochB, PathListd, Guidf, RawFiles, registryKey.KeyName,
+                        registryKey.LastWriteTime.Value);
+
+                    ProgramsEntries.Add(pe);
                 }
-
-                var pe = new ProgramsEntry(ProgramName0, ProgramVersion1, VenderName2, LocaleID3, InstallSource6,
-                    UninstallKey7, Guid10, Guid12, UninstallGuid11, Dword5, Dword13, Dword14, Dword15, UnknownBytes,
-                    Qword17, Dword18, EpochA, EpochB, PathListd, Guidf, RawFiles, registryKey.KeyName,
-                    registryKey.LastWriteTime.Value);
-
-                ProgramsEntries.Add(pe);
+                catch (Exception ex)
+                {
+                    _logger.Error($"Error parsing ProgramsEntry at {registryKey.KeyPath}. Error: {ex.Message}");
+                    _logger.Error($"Please send the following text to saericzimmerman@gmail.com. \r\n\r\nKey data: {registryKey}");
+                }
             }
 
             //For each Programs entry, add the related Files entries from Files\Volume subkey, put the rest in unassociated
@@ -217,121 +225,129 @@ namespace Amcache
 
                     var hasLinkedProgram = false;
 
-                    //these are the files executed from the volume
-                    foreach (var keyValue in subKey.Values)
+                    try
                     {
-                        var keyVal = int.Parse(keyValue.ValueName, NumberStyles.HexNumber);
-
-                        switch (keyVal)
+                        //these are the files executed from the volume
+                        foreach (var keyValue in subKey.Values)
                         {
-                            case ProductName:
-                                prodName = keyValue.ValueData;
-                                break;
-                            case CompanyName:
-                                compName = keyValue.ValueData;
-                                break;
-                            case FileVersionNumber:
-                                fileVerNum = keyValue.ValueData;
-                                break;
-                            case LanguageCode:
-                                langId = int.Parse(keyValue.ValueData);
-                                break;
-                            case SwitchBackContext:
-                                switchBack = keyValue.ValueData;
-                                break;
-                            case FileVersionString:
-                                fileVerString = keyValue.ValueData;
-                                break;
-                            case FileSize:
-                                fileSize = int.Parse(keyValue.ValueData);
-                                break;
-                            case PEHeaderSize:
-                                peHeaderSize = int.Parse(keyValue.ValueData);
-                                break;
-                            case PEHeaderHash:
-                                peHash = keyValue.ValueData;
-                                break;
-                            case PEHeaderChecksum:
-                                peHeaderChecksum = int.Parse(keyValue.ValueData);
-                                break;
-                            case Unknown1:
-                                unknown1 = long.Parse(keyValue.ValueData);
-                                break;
-                            case Unknown2:
-                                unknown2 = long.Parse(keyValue.ValueData);
-                                break;
-                            case FileDescription:
-                                fileDesc = keyValue.ValueData;
-                                break;
-                            case Unknown3:
-                                unknown3 = int.Parse(keyValue.ValueData);
-                                break;
-                            case CompileTime:
-                                compTime = DateTimeOffset.FromUnixTimeSeconds(long.Parse(keyValue.ValueData));
-                                break;
-                            case Unknown4:
-                                unknown4 = int.Parse(keyValue.ValueData);
-                                break;
-                            case LastModified:
-                                lm = DateTimeOffset.FromFileTime(long.Parse(keyValue.ValueData));
-                                break;
-                            case Created:
-                                created = DateTimeOffset.FromFileTime(long.Parse(keyValue.ValueData));
-                                break;
-                            case FullPath:
-                                fullPath = keyValue.ValueData;
-                                break;
-                            case Unknown5:
-                                unknown5 = int.Parse(keyValue.ValueData);
-                                break;
-                            case Unknown6:
-                                unknown6 = int.Parse(keyValue.ValueData);
-                                break;
-                            case LastModified2:
-                                lm2 = DateTimeOffset.FromFileTime(long.Parse(keyValue.ValueData));
-                                break;
-                            case ProgramID:
-                                progID = keyValue.ValueData;
+                            var keyVal = int.Parse(keyValue.ValueName, NumberStyles.HexNumber);
 
-                                var program = ProgramsEntries.SingleOrDefault(t => t.ProgramID == progID);
-                                if (program != null)
-                                {
-                                    hasLinkedProgram = true;
-                                }
+                            switch (keyVal)
+                            {
+                                case ProductName:
+                                    prodName = keyValue.ValueData;
+                                    break;
+                                case CompanyName:
+                                    compName = keyValue.ValueData;
+                                    break;
+                                case FileVersionNumber:
+                                    fileVerNum = keyValue.ValueData;
+                                    break;
+                                case LanguageCode:
+                                    langId = int.Parse(keyValue.ValueData);
+                                    break;
+                                case SwitchBackContext:
+                                    switchBack = keyValue.ValueData;
+                                    break;
+                                case FileVersionString:
+                                    fileVerString = keyValue.ValueData;
+                                    break;
+                                case FileSize:
+                                    fileSize = int.Parse(keyValue.ValueData);
+                                    break;
+                                case PEHeaderSize:
+                                    peHeaderSize = int.Parse(keyValue.ValueData);
+                                    break;
+                                case PEHeaderHash:
+                                    peHash = keyValue.ValueData;
+                                    break;
+                                case PEHeaderChecksum:
+                                    peHeaderChecksum = int.Parse(keyValue.ValueData);
+                                    break;
+                                case Unknown1:
+                                    unknown1 = long.Parse(keyValue.ValueData);
+                                    break;
+                                case Unknown2:
+                                    unknown2 = long.Parse(keyValue.ValueData);
+                                    break;
+                                case FileDescription:
+                                    fileDesc = keyValue.ValueData;
+                                    break;
+                                case Unknown3:
+                                    unknown3 = int.Parse(keyValue.ValueData);
+                                    break;
+                                case CompileTime:
+                                    compTime = DateTimeOffset.FromUnixTimeSeconds(long.Parse(keyValue.ValueData));
+                                    break;
+                                case Unknown4:
+                                    unknown4 = int.Parse(keyValue.ValueData);
+                                    break;
+                                case LastModified:
+                                    lm = DateTimeOffset.FromFileTime(long.Parse(keyValue.ValueData));
+                                    break;
+                                case Created:
+                                    created = DateTimeOffset.FromFileTime(long.Parse(keyValue.ValueData));
+                                    break;
+                                case FullPath:
+                                    fullPath = keyValue.ValueData;
+                                    break;
+                                case Unknown5:
+                                    unknown5 = int.Parse(keyValue.ValueData);
+                                    break;
+                                case Unknown6:
+                                    unknown6 = int.Parse(keyValue.ValueData);
+                                    break;
+                                case LastModified2:
+                                    lm2 = DateTimeOffset.FromFileTime(long.Parse(keyValue.ValueData));
+                                    break;
+                                case ProgramID:
+                                    progID = keyValue.ValueData;
 
-                                break;
-                            case SHA1:
-                                sha = keyValue.ValueData;
-                                break;
-                            default:
-                                _logger.Warn($"Unknown value name when processing FileEntry at path '{registryKey.KeyPath}': 0x{keyVal:X}");
-                                break;
+                                    var program = ProgramsEntries.SingleOrDefault(t => t.ProgramID == progID);
+                                    if (program != null)
+                                    {
+                                        hasLinkedProgram = true;
+                                    }
+
+                                    break;
+                                case SHA1:
+                                    sha = keyValue.ValueData;
+                                    break;
+                                default:
+                                    _logger.Warn($"Unknown value name when processing FileEntry at path '{subKey.KeyPath}': 0x{keyVal:X}");
+                                    break;
+                            }
+                        }
+
+                        if (fullPath.Length == 0)
+                        {
+                            continue;
+                        }
+
+                        TotalFileEntries += 1;
+
+                        var fe = new FileEntry(prodName, progID, sha, fullPath, lm2, registryKey.KeyName,
+                            registryKey.LastWriteTime.Value, subKey.KeyName, subKey.LastWriteTime.Value,
+                            unknown5, compName, langId, fileVerString, peHash, fileVerNum, fileDesc, unknown1, unknown2,
+                            unknown3, unknown4, switchBack, fileSize, compTime, peHeaderSize,
+                            lm, created, peHeaderChecksum, unknown6);
+
+                        if (hasLinkedProgram)
+                        {
+                            var program = ProgramsEntries.SingleOrDefault(t => t.ProgramID == fe.ProgramID);
+                            fe.ProgramName = program.ProgramName_0;
+                            program.FileEntries.Add(fe);
+                        }
+                        else
+                        {
+                            fe.ProgramName = "Unassociated";
+                            UnassociatedFileEntries.Add(fe);
                         }
                     }
-
-                    if (fullPath.Length == 0)
+                    catch (Exception ex)
                     {
-                        continue;
-                    }
-
-                    TotalFileEntries += 1;
-
-                    var fe = new FileEntry(prodName, progID, sha, fullPath, lm2, registryKey.KeyName,
-                        registryKey.LastWriteTime.Value, subKey.KeyName, subKey.LastWriteTime.Value,
-                        unknown5, compName, langId, fileVerString, peHash, fileVerNum, fileDesc, unknown1, unknown2,
-                        unknown3, unknown4, switchBack, fileSize, compTime, peHeaderSize,
-                        lm, created, peHeaderChecksum, unknown6);
-
-                    if (hasLinkedProgram)
-                    {
-                        var program = ProgramsEntries.SingleOrDefault(t => t.ProgramID == fe.ProgramID);
-                        fe.ProgramName = program.ProgramName_0;
-                        program.FileEntries.Add(fe);
-                    }
-                    else
-                    {
-                        fe.ProgramName = "Unassociated";
-                        UnassociatedFileEntries.Add(fe);
+                        _logger.Error($"Error parsing FileEntry at {subKey.KeyPath}. Error: {ex.Message}");
+                        _logger.Error($"Please send the following text to saericzimmerman@gmail.com. \r\n\r\nKey data: {subKey}");
                     }
                 }
             }

@@ -27,6 +27,11 @@ namespace AmcacheParser
                     RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry32)
                         .OpenSubKey("SOFTWARE\\Microsoft\\NET Framework Setup\\NDP\\v4\\Full\\"))
             {
+                if (ndpKey == null)
+                {
+                    return false;
+                }
+
                 var releaseKey = Convert.ToInt32(ndpKey.GetValue("Release"));
 
                 return (releaseKey >= 393295);
@@ -52,7 +57,7 @@ namespace AmcacheParser
 
             p.Setup(arg => arg.File)
                 .As('f')
-                .WithDescription("Amcache.hve file to parse. This is required").Required();
+                .WithDescription("Amcache.hve file to parse. Required").Required();
 
             p.Setup(arg => arg.IncludeLinked)
                 .As('i').SetDefault(false)
@@ -60,11 +65,12 @@ namespace AmcacheParser
 
             p.Setup(arg => arg.Whitelist)
                 .As('w')
-                .WithDescription("Path to file containing SHA-1 hashes to *exclude* from the results");
+                .WithDescription("Path to file containing SHA-1 hashes to *exclude* from the results. Blacklisting overrides whitelisting");
 
             p.Setup(arg => arg.Blacklist)
-    .As('b')
-    .WithDescription("Path to file containing SHA-1 hashes to *include* from the results");
+                .As('b')
+                .WithDescription(
+                    "Path to file containing SHA-1 hashes to *include* from the results. Blacklisting overrides whitelisting");
 
             p.Setup(arg => arg.SaveTo)
                 .As('s').Required()
@@ -139,7 +145,8 @@ namespace AmcacheParser
                     {
                         _logger.Warn($"'{p.Object.Blacklist}' does not exist");
                     }
-                } else if (p.Object.Whitelist.Length > 0)
+                }
+                else if (p.Object.Whitelist.Length > 0)
                 {
                     if (File.Exists(p.Object.Whitelist))
                     {
@@ -154,7 +161,8 @@ namespace AmcacheParser
                     }
                 }
 
-                var cleanList = am.UnassociatedFileEntries.Where(t => whitelistHashes.Contains(t.SHA1) == useBlacklist).ToList();
+                var cleanList =
+                    am.UnassociatedFileEntries.Where(t => whitelistHashes.Contains(t.SHA1) == useBlacklist).ToList();
                 var totalProgramFileEntries = 0;
 
                 if (Directory.Exists(p.Object.SaveTo) == false)
@@ -173,7 +181,8 @@ namespace AmcacheParser
 
                 foreach (var pe in am.ProgramsEntries)
                 {
-                    var cleanList2 = pe.FileEntries.Where(t => whitelistHashes.Contains(t.SHA1) == useBlacklist).ToList();
+                    var cleanList2 =
+                        pe.FileEntries.Where(t => whitelistHashes.Contains(t.SHA1) == useBlacklist).ToList();
                     totalProgramFileEntries += cleanList2.Count;
                 }
 
@@ -227,7 +236,8 @@ namespace AmcacheParser
 
                         foreach (var pe in am.ProgramsEntries)
                         {
-                            var cleanList2 = pe.FileEntries.Where(t => whitelistHashes.Contains(t.SHA1) == useBlacklist).ToList();
+                            var cleanList2 =
+                                pe.FileEntries.Where(t => whitelistHashes.Contains(t.SHA1) == useBlacklist).ToList();
 
                             csv.WriteRecords(cleanList2);
                         }
@@ -245,7 +255,6 @@ namespace AmcacheParser
                 }
 
 
-             
                 _logger.Info("");
 
                 _logger.Info($"Total file entries found: {am.TotalFileEntries:N0}.");
@@ -259,11 +268,17 @@ namespace AmcacheParser
 
                     _logger.Info("");
 
-                    _logger.Info($"Whitelist hash count: {whitelistHashes.Count:N0}");
+                    var list = "whitelist";
+                    if (p.Object.Blacklist.Length > 0)
+                    {
+                        list = "blacklist";
+                    }
+
+                    _logger.Info($"{UppercaseFirst(list)} hash count: {whitelistHashes.Count:N0}");
 
                     _logger.Info("");
 
-                    _logger.Info($"Percentage of total shown based on whitelist: {per:P3} ({(1 - per):P3} savings)");
+                    _logger.Info($"Percentage of total shown based on {list}: {per:P3} ({(1 - per):P3} savings)");
                 }
                 _logger.Info("");
 
@@ -271,19 +286,16 @@ namespace AmcacheParser
 
                 _logger.Info("");
                 _logger.Info(
-                 $"Total search time: {_sw.Elapsed.TotalSeconds:N3} seconds.");
+                    $"Total search time: {_sw.Elapsed.TotalSeconds:N3} seconds.");
             }
             catch (Exception ex)
             {
                 _logger.Error($"There was an error: {ex.Message}");
+                _logger.Error($"Stacktrace: {ex.StackTrace}");
+                _logger.Info("");
+                _logger.Error($"Please send '{p.Object.File}' to saericzimmerman@gmail.com in order to fix the issue");
             }
 
-//#if DEBUG
-//            _logger.Info("");
-//            _logger.Info("");
-//            _logger.Warn("Press a key to exit");
-//            Console.ReadKey();
-//#endif
         }
 
         private static void SetupNLog()
@@ -304,7 +316,20 @@ namespace AmcacheParser
 
             LogManager.Configuration = config;
         }
+
+        static string UppercaseFirst(string s)
+        {
+            if (string.IsNullOrEmpty(s))
+            {
+                return string.Empty;
+            }
+            char[] a = s.ToCharArray();
+            a[0] = char.ToUpper(a[0]);
+            return new string(a);
+        }
     }
+
+
 
     internal class ApplicationArguments
     {
