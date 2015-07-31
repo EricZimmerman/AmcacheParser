@@ -60,7 +60,11 @@ namespace AmcacheParser
 
             p.Setup(arg => arg.Whitelist)
                 .As('w')
-                .WithDescription("Path to file containing SHA-1 hashes to exclude from the results");
+                .WithDescription("Path to file containing SHA-1 hashes to *exclude* from the results");
+
+            p.Setup(arg => arg.Blacklist)
+    .As('b')
+    .WithDescription("Path to file containing SHA-1 hashes to *include* from the results");
 
             p.Setup(arg => arg.SaveTo)
                 .As('s').Required()
@@ -119,7 +123,23 @@ namespace AmcacheParser
 
                 var whitelistHashes = new HashSet<string>();
 
-                if (p.Object.Whitelist.Length > 0)
+                var useBlacklist = false;
+
+                if (p.Object.Blacklist.Length > 0)
+                {
+                    if (File.Exists(p.Object.Blacklist))
+                    {
+                        foreach (var readLine in File.ReadLines(p.Object.Blacklist))
+                        {
+                            whitelistHashes.Add(readLine.ToLowerInvariant());
+                        }
+                        useBlacklist = true;
+                    }
+                    else
+                    {
+                        _logger.Warn($"'{p.Object.Blacklist}' does not exist");
+                    }
+                } else if (p.Object.Whitelist.Length > 0)
                 {
                     if (File.Exists(p.Object.Whitelist))
                     {
@@ -134,7 +154,7 @@ namespace AmcacheParser
                     }
                 }
 
-                var cleanList = am.UnassociatedFileEntries.Where(t => !whitelistHashes.Contains(t.SHA1)).ToList();
+                var cleanList = am.UnassociatedFileEntries.Where(t => whitelistHashes.Contains(t.SHA1) == useBlacklist).ToList();
                 var totalProgramFileEntries = 0;
 
                 if (Directory.Exists(p.Object.SaveTo) == false)
@@ -153,7 +173,7 @@ namespace AmcacheParser
 
                 foreach (var pe in am.ProgramsEntries)
                 {
-                    var cleanList2 = pe.FileEntries.Where(t => !whitelistHashes.Contains(t.SHA1)).ToList();
+                    var cleanList2 = pe.FileEntries.Where(t => whitelistHashes.Contains(t.SHA1) == useBlacklist).ToList();
                     totalProgramFileEntries += cleanList2.Count;
                 }
 
@@ -207,7 +227,7 @@ namespace AmcacheParser
 
                         foreach (var pe in am.ProgramsEntries)
                         {
-                            var cleanList2 = pe.FileEntries.Where(t => !whitelistHashes.Contains(t.SHA1)).ToList();
+                            var cleanList2 = pe.FileEntries.Where(t => whitelistHashes.Contains(t.SHA1) == useBlacklist).ToList();
 
                             csv.WriteRecords(cleanList2);
                         }
@@ -291,6 +311,7 @@ namespace AmcacheParser
         public string File { get; set; }
         //       public string Extension { get; set; } = string.Empty;
         public string Whitelist { get; set; } = string.Empty;
+        public string Blacklist { get; set; } = string.Empty;
         public string SaveTo { get; set; } = string.Empty;
         public bool IncludeLinked { get; set; } = false;
         public bool RecoverDeleted { get; set; } = false;
