@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 
 namespace Amcache.Classes
 {
@@ -29,6 +30,9 @@ namespace Amcache.Classes
             }
             
             FullPath = fullPath;
+
+            FileExtension = Path.GetExtension(fullPath);
+
             LastModified2 = lastMod2;
             FileID = fileID;
             FileIDLastWriteTimestamp = lastWrite;
@@ -53,6 +57,7 @@ namespace Amcache.Classes
         public string FileVersionNumber { get; }
         public string FileDescription { get; }
         public string FullPath { get; }
+        public string FileExtension { get; }
         public string PEHeaderHash { get; }
         public string ProgramID { get; }
         public string SHA1 { get; }

@@ -1,6 +1,7 @@
-﻿0.5.0
+﻿0.0.5.2
+
+NEW: Added FileExtension column to FileEntry to allow for easier sorting/filtering of results by file type
 
 
 TODO
 
-- Whitelist based on SHA-1

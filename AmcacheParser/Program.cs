@@ -354,6 +354,7 @@ namespace AmcacheParser
             Map(m => m.FileIDLastWriteTimestamp).TypeConverterOption("MM-dd-yyyy HH:mm:ss");
             Map(m => m.SHA1);
             Map(m => m.FullPath);
+            Map(m => m.FileExtension);
             Map(m => m.FileSize);
             Map(m => m.FileVersionString);
             Map(m => m.FileVersionNumber);
