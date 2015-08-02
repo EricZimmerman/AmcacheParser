@@ -2,6 +2,7 @@
 
 NEW: Added FileExtension column to FileEntry to allow for easier sorting/filtering of results by file type
 
+FIX: Add date formatting to created, modified, and compile timestamps
 
 TODO
 

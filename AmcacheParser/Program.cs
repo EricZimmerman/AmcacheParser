@@ -364,10 +364,10 @@ namespace AmcacheParser
             Map(m => m.PEHeaderHash);
             Map(m => m.PEHeaderChecksum);
 
-            Map(m => m.Created);
-            Map(m => m.LastModified);
-            Map(m => m.LastModified2);
-            Map(m => m.CompileTime);
+            Map(m => m.Created).TypeConverterOption("MM-dd-yyyy HH:mm:ss");
+            Map(m => m.LastModified).TypeConverterOption("MM-dd-yyyy HH:mm:ss");
+            Map(m => m.LastModified2).TypeConverterOption("MM-dd-yyyy HH:mm:ss");
+            Map(m => m.CompileTime).TypeConverterOption("MM-dd-yyyy HH:mm:ss");
             Map(m => m.LanguageID);
         }
     }
@@ -377,7 +377,7 @@ namespace AmcacheParser
         public PECacheOutputMap()
         {
             Map(m => m.ProgramID);
-            Map(m => m.LastWriteTimestamp);
+            Map(m => m.LastWriteTimestamp).TypeConverterOption("MM-dd-yyyy HH:mm:ss");
             Map(m => m.ProgramName_0);
             Map(m => m.ProgramVersion_1);
             Map(m => m.VendorName_2);
