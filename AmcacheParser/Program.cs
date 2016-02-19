@@ -125,6 +125,12 @@ namespace AmcacheParser
 
                 var am = new Amcache.Amcache(p.Object.File, p.Object.RecoverDeleted);
 
+                if (am.ProgramsEntries.Count == 0 && am.UnassociatedFileEntries.Count == 0)
+                {
+                    _logger.Warn("Hive did not contain program entries nor file entries. Exiting");
+                    return;
+                }
+
                 _sw.Stop();
 
                 var whitelistHashes = new HashSet<string>();

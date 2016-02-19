@@ -50,7 +50,15 @@ namespace Amcache
             var fileKey = reg.GetKey(@"Root\File");
             var programsKey = reg.GetKey(@"Root\Programs");
 
+
+            UnassociatedFileEntries = new List<FileEntry>();
             ProgramsEntries = new List<ProgramsEntry>();
+
+            if (fileKey == null || programsKey == null)
+            {
+                _logger.Error($"Hive does not contain a File and/or Programs key. Processing cannot continue");
+                return;
+            }
 
             //First, we get data for all the Program entries under Programs key
 
@@ -189,7 +197,7 @@ namespace Amcache
 
             //For each Programs entry, add the related Files entries from Files\Volume subkey, put the rest in unassociated
 
-            UnassociatedFileEntries = new List<FileEntry>();
+           
 
             foreach (var registryKey in fileKey.SubKeys)
             {
