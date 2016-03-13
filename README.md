@@ -1,5 +1,9 @@
 # AmcacheParser
 
+See here for more info:
+
+http://binaryforay.blogspot.com/2015/07/amcacheparser-reducing-noise-finding.html
+
     AmcacheParser version 0.0.5.1
 
     Author: Eric Zimmerman (saericzimmerman@gmail.com)
