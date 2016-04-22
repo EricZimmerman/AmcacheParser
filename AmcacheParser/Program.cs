@@ -17,8 +17,12 @@ namespace AmcacheParser
 {
     internal class Program
     {
+        private static readonly string _preciseTimeFormat = "yyyy-MM-dd HH:mm:ss.fffffff K";
+
+
         private static Logger _logger;
         private static Stopwatch _sw;
+        private static FluentCommandLineParser<ApplicationArguments> _fluentCommandLineParser;
 
         private static bool CheckForDotnet46()
         {
@@ -50,31 +54,43 @@ namespace AmcacheParser
                 return;
             }
 
-            var p = new FluentCommandLineParser<ApplicationArguments>
+            _fluentCommandLineParser = new FluentCommandLineParser<ApplicationArguments>
             {
                 IsCaseSensitive = false
             };
 
-            p.Setup(arg => arg.File)
+            _fluentCommandLineParser.Setup(arg => arg.File)
                 .As('f')
                 .WithDescription("Amcache.hve file to parse. Required").Required();
 
-            p.Setup(arg => arg.IncludeLinked)
+            _fluentCommandLineParser.Setup(arg => arg.IncludeLinked)
                 .As('i').SetDefault(false)
                 .WithDescription("Include file entries for Programs entries");
 
-            p.Setup(arg => arg.Whitelist)
+            _fluentCommandLineParser.Setup(arg => arg.Whitelist)
                 .As('w')
                 .WithDescription("Path to file containing SHA-1 hashes to *exclude* from the results. Blacklisting overrides whitelisting");
 
-            p.Setup(arg => arg.Blacklist)
+            _fluentCommandLineParser.Setup(arg => arg.Blacklist)
                 .As('b')
                 .WithDescription(
                     "Path to file containing SHA-1 hashes to *include* from the results. Blacklisting overrides whitelisting");
 
-            p.Setup(arg => arg.SaveTo)
+            _fluentCommandLineParser.Setup(arg => arg.SaveTo)
                 .As('s').Required()
                 .WithDescription("Directory where results will be saved. Required");
+
+
+            _fluentCommandLineParser.Setup(arg => arg.DateTimeFormat)
+                         .As("dt")
+                         .WithDescription(
+                             "The custom date/time format to use when displaying time stamps. Default is: yyyy-MM-dd HH:mm:ss K")
+                         .SetDefault("yyyy-MM-dd HH:mm:ss K");
+
+            _fluentCommandLineParser.Setup(arg => arg.PreciseTimestamps)
+         .As("mp")
+         .WithDescription(
+             "When true, display higher precision for time stamps. Default is false").SetDefault(false);
 
             var header =
                 $"AmcacheParser version {Assembly.GetExecutingAssembly().GetName().Version}" +
@@ -86,9 +102,9 @@ namespace AmcacheParser
                          @" AmcacheParser.exe -f ""C:\Temp\amcache\AmcacheWin10.hve"" -w ""c:\temp\whitelist.txt"" -s C:\temp" +
                          "\r\n\t ";
 
-            p.SetupHelp("?", "help").WithHeader(header).Callback(text => _logger.Info(text + "\r\n" + footer));
+            _fluentCommandLineParser.SetupHelp("?", "help").WithHeader(header).Callback(text => _logger.Info(text + "\r\n" + footer));
 
-            var result = p.Parse(args);
+            var result = _fluentCommandLineParser.Parse(args);
 
             if (result.HelpCalled)
             {
@@ -100,14 +116,14 @@ namespace AmcacheParser
                 _logger.Error("");
                 _logger.Error(result.ErrorText);
 
-                p.HelpOption.ShowHelp(p.Options);
+                _fluentCommandLineParser.HelpOption.ShowHelp(_fluentCommandLineParser.Options);
 
                 return;
             }
 
-            if (!File.Exists(p.Object.File))
+            if (!File.Exists(_fluentCommandLineParser.Object.File))
             {
-                _logger.Warn($"'{p.Object.File}' not found. Exiting");
+                _logger.Warn($"'{_fluentCommandLineParser.Object.File}' not found. Exiting");
                 return;
             }
 
@@ -116,6 +132,12 @@ namespace AmcacheParser
             _logger.Info($"Command line: {string.Join(" ", args)}");
             _logger.Info("");
 
+            if (_fluentCommandLineParser.Object.PreciseTimestamps)
+            {
+                _fluentCommandLineParser.Object.DateTimeFormat = _preciseTimeFormat;
+            }
+
+
             _sw = new Stopwatch();
             _sw.Start();
 
@@ -123,7 +145,7 @@ namespace AmcacheParser
             {
                 _sw.Start();
 
-                var am = new Amcache.Amcache(p.Object.File, p.Object.RecoverDeleted);
+                var am = new Amcache.Amcache(_fluentCommandLineParser.Object.File, _fluentCommandLineParser.Object.RecoverDeleted);
 
                 if (am.ProgramsEntries.Count == 0 && am.UnassociatedFileEntries.Count == 0)
                 {
@@ -137,11 +159,11 @@ namespace AmcacheParser
 
                 var useBlacklist = false;
 
-                if (p.Object.Blacklist.Length > 0)
+                if (_fluentCommandLineParser.Object.Blacklist.Length > 0)
                 {
-                    if (File.Exists(p.Object.Blacklist))
+                    if (File.Exists(_fluentCommandLineParser.Object.Blacklist))
                     {
-                        foreach (var readLine in File.ReadLines(p.Object.Blacklist))
+                        foreach (var readLine in File.ReadLines(_fluentCommandLineParser.Object.Blacklist))
                         {
                             whitelistHashes.Add(readLine.ToLowerInvariant());
                         }
@@ -149,21 +171,21 @@ namespace AmcacheParser
                     }
                     else
                     {
-                        _logger.Warn($"'{p.Object.Blacklist}' does not exist");
+                        _logger.Warn($"'{_fluentCommandLineParser.Object.Blacklist}' does not exist");
                     }
                 }
-                else if (p.Object.Whitelist.Length > 0)
+                else if (_fluentCommandLineParser.Object.Whitelist.Length > 0)
                 {
-                    if (File.Exists(p.Object.Whitelist))
+                    if (File.Exists(_fluentCommandLineParser.Object.Whitelist))
                     {
-                        foreach (var readLine in File.ReadLines(p.Object.Whitelist))
+                        foreach (var readLine in File.ReadLines(_fluentCommandLineParser.Object.Whitelist))
                         {
                             whitelistHashes.Add(readLine.ToLowerInvariant());
                         }
                     }
                     else
                     {
-                        _logger.Warn($"'{p.Object.Whitelist}' does not exist");
+                        _logger.Warn($"'{_fluentCommandLineParser.Object.Whitelist}' does not exist");
                     }
                 }
 
@@ -171,16 +193,16 @@ namespace AmcacheParser
                     am.UnassociatedFileEntries.Where(t => whitelistHashes.Contains(t.SHA1) == useBlacklist).ToList();
                 var totalProgramFileEntries = 0;
 
-                if (Directory.Exists(p.Object.SaveTo) == false)
+                if (Directory.Exists(_fluentCommandLineParser.Object.SaveTo) == false)
                 {
                     try
                     {
-                        Directory.CreateDirectory(p.Object.SaveTo);
+                        Directory.CreateDirectory(_fluentCommandLineParser.Object.SaveTo);
                     }
                     catch (Exception ex)
                     {
                         _logger.Error(
-                            $"There was an error creating directory '{p.Object.SaveTo}'. Error: {ex.Message} Exiting");
+                            $"There was an error creating directory '{_fluentCommandLineParser.Object.SaveTo}'. Error: {ex.Message} Exiting");
                         return;
                     }
                 }
@@ -193,34 +215,34 @@ namespace AmcacheParser
                 }
 
                 var ts = DateTime.Now.ToString("yyyyMMddHHmmss");
-                var hiveName = Path.GetFileNameWithoutExtension(p.Object.File);
+                var hiveName = Path.GetFileNameWithoutExtension(_fluentCommandLineParser.Object.File);
 
                 var outbase = $"{ts}_{hiveName}_Unassociated file entries.tsv";
-                var outFile = Path.Combine(p.Object.SaveTo, outbase);
+                var outFile = Path.Combine(_fluentCommandLineParser.Object.SaveTo, outbase);
 
                 using (var sw = new StreamWriter(outFile))
                 {
                     sw.AutoFlush = true;
 
                     var csv = new CsvWriter(sw);
-                    csv.Configuration.RegisterClassMap<FECacheOutputMap>();
+                    csv.Configuration.RegisterClassMap(new FECacheOutputMap(_fluentCommandLineParser.Object.DateTimeFormat));
                     csv.Configuration.Delimiter = "\t";
 
                     csv.WriteHeader<FileEntry>();
                     csv.WriteRecords(cleanList);
                 }
 
-                if (p.Object.IncludeLinked)
+                if (_fluentCommandLineParser.Object.IncludeLinked)
                 {
                     outbase = $"{ts}_{hiveName}_Program entries.tsv";
-                    outFile = Path.Combine(p.Object.SaveTo, outbase);
+                    outFile = Path.Combine(_fluentCommandLineParser.Object.SaveTo, outbase);
 
                     using (var sw = new StreamWriter(outFile))
                     {
                         sw.AutoFlush = true;
 
                         var csv = new CsvWriter(sw);
-                        csv.Configuration.RegisterClassMap<PECacheOutputMap>();
+                        csv.Configuration.RegisterClassMap(new PECacheOutputMap(_fluentCommandLineParser.Object.DateTimeFormat));
                         csv.Configuration.Delimiter = "\t";
 
                         csv.WriteHeader<ProgramsEntry>();
@@ -228,12 +250,12 @@ namespace AmcacheParser
                     }
 
                     outbase = $"{ts}_{hiveName}_Associated file entries.tsv";
-                    outFile = Path.Combine(p.Object.SaveTo, outbase);
+                    outFile = Path.Combine(_fluentCommandLineParser.Object.SaveTo, outbase);
 
                     using (var sw = new StreamWriter(outFile))
                     {
                         var csv = new CsvWriter(sw);
-                        csv.Configuration.RegisterClassMap<FECacheOutputMap>();
+                        csv.Configuration.RegisterClassMap(new FECacheOutputMap(_fluentCommandLineParser.Object.DateTimeFormat));
                         csv.Configuration.Delimiter = "\t";
 
                         csv.WriteHeader<FileEntry>();
@@ -254,7 +276,7 @@ namespace AmcacheParser
 
 
                 var linked = "";
-                if (p.Object.IncludeLinked)
+                if (_fluentCommandLineParser.Object.IncludeLinked)
                 {
                     linked =
                         $"and {totalProgramFileEntries:N0} program file entries (across {am.ProgramsEntries.Count:N0} program entries) ";
@@ -275,7 +297,7 @@ namespace AmcacheParser
                     _logger.Info("");
 
                     var list = "whitelist";
-                    if (p.Object.Blacklist.Length > 0)
+                    if (_fluentCommandLineParser.Object.Blacklist.Length > 0)
                     {
                         list = "blacklist";
                     }
@@ -288,7 +310,7 @@ namespace AmcacheParser
                 }
                 _logger.Info("");
 
-                _logger.Info($"Results saved to: {p.Object.SaveTo}");
+                _logger.Info($"Results saved to: {_fluentCommandLineParser.Object.SaveTo}");
 
                 _logger.Info("");
                 _logger.Info(
@@ -299,7 +321,7 @@ namespace AmcacheParser
                 _logger.Error($"There was an error: {ex.Message}");
                 _logger.Error($"Stacktrace: {ex.StackTrace}");
                 _logger.Info("");
-                _logger.Error($"Please send '{p.Object.File}' to saericzimmerman@gmail.com in order to fix the issue");
+                _logger.Error($"Please send '{_fluentCommandLineParser.Object.File}' to saericzimmerman@gmail.com in order to fix the issue");
             }
 
         }
@@ -346,18 +368,20 @@ namespace AmcacheParser
         public string SaveTo { get; set; } = string.Empty;
         public bool IncludeLinked { get; set; } = false;
         public bool RecoverDeleted { get; set; } = false;
+        public string DateTimeFormat { get; set; }
+        public bool PreciseTimestamps { get; set; }
     }
 
     public sealed class FECacheOutputMap : CsvClassMap<FileEntry>
     {
-        public FECacheOutputMap()
+        public FECacheOutputMap(string dateformat)
         {
             Map(m => m.ProgramName);
             Map(m => m.ProgramID);
             Map(m => m.VolumeID);
-            Map(m => m.VolumeIDLastWriteTimestamp).TypeConverterOption("MM-dd-yyyy HH:mm:ss");
+            Map(m => m.VolumeIDLastWriteTimestamp).TypeConverterOption(dateformat);
             Map(m => m.FileID);
-            Map(m => m.FileIDLastWriteTimestamp).TypeConverterOption("MM-dd-yyyy HH:mm:ss");
+            Map(m => m.FileIDLastWriteTimestamp).TypeConverterOption(dateformat);
             Map(m => m.SHA1);
             Map(m => m.FullPath);
             Map(m => m.FileExtension);
@@ -370,26 +394,26 @@ namespace AmcacheParser
             Map(m => m.PEHeaderHash);
             Map(m => m.PEHeaderChecksum);
 
-            Map(m => m.Created).TypeConverterOption("MM-dd-yyyy HH:mm:ss");
-            Map(m => m.LastModified).TypeConverterOption("MM-dd-yyyy HH:mm:ss");
-            Map(m => m.LastModified2).TypeConverterOption("MM-dd-yyyy HH:mm:ss");
-            Map(m => m.CompileTime).TypeConverterOption("MM-dd-yyyy HH:mm:ss");
+            Map(m => m.Created).TypeConverterOption(dateformat);
+            Map(m => m.LastModified).TypeConverterOption(dateformat);
+            Map(m => m.LastModified2).TypeConverterOption(dateformat);
+            Map(m => m.CompileTime).TypeConverterOption(dateformat);
             Map(m => m.LanguageID);
         }
     }
 
     public sealed class PECacheOutputMap : CsvClassMap<ProgramsEntry>
     {
-        public PECacheOutputMap()
+        public PECacheOutputMap(string dateformat)
         {
             Map(m => m.ProgramID);
-            Map(m => m.LastWriteTimestamp).TypeConverterOption("MM-dd-yyyy HH:mm:ss");
+            Map(m => m.LastWriteTimestamp).TypeConverterOption(dateformat);
             Map(m => m.ProgramName_0);
             Map(m => m.ProgramVersion_1);
             Map(m => m.VendorName_2);
 
-            Map(m => m.InstallDateEpoch_a).TypeConverterOption("MM-dd-yyyy HH:mm:ss");
-            Map(m => m.InstallDateEpoch_b).TypeConverterOption("MM-dd-yyyy HH:mm:ss");
+            Map(m => m.InstallDateEpoch_a).TypeConverterOption(dateformat);
+            Map(m => m.InstallDateEpoch_b).TypeConverterOption(dateformat);
 
             Map(m => m.LanguageCode_3);
             Map(m => m.InstallSource_6);
