@@ -385,6 +385,8 @@ namespace AmcacheParser
             Map(m => m.SHA1);
             Map(m => m.FullPath);
             Map(m => m.FileExtension);
+            Map(m => m.MFTEntryNumber);
+            Map(m => m.MFTSequenceNumber);
             Map(m => m.FileSize);
             Map(m => m.FileVersionString);
             Map(m => m.FileVersionNumber);
@@ -399,6 +401,7 @@ namespace AmcacheParser
             Map(m => m.LastModified2).TypeConverterOption(dateformat);
             Map(m => m.CompileTime).TypeConverterOption(dateformat);
             Map(m => m.LanguageID);
+
         }
     }
 

@@ -338,7 +338,7 @@ namespace Amcache
                             registryKey.LastWriteTime.Value, subKey.KeyName, subKey.LastWriteTime.Value,
                             unknown5, compName, langId, fileVerString, peHash, fileVerNum, fileDesc, unknown1, unknown2,
                             unknown3, unknown4, switchBack, fileSize, compTime, peHeaderSize,
-                            lm, created, peHeaderChecksum, unknown6);
+                            lm, created, peHeaderChecksum, unknown6, subKey.KeyName);
 
                         if (hasLinkedProgram)
                         {
