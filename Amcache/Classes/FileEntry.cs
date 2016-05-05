@@ -1,6 +1,5 @@
 ﻿using System;
 using System.IO;
-using System.Linq;
 
 namespace Amcache.Classes
 {
@@ -29,7 +28,7 @@ namespace Amcache.Classes
             {
                 SHA1 = sha1.Substring(4).ToLowerInvariant();
             }
-            
+
             FullPath = fullPath;
 
             FileExtension = Path.GetExtension(fullPath);
@@ -62,17 +61,10 @@ namespace Amcache.Classes
                 seq = "0";
             }
 
-            
+
             MFTSequenceNumber = Convert.ToInt32(seq, 16);
             var ent = tempKey.Substring(4);
             MFTEntryNumber = Convert.ToInt32(ent, 16);
-        }
-
-        public static string Reverse(string s)
-        {
-            char[] charArray = s.ToCharArray();
-            Array.Reverse(charArray);
-            return new string(charArray);
         }
 
         public int MFTEntryNumber { get; }
@@ -107,5 +99,12 @@ namespace Amcache.Classes
         public DateTimeOffset? LastModified { get; }
         public DateTimeOffset? LastModified2 { get; }
         public DateTimeOffset? Created { get; }
+
+        public static string Reverse(string s)
+        {
+            var charArray = s.ToCharArray();
+            Array.Reverse(charArray);
+            return new string(charArray);
+        }
     }
 }

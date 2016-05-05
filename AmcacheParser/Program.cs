@@ -38,7 +38,7 @@ namespace AmcacheParser
 
                 var releaseKey = Convert.ToInt32(ndpKey.GetValue("Release"));
 
-                return (releaseKey >= 393295);
+                return releaseKey >= 393295;
             }
         }
 
@@ -69,7 +69,8 @@ namespace AmcacheParser
 
             _fluentCommandLineParser.Setup(arg => arg.Whitelist)
                 .As('w')
-                .WithDescription("Path to file containing SHA-1 hashes to *exclude* from the results. Blacklisting overrides whitelisting");
+                .WithDescription(
+                    "Path to file containing SHA-1 hashes to *exclude* from the results. Blacklisting overrides whitelisting");
 
             _fluentCommandLineParser.Setup(arg => arg.Blacklist)
                 .As('b')
@@ -82,15 +83,15 @@ namespace AmcacheParser
 
 
             _fluentCommandLineParser.Setup(arg => arg.DateTimeFormat)
-                         .As("dt")
-                         .WithDescription(
-                             "The custom date/time format to use when displaying time stamps. Default is: yyyy-MM-dd HH:mm:ss K")
-                         .SetDefault("yyyy-MM-dd HH:mm:ss K");
+                .As("dt")
+                .WithDescription(
+                    "The custom date/time format to use when displaying time stamps. Default is: yyyy-MM-dd HH:mm:ss K")
+                .SetDefault("yyyy-MM-dd HH:mm:ss K");
 
             _fluentCommandLineParser.Setup(arg => arg.PreciseTimestamps)
-         .As("mp")
-         .WithDescription(
-             "When true, display higher precision for time stamps. Default is false").SetDefault(false);
+                .As("mp")
+                .WithDescription(
+                    "When true, display higher precision for time stamps. Default is false").SetDefault(false);
 
             var header =
                 $"AmcacheParser version {Assembly.GetExecutingAssembly().GetName().Version}" +
@@ -102,7 +103,9 @@ namespace AmcacheParser
                          @" AmcacheParser.exe -f ""C:\Temp\amcache\AmcacheWin10.hve"" -w ""c:\temp\whitelist.txt"" -s C:\temp" +
                          "\r\n\t ";
 
-            _fluentCommandLineParser.SetupHelp("?", "help").WithHeader(header).Callback(text => _logger.Info(text + "\r\n" + footer));
+            _fluentCommandLineParser.SetupHelp("?", "help")
+                .WithHeader(header)
+                .Callback(text => _logger.Info(text + "\r\n" + footer));
 
             var result = _fluentCommandLineParser.Parse(args);
 
@@ -145,7 +148,8 @@ namespace AmcacheParser
             {
                 _sw.Start();
 
-                var am = new Amcache.Amcache(_fluentCommandLineParser.Object.File, _fluentCommandLineParser.Object.RecoverDeleted);
+                var am = new Amcache.Amcache(_fluentCommandLineParser.Object.File,
+                    _fluentCommandLineParser.Object.RecoverDeleted);
 
                 if (am.ProgramsEntries.Count == 0 && am.UnassociatedFileEntries.Count == 0)
                 {
@@ -225,7 +229,8 @@ namespace AmcacheParser
                     sw.AutoFlush = true;
 
                     var csv = new CsvWriter(sw);
-                    csv.Configuration.RegisterClassMap(new FECacheOutputMap(_fluentCommandLineParser.Object.DateTimeFormat));
+                    csv.Configuration.RegisterClassMap(
+                        new FECacheOutputMap(_fluentCommandLineParser.Object.DateTimeFormat));
                     csv.Configuration.Delimiter = "\t";
 
                     csv.WriteHeader<FileEntry>();
@@ -242,7 +247,8 @@ namespace AmcacheParser
                         sw.AutoFlush = true;
 
                         var csv = new CsvWriter(sw);
-                        csv.Configuration.RegisterClassMap(new PECacheOutputMap(_fluentCommandLineParser.Object.DateTimeFormat));
+                        csv.Configuration.RegisterClassMap(
+                            new PECacheOutputMap(_fluentCommandLineParser.Object.DateTimeFormat));
                         csv.Configuration.Delimiter = "\t";
 
                         csv.WriteHeader<ProgramsEntry>();
@@ -255,7 +261,8 @@ namespace AmcacheParser
                     using (var sw = new StreamWriter(outFile))
                     {
                         var csv = new CsvWriter(sw);
-                        csv.Configuration.RegisterClassMap(new FECacheOutputMap(_fluentCommandLineParser.Object.DateTimeFormat));
+                        csv.Configuration.RegisterClassMap(
+                            new FECacheOutputMap(_fluentCommandLineParser.Object.DateTimeFormat));
                         csv.Configuration.Delimiter = "\t";
 
                         csv.WriteHeader<FileEntry>();
@@ -306,11 +313,12 @@ namespace AmcacheParser
 
                     _logger.Info("");
 
-                    _logger.Info($"Percentage of total shown based on {list}: {per:P3} ({(1 - per):P3} savings)");
+                    _logger.Info($"Percentage of total shown based on {list}: {per:P3} ({1 - per:P3} savings)");
                 }
                 _logger.Info("");
 
                 _logger.Info($"Results saved to: {_fluentCommandLineParser.Object.SaveTo}");
+
 
                 _logger.Info("");
                 _logger.Info(
@@ -321,9 +329,9 @@ namespace AmcacheParser
                 _logger.Error($"There was an error: {ex.Message}");
                 _logger.Error($"Stacktrace: {ex.StackTrace}");
                 _logger.Info("");
-                _logger.Error($"Please send '{_fluentCommandLineParser.Object.File}' to saericzimmerman@gmail.com in order to fix the issue");
+                _logger.Error(
+                    $"Please send '{_fluentCommandLineParser.Object.File}' to saericzimmerman@gmail.com in order to fix the issue");
             }
-
         }
 
         private static void SetupNLog()
@@ -345,18 +353,17 @@ namespace AmcacheParser
             LogManager.Configuration = config;
         }
 
-        static string UppercaseFirst(string s)
+        private static string UppercaseFirst(string s)
         {
             if (string.IsNullOrEmpty(s))
             {
                 return string.Empty;
             }
-            char[] a = s.ToCharArray();
+            var a = s.ToCharArray();
             a[0] = char.ToUpper(a[0]);
             return new string(a);
         }
     }
-
 
 
     internal class ApplicationArguments
@@ -401,7 +408,6 @@ namespace AmcacheParser
             Map(m => m.LastModified2).TypeConverterOption(dateformat);
             Map(m => m.CompileTime).TypeConverterOption(dateformat);
             Map(m => m.LanguageID);
-
         }
     }
 

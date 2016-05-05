@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
 using Amcache.Classes;
@@ -119,9 +118,7 @@ namespace Amcache
                                     var seca = long.Parse(value.ValueData);
                                     if (seca > 0)
                                     {
-
-                                        EpochA = DateTimeOffset.FromUnixTimeSeconds(seca);
-
+                                        EpochA = DateTimeOffset.FromUnixTimeSeconds(seca).ToUniversalTime();
                                     }
                                 }
                                 catch (Exception ex)
@@ -135,7 +132,7 @@ namespace Amcache
                                 if (seconds > 0)
                                 {
                                     EpochB =
-                                        DateTimeOffset.FromUnixTimeSeconds(seconds);
+                                        DateTimeOffset.FromUnixTimeSeconds(seconds).ToUniversalTime();
                                 }
 
                                 break;
@@ -176,7 +173,8 @@ namespace Amcache
                                 RawFiles = value.ValueData;
                                 break;
                             default:
-                                _logger.Warn($"Unknown value name in Program at path {registryKey.KeyPath}: {value.ValueName}");
+                                _logger.Warn(
+                                    $"Unknown value name in Program at path {registryKey.KeyPath}: {value.ValueName}");
                                 break;
                         }
                     }
@@ -191,13 +189,13 @@ namespace Amcache
                 catch (Exception ex)
                 {
                     _logger.Error($"Error parsing ProgramsEntry at {registryKey.KeyPath}. Error: {ex.Message}");
-                    _logger.Error($"Please send the following text to saericzimmerman@gmail.com. \r\n\r\nKey data: {registryKey}");
+                    _logger.Error(
+                        $"Please send the following text to saericzimmerman@gmail.com. \r\n\r\nKey data: {registryKey}");
                 }
             }
 
             //For each Programs entry, add the related Files entries from Files\Volume subkey, put the rest in unassociated
 
-           
 
             foreach (var registryKey in fileKey.SubKeys)
             {
@@ -215,7 +213,7 @@ namespace Amcache
                     var peHash = "";
                     var progID = "";
                     var sha = "";
-                    
+
                     long unknown1 = 0;
                     long unknown2 = 0;
                     var unknown3 = 0;
@@ -285,16 +283,19 @@ namespace Amcache
                                     unknown3 = int.Parse(keyValue.ValueData);
                                     break;
                                 case CompileTime:
-                                    compTime = DateTimeOffset.FromUnixTimeSeconds(long.Parse(keyValue.ValueData));
+                                    compTime =
+                                        DateTimeOffset.FromUnixTimeSeconds(long.Parse(keyValue.ValueData))
+                                            .ToUniversalTime();
                                     break;
                                 case Unknown4:
                                     unknown4 = int.Parse(keyValue.ValueData);
                                     break;
                                 case LastModified:
-                                    lm = DateTimeOffset.FromFileTime(long.Parse(keyValue.ValueData));
+                                    lm = DateTimeOffset.FromFileTime(long.Parse(keyValue.ValueData)).ToUniversalTime();
                                     break;
                                 case Created:
-                                    created = DateTimeOffset.FromFileTime(long.Parse(keyValue.ValueData));
+                                    created =
+                                        DateTimeOffset.FromFileTime(long.Parse(keyValue.ValueData)).ToUniversalTime();
                                     break;
                                 case FullPath:
                                     fullPath = keyValue.ValueData;
@@ -306,7 +307,7 @@ namespace Amcache
                                     unknown6 = int.Parse(keyValue.ValueData);
                                     break;
                                 case LastModified2:
-                                    lm2 = DateTimeOffset.FromFileTime(long.Parse(keyValue.ValueData));
+                                    lm2 = DateTimeOffset.FromFileTime(long.Parse(keyValue.ValueData)).ToUniversalTime();
                                     break;
                                 case ProgramID:
                                     progID = keyValue.ValueData;
@@ -322,7 +323,8 @@ namespace Amcache
                                     sha = keyValue.ValueData;
                                     break;
                                 default:
-                                    _logger.Warn($"Unknown value name when processing FileEntry at path '{subKey.KeyPath}': 0x{keyVal:X}");
+                                    _logger.Warn(
+                                        $"Unknown value name when processing FileEntry at path '{subKey.KeyPath}': 0x{keyVal:X}");
                                     break;
                             }
                         }
@@ -355,7 +357,8 @@ namespace Amcache
                     catch (Exception ex)
                     {
                         _logger.Error($"Error parsing FileEntry at {subKey.KeyPath}. Error: {ex.Message}");
-                        _logger.Error($"Please send the following text to saericzimmerman@gmail.com. \r\n\r\nKey data: {subKey}");
+                        _logger.Error(
+                            $"Please send the following text to saericzimmerman@gmail.com. \r\n\r\nKey data: {subKey}");
                     }
                 }
             }
