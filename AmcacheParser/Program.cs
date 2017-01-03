@@ -7,6 +7,7 @@ using System.Reflection;
 using Amcache.Classes;
 using CsvHelper;
 using CsvHelper.Configuration;
+using Exceptionless;
 using Fclp;
 using Microsoft.Win32;
 using NLog;
@@ -17,7 +18,7 @@ namespace AmcacheParser
 {
     internal class Program
     {
-        private static readonly string _preciseTimeFormat = "yyyy-MM-dd HH:mm:ss.fffffff K";
+        private static readonly string _preciseTimeFormat = "yyyy-MM-dd HH:mm:ss.fffffff";
 
 
         private static Logger _logger;
@@ -44,6 +45,7 @@ namespace AmcacheParser
 
         private static void Main(string[] args)
         {
+            ExceptionlessClient.Default.Startup("prIG996gFK1y6DaZEoXh3InSg8LwrHcQV4Dze2r8");
             SetupNLog();
 
             _logger = LogManager.GetCurrentClassLogger();
@@ -53,6 +55,7 @@ namespace AmcacheParser
                 _logger.Warn(".net 4.6 not detected. Please install .net 4.6 and try again.");
                 return;
             }
+
 
             _fluentCommandLineParser = new FluentCommandLineParser<ApplicationArguments>
             {
@@ -70,7 +73,7 @@ namespace AmcacheParser
             _fluentCommandLineParser.Setup(arg => arg.Whitelist)
                 .As('w')
                 .WithDescription(
-                    "Path to file containing SHA-1 hashes to *exclude* from the results. Blacklisting overrides whitelisting");
+                    "Path to file containing SHA-1 hashes to *exclude* from the results. Blacklisting overrides whitelisting\r\n");
 
             _fluentCommandLineParser.Setup(arg => arg.Blacklist)
                 .As('b')
@@ -78,30 +81,32 @@ namespace AmcacheParser
                     "Path to file containing SHA-1 hashes to *include* from the results. Blacklisting overrides whitelisting");
 
             _fluentCommandLineParser.Setup(arg => arg.SaveTo)
-                .As('s').Required()
+                .As("csv").Required()
                 .WithDescription("Directory where results will be saved. Required");
 
 
             _fluentCommandLineParser.Setup(arg => arg.DateTimeFormat)
                 .As("dt")
                 .WithDescription(
-                    "The custom date/time format to use when displaying time stamps. Default is: yyyy-MM-dd HH:mm:ss K")
-                .SetDefault("yyyy-MM-dd HH:mm:ss K");
+                    "The custom date/time format to use when displaying timestamps. See https://goo.gl/CNVq0k for options. Default is: yyyy-MM-dd HH:mm:ss")
+                .SetDefault("yyyy-MM-dd HH:mm:ss");
 
             _fluentCommandLineParser.Setup(arg => arg.PreciseTimestamps)
                 .As("mp")
                 .WithDescription(
-                    "When true, display higher precision for time stamps. Default is false").SetDefault(false);
+                    "When true, display higher precision for timestamps. Default is false").SetDefault(false);
 
             var header =
                 $"AmcacheParser version {Assembly.GetExecutingAssembly().GetName().Version}" +
                 "\r\n\r\nAuthor: Eric Zimmerman (saericzimmerman@gmail.com)" +
                 "\r\nhttps://github.com/EricZimmerman/AmcacheParser";
 
-            var footer = @"Examples: AmcacheParser.exe -f ""C:\Temp\amcache\AmcacheWin10.hve"" -s C:\temp" + "\r\n\t " +
-                         @" AmcacheParser.exe -f ""C:\Temp\amcache\AmcacheWin10.hve"" -i on -s C:\temp" + "\r\n\t " +
-                         @" AmcacheParser.exe -f ""C:\Temp\amcache\AmcacheWin10.hve"" -w ""c:\temp\whitelist.txt"" -s C:\temp" +
-                         "\r\n\t ";
+            var footer = @"Examples: AmcacheParser.exe -f ""C:\Temp\amcache\AmcacheWin10.hve"" --csv C:\temp" + "\r\n\t " +
+                         @" AmcacheParser.exe -f ""C:\Temp\amcache\AmcacheWin10.hve"" -i on --csv C:\temp" + "\r\n\t " +
+                         @" AmcacheParser.exe -f ""C:\Temp\amcache\AmcacheWin10.hve"" -w ""c:\temp\whitelist.txt"" --csv C:\temp" +
+                         "\r\n\t" +
+                         "\r\n\t" +
+                         "  Short options (single letter) are prefixed with a single dash. Long commands are prefixed with two dashes\r\n";
 
             _fluentCommandLineParser.SetupHelp("?", "help")
                 .WithHeader(header)
@@ -116,10 +121,9 @@ namespace AmcacheParser
 
             if (result.HasErrors)
             {
-                _logger.Error("");
-                _logger.Error(result.ErrorText);
-
                 _fluentCommandLineParser.HelpOption.ShowHelp(_fluentCommandLineParser.Options);
+
+                _logger.Warn("Both -f and --csv are required. Exiting");
 
                 return;
             }
