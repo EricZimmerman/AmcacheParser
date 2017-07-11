@@ -8,7 +8,7 @@ namespace Amcache.Classes
         public FileEntry(string productName, string programID, string sha1, string fullPath, DateTimeOffset? lastMod2,
             string volumeID, DateTimeOffset volumeLastWrite, string fileID, DateTimeOffset lastWrite, int unknown5,
             string compName, int? langId,
-            string fileVerString, string peHash, string fileVerNum, string fileDesc, long unknown1, long unknown2,
+            string fileVerString, string peHash, string fileVerNum, string fileDesc, long unknown1, ulong unknown2,
             int unknown3, int unknown4, string switchback, int? fileSize, DateTimeOffset? compTime, int? peHeaderSize,
             DateTimeOffset? lm, DateTimeOffset? created, int? pecheck, int unknown6, string keyName)
         {
@@ -84,7 +84,7 @@ namespace Amcache.Classes
         public string SwitchBackContext { get; }
         public string ProgramName { get; set; }
         public long Unknown1 { get; }
-        public long Unknown2 { get; }
+        public ulong Unknown2 { get; }
         public int Unknown3 { get; }
         public int Unknown4 { get; }
         public int Unknown5 { get; }

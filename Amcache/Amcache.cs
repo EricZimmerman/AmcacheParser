@@ -215,7 +215,7 @@ namespace Amcache
                     var sha = "";
 
                     long unknown1 = 0;
-                    long unknown2 = 0;
+                    ulong unknown2 = 0;
                     var unknown3 = 0;
                     var unknown4 = 0;
                     var unknown5 = 0;
@@ -274,7 +274,7 @@ namespace Amcache
                                     unknown1 = long.Parse(keyValue.ValueData);
                                     break;
                                 case Unknown2:
-                                    unknown2 = long.Parse(keyValue.ValueData);
+                                    unknown2 = ulong.Parse(keyValue.ValueData);
                                     break;
                                 case FileDescription:
                                     fileDesc = keyValue.ValueData;
