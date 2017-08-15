@@ -403,14 +403,21 @@ namespace AmcacheParser
             Map(m => m.FileVersionNumber);
             Map(m => m.FileDescription);
 
-            Map(m => m.PEHeaderSize);
+            Map(m => m.SizeOfImage);
             Map(m => m.PEHeaderHash);
             Map(m => m.PEHeaderChecksum);
 
+            Map(m => m.BinProductVersion);
+            Map(m => m.BinFileVersion);
+            Map(m => m.LinkerVersion);
+            Map(m => m.BinaryType);
+            Map(m => m.IsLocal);
+            Map(m => m.GuessProgramID);
+
             Map(m => m.Created).TypeConverterOption(dateformat);
             Map(m => m.LastModified).TypeConverterOption(dateformat);
-            Map(m => m.LastModified2).TypeConverterOption(dateformat);
-            Map(m => m.CompileTime).TypeConverterOption(dateformat);
+            Map(m => m.LastModifiedStore).TypeConverterOption(dateformat);
+            Map(m => m.LinkDate).TypeConverterOption(dateformat);
             Map(m => m.LanguageID);
         }
     }
