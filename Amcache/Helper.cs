@@ -7,17 +7,18 @@ namespace Amcache
     {
         public static bool IsNewFormat(string file)
         {
-            LogManager.DisableLogging();
+            
             var reg = new RegistryHive(file)
             {
                 RecoverDeleted = false
             };
+            LogManager.DisableLogging();
             reg.ParseHive();
 
 
             var fileKey = reg.GetKey(@"Root\InventoryApplication");
 
-            LogManager.EnableLogging();
+          LogManager.EnableLogging();
 
             return fileKey != null;
         }

@@ -234,6 +234,8 @@ namespace AmcacheParser
                     var outbase1 = $"{ts1}_{hiveName1}_Unassociated file entries.tsv";
                     var outFile1 = Path.Combine(_fluentCommandLineParser.Object.SaveTo, outbase1);
 
+                  
+
                     using (var sw = new StreamWriter(outFile1))
                     {
                         sw.AutoFlush = true;
