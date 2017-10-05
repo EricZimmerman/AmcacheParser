@@ -3,9 +3,9 @@ using System.IO;
 
 namespace Amcache.Classes
 {
-    public class FileEntry
+    public class FileEntryOld
     {
-        public FileEntry(string productName, string programID, string sha1, string fullPath, DateTimeOffset? lastMod2,
+        public FileEntryOld(string productName, string programID, string sha1, string fullPath, DateTimeOffset? lastMod2,
             string volumeID, DateTimeOffset volumeLastWrite, string fileID, DateTimeOffset lastWrite, int unknown5,
             string compName, int? langId,
             string fileVerString, string peHash, string fileVerNum, string fileDesc, long unknown1, ulong unknown2,
@@ -60,7 +60,6 @@ namespace Amcache.Classes
             {
                 seq = "0";
             }
-
 
             MFTSequenceNumber = Convert.ToInt32(seq, 16);
             var ent = tempKey.Substring(4);

@@ -5,11 +5,11 @@ using System.Runtime.InteropServices;
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
 
-[assembly: AssemblyTitle("Amcache")]
-[assembly: AssemblyDescription("Parses Amcache hives")]
+[assembly: AssemblyTitle("AmcacheOld")]
+[assembly: AssemblyDescription("Parses AmcacheOld hives")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("Eric Zimmerman")]
-[assembly: AssemblyProduct("Amcache")]
+[assembly: AssemblyProduct("AmcacheOld")]
 [assembly: AssemblyCopyright("Copyright ©  2015")]
 [assembly: AssemblyTrademark("saericzimmerman@gmail.com")]
 [assembly: AssemblyCulture("")]

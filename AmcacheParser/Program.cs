@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using Amcache;
 using Amcache.Classes;
 using CsvHelper;
 using CsvHelper.Configuration;
@@ -64,7 +65,7 @@ namespace AmcacheParser
 
             _fluentCommandLineParser.Setup(arg => arg.File)
                 .As('f')
-                .WithDescription("Amcache.hve file to parse. Required").Required();
+                .WithDescription("AmcacheOld.hve file to parse. Required").Required();
 
             _fluentCommandLineParser.Setup(arg => arg.IncludeLinked)
                 .As('i').SetDefault(false)
@@ -152,7 +153,20 @@ namespace AmcacheParser
             {
                 _sw.Start();
 
-                var am = new Amcache.Amcache(_fluentCommandLineParser.Object.File,
+                //determine format here
+                //fork accordingly
+
+                if (Amcache.Helper.IsNewFormat(_fluentCommandLineParser.Object.File))
+                {
+
+                    var amNew = new Amcache.AmcacheNew(_fluentCommandLineParser.Object.File,
+                        _fluentCommandLineParser.Object.RecoverDeleted);
+
+
+                    return;
+                }
+
+                var am = new Amcache.AmcacheOld(_fluentCommandLineParser.Object.File,
                     _fluentCommandLineParser.Object.RecoverDeleted);
 
                 if (am.ProgramsEntries.Count == 0 && am.UnassociatedFileEntries.Count == 0)
@@ -215,6 +229,13 @@ namespace AmcacheParser
                     }
                 }
 
+
+               
+
+
+
+
+
                 foreach (var pe in am.ProgramsEntries)
                 {
                     var cleanList2 =
@@ -237,7 +258,7 @@ namespace AmcacheParser
                         new FECacheOutputMap(_fluentCommandLineParser.Object.DateTimeFormat));
                     csv.Configuration.Delimiter = "\t";
 
-                    csv.WriteHeader<FileEntry>();
+                    csv.WriteHeader<FileEntryOld>();
                     csv.WriteRecords(cleanList);
                 }
 
@@ -255,7 +276,7 @@ namespace AmcacheParser
                             new PECacheOutputMap(_fluentCommandLineParser.Object.DateTimeFormat));
                         csv.Configuration.Delimiter = "\t";
 
-                        csv.WriteHeader<ProgramsEntry>();
+                        csv.WriteHeader<ProgramsEntryOld>();
                         csv.WriteRecords(am.ProgramsEntries);
                     }
 
@@ -269,7 +290,7 @@ namespace AmcacheParser
                             new FECacheOutputMap(_fluentCommandLineParser.Object.DateTimeFormat));
                         csv.Configuration.Delimiter = "\t";
 
-                        csv.WriteHeader<FileEntry>();
+                        csv.WriteHeader<FileEntryOld>();
 
                         sw.AutoFlush = true;
 
@@ -383,7 +404,7 @@ namespace AmcacheParser
         public bool PreciseTimestamps { get; set; }
     }
 
-    public sealed class FECacheOutputMap : CsvClassMap<FileEntry>
+    public sealed class FECacheOutputMap : CsvClassMap<FileEntryOld>
     {
         public FECacheOutputMap(string dateformat)
         {
@@ -415,7 +436,7 @@ namespace AmcacheParser
         }
     }
 
-    public sealed class PECacheOutputMap : CsvClassMap<ProgramsEntry>
+    public sealed class PECacheOutputMap : CsvClassMap<ProgramsEntryOld>
     {
         public PECacheOutputMap(string dateformat)
         {

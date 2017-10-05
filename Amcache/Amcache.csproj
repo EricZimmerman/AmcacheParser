@@ -35,7 +35,7 @@
       <HintPath>..\packages\NFluent.2.0.0\lib\net45\NFluent.dll</HintPath>
     </Reference>
     <Reference Include="NLog, Version=4.0.0.0, Culture=neutral, PublicKeyToken=5120e14c03d0593c, processorArchitecture=MSIL">
-      <HintPath>..\packages\NLog.4.4.11\lib\net45\NLog.dll</HintPath>
+      <HintPath>..\packages\NLog.4.4.12\lib\net45\NLog.dll</HintPath>
     </Reference>
     <Reference Include="Registry, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
@@ -51,9 +51,13 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Amcache.cs" />
-    <Compile Include="Classes\FileEntry.cs" />
-    <Compile Include="Classes\ProgramsEntry.cs" />
+    <Compile Include="AmcacheNew.cs" />
+    <Compile Include="AmcacheOld.cs" />
+    <Compile Include="Classes\FileEntryNew.cs" />
+    <Compile Include="Classes\FileEntryOld.cs" />
+    <Compile Include="Classes\ProgramsEntryNew.cs" />
+    <Compile Include="Classes\ProgramsEntryOld.cs" />
+    <Compile Include="Helper.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
