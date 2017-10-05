@@ -152,7 +152,6 @@ namespace AmcacheParser
 
             try
             {
-                _sw.Start();
 
                 //determine format here
                 //fork accordingly
@@ -467,7 +466,7 @@ namespace AmcacheParser
 
                     _logger.Info("");
                     _logger.Info(
-                        $"Total search time: {_sw.Elapsed.TotalSeconds:N3} seconds.");
+                        $"Total parsing time: {_sw.Elapsed.TotalSeconds:N3} seconds.\r\n");
 
 
                     return;
@@ -651,7 +650,7 @@ namespace AmcacheParser
 
                 _logger.Info("");
                 _logger.Info(
-                    $"Total search time: {_sw.Elapsed.TotalSeconds:N3} seconds.");
+                    $"Total parsing time: {_sw.Elapsed.TotalSeconds:N3} seconds.\r\n");
             }
             catch (Exception ex)
             {
