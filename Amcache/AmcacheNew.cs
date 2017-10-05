@@ -19,6 +19,7 @@ namespace Amcache
         public List<DeviceContainer> DeviceContainers { get; }
         public List<DevicePnp> DevicePnps { get; }
         public List<DriverBinary> DriveBinaries { get; }
+        public List<DriverPackage> DriverPackages { get; }
 
         public Dictionary<string,string> ShortCuts { get; }
 
@@ -43,6 +44,7 @@ namespace Amcache
             DeviceContainers = new List<DeviceContainer>();
             DevicePnps = new List<DevicePnp>();
             DriveBinaries = new List<DriverBinary>();
+            DriverPackages = new List<DriverPackage>();
             ShortCuts = new Dictionary<string, string>();
 
             if (fileKey == null || programsKey == null)
@@ -96,7 +98,7 @@ namespace Amcache
                                 if (registryKeyValue.ValueData.Length > 0)
                                 {
                                     var d = new DateTimeOffset(DateTime.Parse(registryKeyValue.ValueData).Ticks,TimeSpan.Zero);
-                                    installDate = new DateTimeOffset?(d);
+                                    installDate = d;
                                 }
                                 break;
                             case "Language":
@@ -594,7 +596,7 @@ namespace Amcache
                                     if (keyValue.ValueData.Length > 0)
                                     {
                                         var d = new DateTimeOffset(DateTime.Parse(keyValue.ValueData).Ticks, TimeSpan.Zero);
-                                        driverLastWriteTime = new DateTimeOffset?(d);
+                                        driverLastWriteTime = d;
                                     }
                                     
                                     break;
@@ -655,6 +657,92 @@ namespace Amcache
                         _logger.Error($"Error parsing DriverBinary at {binaryKey.KeyPath}. Error: {ex.Message}");
                         _logger.Error(
                             $"Please send the following text to saericzimmerman@gmail.com. \r\n\r\nKey data: {binaryKey}");
+                    }
+
+                }
+            }
+
+
+            var packaheKey = reg.GetKey(@"Root\InventoryDriverPackage");
+
+            if (packaheKey != null)
+            {
+                foreach (var packKey in packaheKey.SubKeys)
+                {
+                    var Class = string.Empty;
+                    var ClassGuid = string.Empty;
+                    DateTimeOffset? Date = null;
+                    var Directory = string.Empty;
+                    var DriverInBox = false;
+                    var Hwids = string.Empty;
+                    var Inf = string.Empty;
+                    var Provider = string.Empty;
+                    var SubmissionId = string.Empty;
+                    var SYSFILE = string.Empty;
+                    var Version = string.Empty;
+
+
+                    try
+                    {
+                        foreach (var keyValue in packKey.Values)
+                        {
+                            switch (keyValue.ValueName)
+                            {
+                                case "Class":
+                                    Class = keyValue.ValueData;
+                                    break;
+                                case "ClassGuid":
+                                    ClassGuid = keyValue.ValueData;
+                                    break;
+                                case "Date":
+                                    if (keyValue.ValueData.Length > 0)
+                                    {
+                                        var d = new DateTimeOffset(DateTime.Parse(keyValue.ValueData).Ticks, TimeSpan.Zero);
+                                        Date = d;
+                                    }
+
+                                    break;
+                                case "Directory":
+                                    Directory = keyValue.ValueData;
+                                    break;
+                                case "DriverInBox":
+                                    DriverInBox = keyValue.ValueData == "1";
+                                    break;
+                                case "Hwids":
+                                    Hwids = keyValue.ValueData;
+                                    break;
+                                case "Inf":
+                                    Inf = keyValue.ValueData;
+                                    break;
+                                case "Provider":
+                                    Provider = keyValue.ValueData;
+                                    break;
+                                case "SubmissionId":
+                                    SubmissionId = keyValue.ValueData;
+                                    break;
+                                case "SYSFILE":
+                                    SYSFILE = keyValue.ValueData;
+                                    break;
+                                case "Version":
+                                    Version = keyValue.ValueData;
+                                    break;
+
+                                default:
+                                    _logger.Warn(
+                                        $"Unknown value name when processing DriverPackage at path '{packKey.KeyPath}': {keyValue.ValueName}");
+                                    break;
+                            }
+                        }
+
+                        var dp = new DriverPackage(packKey.KeyName, packaheKey.LastWriteTime.Value,Class,ClassGuid,Date,Directory,DriverInBox,Hwids,Inf,Provider,SubmissionId,SYSFILE,Version);
+
+                        DriverPackages.Add(dp);
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.Error($"Error parsing DriverPackage at {packaheKey.KeyPath}. Error: {ex.Message}");
+                        _logger.Error(
+                            $"Please send the following text to saericzimmerman@gmail.com. \r\n\r\nKey data: {packaheKey}");
                     }
 
                 }

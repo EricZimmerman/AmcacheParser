@@ -9,7 +9,7 @@ namespace Amcache.Classes
 {
 public    class DriverPackage
     {
-        public DriverPackage(string keyname, DateTimeOffset keyLastWriteTimestamp,string clss,string classGuid,string date,string directory,bool driverInBox,string hwids,string inf,string provider,string submissionId,string sysfile,string version)
+        public DriverPackage(string keyname, DateTimeOffset keyLastWriteTimestamp,string clss,string classGuid, DateTimeOffset? date,string directory,bool driverInBox,string hwids,string inf,string provider,string submissionId,string sysfile,string version)
         {
             Keyname = keyname;
             KeyLastWriteTimestamp = keyLastWriteTimestamp;
@@ -29,7 +29,7 @@ public    class DriverPackage
         public DateTimeOffset KeyLastWriteTimestamp { get; }
         public string Class { get; }
         public string ClassGuid { get; }
-        public string Date { get; }
+        public DateTimeOffset? Date { get; }
         public string Directory { get; }
         public bool DriverInBox { get; }
         public string Hwids { get; }
