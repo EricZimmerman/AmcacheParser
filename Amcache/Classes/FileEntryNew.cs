@@ -31,7 +31,7 @@ namespace Amcache.Classes
             Language = lang;
             LinkDate = linkDate;
             LongPathHash = pathHash;
-            LowerCaseLongPath = longPath;
+            FullPath = longPath;
             Name = name;
             ProductName = productName;
             ProductVersion = prodVersion;
@@ -57,7 +57,7 @@ namespace Amcache.Classes
         public int Language { get; }
         public DateTimeOffset? LinkDate { get; }
         public string LongPathHash { get; }
-        public string LowerCaseLongPath { get; }
+        public string FullPath { get; }
         public string Name { get; }
         public string ApplicationName { get; set; }
         public string ProductName { get; }

@@ -21,7 +21,7 @@ namespace Amcache
         public List<DriverBinary> DriveBinaries { get; }
         public List<DriverPackage> DriverPackages { get; }
 
-        public Dictionary<string,string> ShortCuts { get; }
+        public List<Shortcut> ShortCuts { get; }
 
         public int TotalFileEntries { get; }
 
@@ -45,7 +45,7 @@ namespace Amcache
             DevicePnps = new List<DevicePnp>();
             DriveBinaries = new List<DriverBinary>();
             DriverPackages = new List<DriverPackage>();
-            ShortCuts = new Dictionary<string, string>();
+            ShortCuts = new List<Shortcut>();
 
             if (fileKey == null || programsKey == null)
             {
@@ -305,7 +305,7 @@ namespace Amcache
             {
                 foreach (var shortCutkeySubKey in shortCutkey.SubKeys)
                 {
-                    ShortCuts.Add(shortCutkeySubKey.KeyName,shortCutkeySubKey.Values.First().ValueData);
+                    ShortCuts.Add(new Shortcut(shortCutkeySubKey.KeyName, shortCutkeySubKey.Values.First().ValueData,shortCutkeySubKey.LastWriteTime.Value));
                 }
             }
 

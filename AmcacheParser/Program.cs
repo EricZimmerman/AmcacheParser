@@ -156,11 +156,322 @@ namespace AmcacheParser
                 //determine format here
                 //fork accordingly
 
-                if (Amcache.Helper.IsNewFormat(_fluentCommandLineParser.Object.File))
+                if (Helper.IsNewFormat(_fluentCommandLineParser.Object.File))
                 {
+                   
 
                     var amNew = new Amcache.AmcacheNew(_fluentCommandLineParser.Object.File,
                         _fluentCommandLineParser.Object.RecoverDeleted);
+
+                    if (amNew.ProgramsEntries.Count == 0 && amNew.UnassociatedFileEntries.Count == 0)
+                    {
+                        _logger.Warn("Hive did not contain program entries nor file entries.");
+                    }
+
+                    _sw.Stop();
+
+                    var whitelistHashes1 = new HashSet<string>();
+
+                    var useBlacklist2 = false;
+
+                    if (_fluentCommandLineParser.Object.Blacklist.Length > 0)
+                    {
+                        if (File.Exists(_fluentCommandLineParser.Object.Blacklist))
+                        {
+                            foreach (var readLine in File.ReadLines(_fluentCommandLineParser.Object.Blacklist))
+                            {
+                                whitelistHashes1.Add(readLine.ToLowerInvariant());
+                            }
+                            useBlacklist2 = true;
+                        }
+                        else
+                        {
+                            _logger.Warn($"'{_fluentCommandLineParser.Object.Blacklist}' does not exist");
+                        }
+                    }
+                    else if (_fluentCommandLineParser.Object.Whitelist.Length > 0)
+                    {
+                        if (File.Exists(_fluentCommandLineParser.Object.Whitelist))
+                        {
+                            foreach (var readLine in File.ReadLines(_fluentCommandLineParser.Object.Whitelist))
+                            {
+                                whitelistHashes1.Add(readLine.ToLowerInvariant());
+                            }
+                        }
+                        else
+                        {
+                            _logger.Warn($"'{_fluentCommandLineParser.Object.Whitelist}' does not exist");
+                        }
+                    }
+
+                    var cleanList2 =
+                        amNew.UnassociatedFileEntries.Where(t => whitelistHashes1.Contains(t.SHA1) == useBlacklist2).ToList();
+                    var totalProgramFileEntries2 = 0;
+
+                    if (Directory.Exists(_fluentCommandLineParser.Object.SaveTo) == false)
+                    {
+                        try
+                        {
+                            Directory.CreateDirectory(_fluentCommandLineParser.Object.SaveTo);
+                        }
+                        catch (Exception ex)
+                        {
+                            _logger.Error(
+                                $"There was an error creating directory '{_fluentCommandLineParser.Object.SaveTo}'. Error: {ex.Message} Exiting");
+                            return;
+                        }
+                    }
+
+                    foreach (var pe in amNew.ProgramsEntries)
+                    {
+                        var cleanList22 =
+                            pe.FileEntries.Where(t => whitelistHashes1.Contains(t.SHA1) == useBlacklist2).ToList();
+                        totalProgramFileEntries2 += cleanList22.Count;
+                    }
+
+                    var ts1 = DateTime.Now.ToString("yyyyMMddHHmmss");
+                    var hiveName1 = Path.GetFileNameWithoutExtension(_fluentCommandLineParser.Object.File);
+
+                    var outbase1 = $"{ts1}_{hiveName1}_Unassociated file entries.tsv";
+                    var outFile1 = Path.Combine(_fluentCommandLineParser.Object.SaveTo, outbase1);
+
+                    using (var sw = new StreamWriter(outFile1))
+                    {
+                        sw.AutoFlush = true;
+
+                        var csv = new CsvWriter(sw);
+                        csv.Configuration.RegisterClassMap(
+                            new FECacheOutputMapNew(_fluentCommandLineParser.Object.DateTimeFormat));
+                        csv.Configuration.Delimiter = "\t";
+
+                        csv.WriteHeader<FileEntryNew>();
+                        csv.WriteRecords(cleanList2);
+                    }
+
+
+                    if (_fluentCommandLineParser.Object.IncludeLinked)
+                    {
+                        outbase1 = $"{ts1}_{hiveName1}_Program entries.tsv";
+                        outFile1 = Path.Combine(_fluentCommandLineParser.Object.SaveTo, outbase1);
+
+                        using (var sw = new StreamWriter(outFile1))
+                        {
+                            sw.AutoFlush = true;
+
+                            var csv = new CsvWriter(sw);
+                            csv.Configuration.RegisterClassMap(
+                                new PECacheOutputMapNew(_fluentCommandLineParser.Object.DateTimeFormat));
+                            csv.Configuration.Delimiter = "\t";
+
+                            csv.WriteHeader<ProgramsEntryNew>();
+                            csv.WriteRecords(amNew.ProgramsEntries);
+                        }
+
+                        outbase1 = $"{ts1}_{hiveName1}_Associated file entries.tsv";
+                        outFile1 = Path.Combine(_fluentCommandLineParser.Object.SaveTo, outbase1);
+
+                        using (var sw = new StreamWriter(outFile1))
+                        {
+                            var csv = new CsvWriter(sw);
+                            csv.Configuration.RegisterClassMap(
+                                new FECacheOutputMapNew(_fluentCommandLineParser.Object.DateTimeFormat));
+                            csv.Configuration.Delimiter = "\t";
+
+                            csv.WriteHeader<FileEntryNew>();
+
+                            sw.AutoFlush = true;
+
+                            foreach (var pe in amNew.ProgramsEntries)
+                            {
+                                var cleanList22 =
+                                    pe.FileEntries.Where(t => whitelistHashes1.Contains(t.SHA1) == useBlacklist2).ToList();
+
+                                csv.WriteRecords(cleanList22);
+                            }
+                        }
+                    }
+
+
+                    //DUMP NEW STUFF HERE
+
+              
+
+                    outbase1 = $"{ts1}_{hiveName1}_ShortCuts.tsv";
+                    outFile1 = Path.Combine(_fluentCommandLineParser.Object.SaveTo, outbase1);
+
+                    using (var sw = new StreamWriter(outFile1))
+                    {
+                        var csv = new CsvWriter(sw);
+                        csv.Configuration.RegisterClassMap(
+                            new ShortCuts(_fluentCommandLineParser.Object.DateTimeFormat));
+                        csv.Configuration.Delimiter = "\t";
+
+                        csv.WriteHeader<Shortcut>();
+
+                        sw.AutoFlush = true;
+
+                        foreach (var sc in amNew.ShortCuts)
+                        {
+                            csv.WriteRecord(sc);
+                        }
+                    }
+
+                    outbase1 = $"{ts1}_{hiveName1}_DriveBinaries.tsv";
+                    outFile1 = Path.Combine(_fluentCommandLineParser.Object.SaveTo, outbase1);
+
+                    using (var sw = new StreamWriter(outFile1))
+                    {
+                        var csv = new CsvWriter(sw);
+                        csv.Configuration.RegisterClassMap(
+                            new DriverBinaries(_fluentCommandLineParser.Object.DateTimeFormat));
+                        csv.Configuration.Delimiter = "\t";
+
+                        csv.WriteHeader<DriverBinary>();
+
+                        sw.AutoFlush = true;
+
+                        foreach (var sc in amNew.DriveBinaries)
+                        {
+                            csv.WriteRecord(sc);
+                        }
+                    }
+
+
+                    outbase1 = $"{ts1}_{hiveName1}_DeviceContainers.tsv";
+                    outFile1 = Path.Combine(_fluentCommandLineParser.Object.SaveTo, outbase1);
+
+                    using (var sw = new StreamWriter(outFile1))
+                    {
+                        var csv = new CsvWriter(sw);
+                        csv.Configuration.RegisterClassMap(
+                            new DeviceContainers(_fluentCommandLineParser.Object.DateTimeFormat));
+                        csv.Configuration.Delimiter = "\t";
+
+                        csv.WriteHeader<DeviceContainer>();
+
+                        sw.AutoFlush = true;
+
+                        foreach (var sc in amNew.DeviceContainers)
+                        {
+                            csv.WriteRecord(sc);
+                        }
+                    }
+
+                    outbase1 = $"{ts1}_{hiveName1}_DriverPackages.tsv";
+                    outFile1 = Path.Combine(_fluentCommandLineParser.Object.SaveTo, outbase1);
+
+                    using (var sw = new StreamWriter(outFile1))
+                    {
+                        var csv = new CsvWriter(sw);
+                        csv.Configuration.RegisterClassMap(
+                            new DriverPackages(_fluentCommandLineParser.Object.DateTimeFormat));
+                        csv.Configuration.Delimiter = "\t";
+
+                        csv.WriteHeader<DriverPackage>();
+
+                        sw.AutoFlush = true;
+
+                        foreach (var sc in amNew.DriverPackages)
+                        {
+                            csv.WriteRecord(sc);
+                        }
+                    }
+
+                    outbase1 = $"{ts1}_{hiveName1}_DevicePnps.tsv";
+                    outFile1 = Path.Combine(_fluentCommandLineParser.Object.SaveTo, outbase1);
+
+                    using (var sw = new StreamWriter(outFile1))
+                    {
+                        var csv = new CsvWriter(sw);
+                        csv.Configuration.RegisterClassMap(
+                            new DevicePnps(_fluentCommandLineParser.Object.DateTimeFormat));
+                        csv.Configuration.Delimiter = "\t";
+
+                        csv.WriteHeader<DevicePnp>();
+
+                        sw.AutoFlush = true;
+
+                        foreach (var sc in amNew.DevicePnps)
+                        {
+                            csv.WriteRecord(sc);
+                        }
+                    }
+
+
+
+                    _logger.Error($"\r\n'{_fluentCommandLineParser.Object.File}' is in new format!");
+
+                    var suffix1 = amNew.UnassociatedFileEntries.Count == 1 ? "y" : "ies";
+
+
+                    var linked1 = "";
+                    if (_fluentCommandLineParser.Object.IncludeLinked)
+                    {
+                        linked1 =
+                            $"and {totalProgramFileEntries2:N0} program file entries (across {amNew.ProgramsEntries.Count:N0} program entries) ";
+                    }
+
+
+                    _logger.Info("");
+
+                    _logger.Info($"Total file entries found: {amNew.TotalFileEntries:N0}");
+                    if (amNew.ShortCuts.Count > 0)
+                    {
+                        _logger.Info($"Total short cuts found: {amNew.ShortCuts.Count:N0}");
+                    }
+                    if (amNew.DeviceContainers.Count > 0)
+                    {
+                        _logger.Info($"Total device containers found: {amNew.DeviceContainers.Count:N0}");
+                    }
+
+                    if (amNew.DevicePnps.Count > 0)
+                    {
+                        _logger.Info($"Total device PnPs found: {amNew.DevicePnps.Count:N0}");
+                    }
+
+                    if (amNew.DriveBinaries.Count > 0)
+                    {
+                        _logger.Info($"Total drive binaries found: {amNew.DriveBinaries.Count:N0}");
+                    }
+
+                    if (amNew.DriverPackages.Count > 0)
+                    {
+                        _logger.Info($"Total driver packages found: {amNew.DriverPackages.Count:N0}");
+                    }
+
+                
+
+                    _logger.Info(
+                        $"\r\nFound {cleanList2.Count:N0} unassociated file entr{suffix1} {linked1}");
+
+                    if (whitelistHashes1.Count > 0)
+                    {
+                        var per = (double)(totalProgramFileEntries2 + cleanList2.Count) / amNew.TotalFileEntries;
+
+                        _logger.Info("");
+
+                        var list = "whitelist";
+                        if (_fluentCommandLineParser.Object.Blacklist.Length > 0)
+                        {
+                            list = "blacklist";
+                        }
+
+                        _logger.Info($"{UppercaseFirst(list)} hash count: {whitelistHashes1.Count:N0}");
+
+                        _logger.Info("");
+
+                        _logger.Info($"Percentage of total shown based on {list}: {per:P3} ({1 - per:P3} savings)");
+                    }
+                    _logger.Info("");
+
+                    _logger.Info($"Results saved to: {_fluentCommandLineParser.Object.SaveTo}");
+
+
+                    _logger.Info("");
+                    _logger.Info(
+                        $"Total search time: {_sw.Elapsed.TotalSeconds:N3} seconds.");
+
+
 
 
                     return;
@@ -168,6 +479,8 @@ namespace AmcacheParser
 
                 var am = new Amcache.AmcacheOld(_fluentCommandLineParser.Object.File,
                     _fluentCommandLineParser.Object.RecoverDeleted);
+
+               
 
                 if (am.ProgramsEntries.Count == 0 && am.UnassociatedFileEntries.Count == 0)
                 {
@@ -230,11 +543,6 @@ namespace AmcacheParser
                 }
 
 
-               
-
-
-
-
 
                 foreach (var pe in am.ProgramsEntries)
                 {
@@ -255,7 +563,7 @@ namespace AmcacheParser
 
                     var csv = new CsvWriter(sw);
                     csv.Configuration.RegisterClassMap(
-                        new FECacheOutputMap(_fluentCommandLineParser.Object.DateTimeFormat));
+                        new FECacheOutputMapOld(_fluentCommandLineParser.Object.DateTimeFormat));
                     csv.Configuration.Delimiter = "\t";
 
                     csv.WriteHeader<FileEntryOld>();
@@ -273,7 +581,7 @@ namespace AmcacheParser
 
                         var csv = new CsvWriter(sw);
                         csv.Configuration.RegisterClassMap(
-                            new PECacheOutputMap(_fluentCommandLineParser.Object.DateTimeFormat));
+                            new PECacheOutputMapOld(_fluentCommandLineParser.Object.DateTimeFormat));
                         csv.Configuration.Delimiter = "\t";
 
                         csv.WriteHeader<ProgramsEntryOld>();
@@ -287,7 +595,7 @@ namespace AmcacheParser
                     {
                         var csv = new CsvWriter(sw);
                         csv.Configuration.RegisterClassMap(
-                            new FECacheOutputMap(_fluentCommandLineParser.Object.DateTimeFormat));
+                            new FECacheOutputMapOld(_fluentCommandLineParser.Object.DateTimeFormat));
                         csv.Configuration.Delimiter = "\t";
 
                         csv.WriteHeader<FileEntryOld>();
@@ -304,6 +612,8 @@ namespace AmcacheParser
                     }
                 }
 
+                _logger.Error($"\r\n'{_fluentCommandLineParser.Object.File}' is in old format!");
+
                 var suffix = am.UnassociatedFileEntries.Count == 1 ? "y" : "ies";
 
 
@@ -317,7 +627,7 @@ namespace AmcacheParser
 
                 _logger.Info("");
 
-                _logger.Info($"Total file entries found: {am.TotalFileEntries:N0}.");
+                _logger.Info($"Total file entries found: {am.TotalFileEntries:N0}");
 
                 _logger.Info(
                     $"Found {cleanList.Count:N0} unassociated file entr{suffix} {linked}");
@@ -404,9 +714,9 @@ namespace AmcacheParser
         public bool PreciseTimestamps { get; set; }
     }
 
-    public sealed class FECacheOutputMap : CsvClassMap<FileEntryOld>
+    public sealed class FECacheOutputMapOld : CsvClassMap<FileEntryOld>
     {
-        public FECacheOutputMap(string dateformat)
+        public FECacheOutputMapOld(string dateformat)
         {
             Map(m => m.ProgramName);
             Map(m => m.ProgramID);
@@ -436,9 +746,9 @@ namespace AmcacheParser
         }
     }
 
-    public sealed class PECacheOutputMap : CsvClassMap<ProgramsEntryOld>
+    public sealed class PECacheOutputMapOld : CsvClassMap<ProgramsEntryOld>
     {
-        public PECacheOutputMap(string dateformat)
+        public PECacheOutputMapOld(string dateformat)
         {
             Map(m => m.ProgramID);
             Map(m => m.LastWriteTimestamp).TypeConverterOption(dateformat);
@@ -455,4 +765,201 @@ namespace AmcacheParser
             Map(m => m.PathsList_d);
         }
     }
+
+
+    public sealed class PECacheOutputMapNew : CsvClassMap<ProgramsEntryNew>
+    {
+        public PECacheOutputMapNew(string dateformat)
+        {
+            Map(m => m.ProgramId);
+            Map(m => m.KeyLastWriteTimestamp).TypeConverterOption(dateformat);
+            Map(m => m.Name);
+            Map(m => m.Version);
+            Map(m => m.Publisher);
+
+            Map(m => m.InstallDate).TypeConverterOption(dateformat);
+            Map(m => m.OSVersionAtInstallTime);
+
+            Map(m => m.BundleManifestPath);
+            Map(m => m.HiddenArp);
+            Map(m => m.InboxModernApp);
+            Map(m => m.Language);
+            Map(m => m.ManifestPath);
+            Map(m => m.MsiPackageCode);
+            Map(m => m.MsiProductCode);
+            
+            Map(m => m.PackageFullName);
+            Map(m => m.ProgramInstanceId);
+            Map(m => m.RegistryKeyPath);
+            Map(m => m.RootDirPath);
+            
+            
+            Map(m => m.Type);
+            Map(m => m.Source);
+            Map(m => m.StoreAppType);
+
+            Map(m => m.UninstallString);
+        }
+    }
+
+    public sealed class ShortCuts : CsvClassMap<Shortcut>
+    {
+        public ShortCuts(string dateformat)
+        {
+            Map(m => m.KeyName);
+            Map(m => m.LnkName);
+            Map(m => m.KeyLastWriteTimestamp).TypeConverterOption(dateformat);
+        }
+    }
+
+        public sealed class FECacheOutputMapNew : CsvClassMap<FileEntryNew>
+    {
+        public FECacheOutputMapNew(string dateformat)
+        {
+            Map(m => m.ApplicationName);
+            
+            Map(m => m.ProgramId);
+            Map(m => m.FileKeyLastWriteTimestamp).TypeConverterOption(dateformat);
+            Map(m => m.SHA1);
+            Map(m => m.IsOsComponent);
+            Map(m => m.FullPath);
+            Map(m => m.Name);
+            Map(m => m.FileExtension);
+           
+            Map(m => m.LinkDate).TypeConverterOption(dateformat);
+            Map(m => m.ProductName);
+
+            Map(m => m.Size);
+
+            Map(m => m.Version);
+            Map(m => m.ProductVersion);
+            
+            Map(m => m.LongPathHash);
+
+            Map(m => m.BinaryType);
+            Map(m => m.IsPeFile);
+
+            Map(m => m.BinFileVersion);
+            Map(m => m.BinProductVersion);
+        
+            Map(m => m.Language);
+
+        }
+    }
+
+    public sealed class DriverBinaries : CsvClassMap<DriverBinary>
+    {
+        public DriverBinaries(string dateformat)
+        {
+            Map(m => m.Keyname);
+            Map(m => m.KeyLastWriteTimestamp).TypeConverterOption(dateformat);
+            Map(m => m.DriverTimeStamp).TypeConverterOption(dateformat);
+            Map(m => m.DriverLastWriteTime).TypeConverterOption(dateformat);
+
+
+            Map(m => m.DriverName);
+
+            Map(m => m.DriverInBox);
+            Map(m => m.DriverIsKernelMode);
+            Map(m => m.DriverSigned);
+            Map(m => m.DriverCheckSum);
+            Map(m => m.DriverCompany);
+            Map(m => m.DriverId);
+            Map(m => m.DriverPackageStrongName);
+            Map(m => m.DriverType);
+            Map(m => m.DriverVersion);
+            Map(m => m.ImageSize);
+            Map(m => m.Inf);
+            Map(m => m.Product);
+            Map(m => m.ProductVersion);
+            Map(m => m.Service);
+            Map(m => m.WdfVersion);
+        }
+    }
+
+    public sealed class DevicePnps : CsvClassMap<DevicePnp>
+    {
+        public DevicePnps(string dateformat)
+        {
+            Map(m => m.Keyname);
+            Map(m => m.KeyLastWriteTimestamp).TypeConverterOption(dateformat);
+
+            Map(m => m.BusReportedDescription);
+
+            Map(m => m.Class);
+            Map(m => m.ClassGuid);
+            Map(m => m.Compid);
+            Map(m => m.ContainerId);
+            Map(m => m.Description);
+            Map(m => m.DriverId);
+            Map(m => m.DriverPackageStrongName);
+            Map(m => m.DriverName);
+            Map(m => m.DriverVerDate);
+            Map(m => m.DriverVerVersion);
+            Map(m => m.Enumerator);
+            Map(m => m.HWID);
+            Map(m => m.Inf);
+            Map(m => m.InstallState);
+            Map(m => m.Manufacturer);
+            Map(m => m.MatchingId);
+            Map(m => m.Model);
+            Map(m => m.ParentId);
+            Map(m => m.ProblemCode);
+            Map(m => m.Provider);
+            Map(m => m.Service);
+            Map(m => m.Stackid);
+        }
+    }
+
+
+    public sealed class DeviceContainers : CsvClassMap<DeviceContainer>
+    {
+        public DeviceContainers(string dateformat)
+        {
+            Map(m => m.KeyName);
+            Map(m => m.KeyLastWriteTimestamp).TypeConverterOption(dateformat);
+
+            Map(m => m.Categories);
+
+            Map(m => m.DiscoveryMethod);
+            Map(m => m.FriendlyName);
+            Map(m => m.Icon);
+            Map(m => m.IsActive);
+            Map(m => m.IsConnected);
+            Map(m => m.IsMachineContainer);
+            Map(m => m.IsNetworked);
+            Map(m => m.IsPaired);
+            Map(m => m.Manufacturer);
+            Map(m => m.ModelId);
+            Map(m => m.ModelName);
+            Map(m => m.ModelNumber);
+            Map(m => m.PrimaryCategory);
+            Map(m => m.State);
+            
+        }
+    }
+
+    public sealed class DriverPackages : CsvClassMap<DriverPackage>
+    {
+        public DriverPackages(string dateformat)
+        {
+            Map(m => m.Keyname);
+            Map(m => m.KeyLastWriteTimestamp).TypeConverterOption(dateformat);
+            Map(m => m.Date).TypeConverterOption(dateformat);
+
+            Map(m => m.Class);
+
+   
+            Map(m => m.Directory);
+            Map(m => m.DriverInBox);
+            Map(m => m.Hwids);
+            Map(m => m.Inf);
+            Map(m => m.Provider);
+            Map(m => m.SubmissionId);
+            Map(m => m.SYSFILE);
+            Map(m => m.Version);
+            
+        }
+    }
+
 }

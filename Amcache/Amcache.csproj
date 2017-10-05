@@ -61,6 +61,7 @@
     <Compile Include="Classes\FileEntryOld.cs" />
     <Compile Include="Classes\ProgramsEntryNew.cs" />
     <Compile Include="Classes\ProgramsEntryOld.cs" />
+    <Compile Include="Classes\Shortcut.cs" />
     <Compile Include="Helper.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
