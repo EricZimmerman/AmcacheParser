@@ -16,6 +16,9 @@ namespace Amcache
 
         public List<FileEntryNew> UnassociatedFileEntries { get; }
         public List<ProgramsEntryNew> ProgramsEntries { get; }
+        public List<DeviceContainer> DeviceContainers { get; }
+
+        public Dictionary<string,string> ShortCuts { get; }
 
         public int TotalFileEntries { get; }
 
@@ -31,40 +34,43 @@ namespace Amcache
 
             var fileKey = reg.GetKey(@"Root\InventoryApplicationFile");
             var programsKey = reg.GetKey(@"Root\InventoryApplication");
+            
 
             UnassociatedFileEntries = new List<FileEntryNew>();
             ProgramsEntries = new List<ProgramsEntryNew>();
+            DeviceContainers = new List<DeviceContainer>();
+            ShortCuts = new Dictionary<string, string>();
 
             if (fileKey == null || programsKey == null)
             {
-                _logger.Error("Hive does not contain a File and/or Programs key. Processing cannot continue");
+                _logger.Error("Hive does not contain a InventoryApplicationFile and/or InventoryApplication key. Processing cannot continue");
                 return;
             }
 
 
             foreach (var registryKey in programsKey.SubKeys)
             {
-                var BundleManifestPath = string.Empty;
-                var HiddenArp = false;
-                var InboxModernApp = false;
-                DateTimeOffset? InstallDate = null;
-                int Language = 0;
-                var ManifestPath = string.Empty;
-                var MsiPackageCode = string.Empty;
-                var MsiProductCode = string.Empty;
-                var Name = string.Empty;
-                var OSVersionAtInstallTime = string.Empty;
-                var PackageFullName = string.Empty;
-                var ProgramId = string.Empty;
-                var ProgramInstanceId = string.Empty;
-                var Publisher = string.Empty;
-                var RegistryKeyPath = string.Empty;
-                var RootDirPath = string.Empty;
-                var Source = string.Empty;
-                var StoreAppType = string.Empty;
-                var Type = string.Empty;
-                var UninstallString = string.Empty;
-                var Version = string.Empty;
+                var bundleManifestPath = string.Empty;
+                var hiddenArp = false;
+                var inboxModernApp = false;
+                DateTimeOffset? installDate = null;
+                var language = 0;
+                var manifestPath = string.Empty;
+                var msiPackageCode = string.Empty;
+                var msiProductCode = string.Empty;
+                var name = string.Empty;
+                var osVersionAtInstallTime = string.Empty;
+                var packageFullName = string.Empty;
+                var programId = string.Empty;
+                var programInstanceId = string.Empty;
+                var publisher = string.Empty;
+                var registryKeyPath = string.Empty;
+                var rootDirPath = string.Empty;
+                var source = string.Empty;
+                var storeAppType = string.Empty;
+                var type = string.Empty;
+                var uninstallString = string.Empty;
+                var version = string.Empty;
 
 
                 try
@@ -74,71 +80,71 @@ namespace Amcache
                         switch (registryKeyValue.ValueName)
                         {
                             case "BundleManifestPath":
-                                BundleManifestPath = registryKeyValue.ValueData;
+                                bundleManifestPath = registryKeyValue.ValueData;
                                 break;
                             case "HiddenArp":
-                                HiddenArp = registryKeyValue.ValueData == "1";
+                                hiddenArp = registryKeyValue.ValueData == "1";
                                 break;
                             case "InboxModernApp":
-                                InboxModernApp = registryKeyValue.ValueData == "1";
+                                inboxModernApp = registryKeyValue.ValueData == "1";
                                 break;
                             case "InstallDate":
                                 if (registryKeyValue.ValueData.Length > 0)
                                 {
                                     var d = new DateTimeOffset(DateTime.Parse(registryKeyValue.ValueData).Ticks,TimeSpan.Zero);
-                                    InstallDate = new DateTimeOffset?(d);
+                                    installDate = new DateTimeOffset?(d);
                                 }
                                 break;
                             case "Language":
-                                Language = int.Parse(registryKeyValue.ValueData);
+                                language = int.Parse(registryKeyValue.ValueData);
                                 break;
                             case "ManifestPath":
-                                ManifestPath = registryKeyValue.ValueData;
+                                manifestPath = registryKeyValue.ValueData;
                                 break;
                             case "MsiPackageCode":
-                                MsiPackageCode = registryKeyValue.ValueData;
+                                msiPackageCode = registryKeyValue.ValueData;
                                 break;
                             case "MsiProductCode":
-                                MsiProductCode = registryKeyValue.ValueData;
+                                msiProductCode = registryKeyValue.ValueData;
                                 break;
                             case "Name":
-                                Name = registryKeyValue.ValueData;
+                                name = registryKeyValue.ValueData;
                                 break;
                             case "OSVersionAtInstallTime":
-                                OSVersionAtInstallTime = registryKeyValue.ValueData;
+                                osVersionAtInstallTime = registryKeyValue.ValueData;
                                 break;
                             case "PackageFullName":
-                                PackageFullName = registryKeyValue.ValueData;
+                                packageFullName = registryKeyValue.ValueData;
                                 break;
                             case "ProgramId":
-                                ProgramId = registryKeyValue.ValueData;
+                                programId = registryKeyValue.ValueData;
                                 break;
                             case "ProgramInstanceId":
-                                ProgramInstanceId = registryKeyValue.ValueData;
+                                programInstanceId = registryKeyValue.ValueData;
                                 break;
                             case "Publisher":
-                                Publisher = registryKeyValue.ValueData;
+                                publisher = registryKeyValue.ValueData;
                                 break;
                             case "RegistryKeyPath":
-                                RegistryKeyPath = registryKeyValue.ValueData;
+                                registryKeyPath = registryKeyValue.ValueData;
                                 break;
                             case "RootDirPath":
-                                RootDirPath = registryKeyValue.ValueData;
+                                rootDirPath = registryKeyValue.ValueData;
                                 break;
                             case "Source":
-                                Source = registryKeyValue.ValueData;
+                                source = registryKeyValue.ValueData;
                                 break;
                             case "StoreAppType":
-                                StoreAppType = registryKeyValue.ValueData;
+                                storeAppType = registryKeyValue.ValueData;
                                 break;
                             case "Type":
-                                Type = registryKeyValue.ValueData;
+                                type = registryKeyValue.ValueData;
                                 break;
                             case "UninstallString":
-                                UninstallString = registryKeyValue.ValueData;
+                                uninstallString = registryKeyValue.ValueData;
                                 break;
                             case "Version":
-                                Version = registryKeyValue.ValueData;
+                                version = registryKeyValue.ValueData;
                                 break;
                             default:
                                 _logger.Warn(
@@ -147,12 +153,9 @@ namespace Amcache
                         }
                         }
 
-
-                    var pe = new ProgramsEntryNew(BundleManifestPath,HiddenArp,InboxModernApp,InstallDate,Language,ManifestPath,MsiPackageCode,MsiProductCode,Name,OSVersionAtInstallTime,PackageFullName,ProgramId,ProgramInstanceId,Publisher,RegistryKeyPath,RootDirPath,Source,StoreAppType,Type,UninstallString,Version, registryKey.LastWriteTime.Value);
+                    var pe = new ProgramsEntryNew(bundleManifestPath,hiddenArp,inboxModernApp,installDate,language,manifestPath,msiPackageCode,msiProductCode,name,osVersionAtInstallTime,packageFullName,programId,programInstanceId,publisher,registryKeyPath,rootDirPath,source,storeAppType,type,uninstallString,version, registryKey.LastWriteTime.Value);
 
                     ProgramsEntries.Add(pe);
-
-
                 }
                 catch (Exception ex)
                 {
@@ -163,26 +166,25 @@ namespace Amcache
                 }
             }
 
-
             foreach (var subKey in fileKey.SubKeys)
             {
-                var BinaryType = string.Empty;
-                var BinFileVersion = string.Empty;
-                var BinProductVersion = string.Empty;
-                var FileId = string.Empty;
-                var IsOsComponent =false;
-                var IsPeFile = false;
-                int Language = 0;
-                DateTimeOffset? LinkDate = null;
-                var LongPathHash = string.Empty;
-                var LowerCaseLongPath = string.Empty;
-                var Name = string.Empty;
-                var ProductName = string.Empty;
-                var ProductVersion = string.Empty;
-                var ProgramId = string.Empty;
-                var Publisher = string.Empty;
-                var Size = 0;
-                var Version = string.Empty;
+                var binaryType = string.Empty;
+                var binFileVersion = string.Empty;
+                var binProductVersion = string.Empty;
+                var fileId = string.Empty;
+                var isOsComponent =false;
+                var isPeFile = false;
+                int language = 0;
+                DateTimeOffset? linkDate = null;
+                var longPathHash = string.Empty;
+                var lowerCaseLongPath = string.Empty;
+                var name = string.Empty;
+                var productName = string.Empty;
+                var productVersion = string.Empty;
+                var programId = string.Empty;
+                var publisher = string.Empty;
+                var size = 0;
+                var version = string.Empty;
 
                 var hasLinkedProgram = false;
 
@@ -193,71 +195,71 @@ namespace Amcache
                         switch (subKeyValue.ValueName)
                         {
                             case "BinaryType":
-                                BinaryType = subKeyValue.ValueData;
+                                binaryType = subKeyValue.ValueData;
                                 break;
                             case "BinFileVersion":
-                                BinFileVersion = subKeyValue.ValueData;
+                                binFileVersion = subKeyValue.ValueData;
                                 break;
                             case "BinProductVersion":
-                                BinProductVersion = subKeyValue.ValueData;
+                                binProductVersion = subKeyValue.ValueData;
                                 break;
                             case "FileId":
-                                FileId = subKeyValue.ValueData;
+                                fileId = subKeyValue.ValueData;
                                 break;
                             case "IsOsComponent":
-                                IsOsComponent = subKeyValue.ValueData == "1";
+                                isOsComponent = subKeyValue.ValueData == "1";
                                 break;
                             case "IsPeFile":
-                                IsPeFile = subKeyValue.ValueData == "1";
+                                isPeFile = subKeyValue.ValueData == "1";
                                 break;
                             case "Language":
-                                Language = int.Parse(subKeyValue.ValueData);
+                                language = int.Parse(subKeyValue.ValueData);
                                 break;
                             case "LinkDate":
                                 if (subKeyValue.ValueData.Length > 0)
                                 {
                                     var d = new DateTimeOffset(DateTime.Parse(subKeyValue.ValueData).Ticks, TimeSpan.Zero);
-                                    LinkDate = d;
+                                    linkDate = d;
                                 }
 
                            
                                 break;
                             case "LongPathHash":
-                                LongPathHash = subKeyValue.ValueData;
+                                longPathHash = subKeyValue.ValueData;
                                 break;
                             case "LowerCaseLongPath":
-                                LowerCaseLongPath = subKeyValue.ValueData;
+                                lowerCaseLongPath = subKeyValue.ValueData;
                                 break;
                             case "Name":
-                                Name = subKeyValue.ValueData;
+                                name = subKeyValue.ValueData;
                                 break;
                             case "ProductName":
-                                ProductName = subKeyValue.ValueData;
+                                productName = subKeyValue.ValueData;
                                 break;
                             case "ProductVersion":
-                                ProductVersion = subKeyValue.ValueData;
+                                productVersion = subKeyValue.ValueData;
                                 break;
                             case "ProgramId":
-                                ProgramId = subKeyValue.ValueData;
+                                programId = subKeyValue.ValueData;
 
-                                var program = ProgramsEntries.SingleOrDefault(t => t.ProgramId == ProgramId);
+                                var program = ProgramsEntries.SingleOrDefault(t => t.ProgramId == programId);
                                 if (program != null)
                                 {
                                     hasLinkedProgram = true;
                                 }
                                 break;
                             case "Publisher":
-                                Publisher = subKeyValue.ValueData;
+                                publisher = subKeyValue.ValueData;
                                 break;
                             case "Size":
-                                Size = int.Parse(subKeyValue.ValueData);
+                                size = int.Parse(subKeyValue.ValueData);
                                 break;
                             case "Version":
-                                Version = subKeyValue.ValueData;
+                                version = subKeyValue.ValueData;
                                 break;
                             default:
                                 _logger.Warn(
-                                    $"Unknown value name when processing FileEntry at path '{subKey.KeyPath}': 0x{subKeyValue:X}");
+                                    $"Unknown value name when processing FileEntry at path '{subKey.KeyPath}': {subKeyValue.ValueName}");
                                 break;
                         }
                     }
@@ -273,8 +275,8 @@ namespace Amcache
 
                 TotalFileEntries += 1;
 
-                Debug.WriteLine(Name);
-                var fe = new FileEntryNew(BinaryType,BinFileVersion,ProductVersion, FileId,IsOsComponent,IsPeFile,Language,LinkDate,LongPathHash,LowerCaseLongPath,Name,ProductName,ProductVersion,ProgramId,Publisher,Size,Version,subKey.LastWriteTime.Value);
+                Debug.WriteLine(name);
+                var fe = new FileEntryNew(binaryType,binFileVersion,productVersion, fileId,isOsComponent,isPeFile,language,linkDate,longPathHash,lowerCaseLongPath,name,productName,productVersion,programId,publisher,size,version,subKey.LastWriteTime.Value,binProductVersion);
 
                 if (hasLinkedProgram)
                 {
@@ -289,6 +291,116 @@ namespace Amcache
                 }
 
             }
+
+
+            var shortCutkey = reg.GetKey(@"Root\InventoryApplicationShortcut");
+
+            if (shortCutkey != null)
+            {
+                foreach (var shortCutkeySubKey in shortCutkey.SubKeys)
+                {
+                    ShortCuts.Add(shortCutkeySubKey.KeyName,shortCutkeySubKey.Values.First().ValueData);
+                }
+            }
+
+
+            var deviceKey = reg.GetKey(@"Root\InventoryDeviceContainer");
+
+            if (deviceKey != null)
+            {
+                foreach (var deviceSubKey in deviceKey.SubKeys)
+                {
+                    var categories = string.Empty;
+                    var discoveryMethod = string.Empty;
+                    var friendlyName = string.Empty;
+                    var icon = string.Empty;
+                    var isActive = false;
+                    var isConnected = false;
+                    var isMachineContainer = false;
+                    var isNetworked = false;
+                    var isPaired = false;
+                    var manufacturer = string.Empty;
+                    var modelId = string.Empty;
+                    var modelName = string.Empty;
+                    var modelNumber = string.Empty;
+                    var primaryCategory = string.Empty;
+                    var state = string.Empty;
+
+                    try
+                    {
+                        foreach (var keyValue in deviceSubKey.Values)
+                        {
+                            switch (keyValue.ValueName)
+                            {
+                                case "Categories":
+                                    categories = keyValue.ValueData;
+                                    break;
+                                case "DiscoveryMethod":
+                                    discoveryMethod = keyValue.ValueData;
+                                    break;
+                                case "FriendlyName":
+                                    friendlyName = keyValue.ValueData;
+                                    break;
+                                case "Icon":
+                                    icon = keyValue.ValueData;
+                                    break;
+                                case "IsActive":
+                                    isActive = keyValue.ValueData == "1";
+                                    break;
+                                case "IsConnected":
+                                    isConnected = keyValue.ValueData == "1";
+                                    break;
+                                case "IsMachineContainer":
+                                    isMachineContainer = keyValue.ValueData == "1";
+                                    break;
+                                case "IsNetworked":
+                                    isNetworked = keyValue.ValueData == "1";
+                                    break;
+                                case "IsPaired":
+                                    isPaired = keyValue.ValueData == "1";
+                                    break;
+                                case "Manufacturer":
+                                    manufacturer = keyValue.ValueData;
+                                    break;
+                                case "ModelId":
+                                    modelId = keyValue.ValueData;
+                                    break;
+                                case "ModelName":
+                                    modelName = keyValue.ValueData;
+                                    break;
+                                case "ModelNumber":
+                                    modelNumber = keyValue.ValueData;
+                                    break;
+                                case "PrimaryCategory":
+                                    primaryCategory = keyValue.ValueData;
+                                    break;
+                                case "State":
+                                    state = keyValue.ValueData;
+                                    break;
+                                default:
+                                _logger.Warn(
+                                    $"Unknown value name when processing DeviceContainer at path '{deviceSubKey.KeyPath}': {keyValue.ValueName}");
+                                break;
+
+                            }
+                        }
+
+                        var dc = new DeviceContainer(deviceSubKey.KeyName,deviceSubKey.LastWriteTime.Value,categories,discoveryMethod,friendlyName,icon,isActive,isConnected,isMachineContainer,isNetworked,isPaired,manufacturer,modelId,modelName,modelNumber,primaryCategory,state);
+
+                        DeviceContainers.Add(dc);
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.Error($"Error parsing DeviceContainer at {deviceSubKey.KeyPath}. Error: {ex.Message}");
+                        _logger.Error(
+                            $"Please send the following text to saericzimmerman@gmail.com. \r\n\r\nKey data: {deviceSubKey}");
+                    }
+
+                }
+            }
+
+
+
 
 
         }

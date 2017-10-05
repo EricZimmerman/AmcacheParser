@@ -53,6 +53,7 @@
   <ItemGroup>
     <Compile Include="AmcacheNew.cs" />
     <Compile Include="AmcacheOld.cs" />
+    <Compile Include="Classes\DeviceContainer.cs" />
     <Compile Include="Classes\FileEntryNew.cs" />
     <Compile Include="Classes\FileEntryOld.cs" />
     <Compile Include="Classes\ProgramsEntryNew.cs" />

@@ -13,7 +13,7 @@ namespace Amcache.Classes
 
         public FileEntryNew(string binaryType, string fileVer, string prodVer, string sha1, bool isOsComp, bool isPe,
             int lang, DateTimeOffset? linkDate, string pathHash, string longPath, string name, string productName,
-            string prodVersion, string programId, string publisher, int size, string version,DateTimeOffset lastwrite)
+            string prodVersion, string programId, string publisher, int size, string version,DateTimeOffset lastwrite, string binProductVersion)
         {
 
             BinaryType = binaryType;
@@ -35,12 +35,13 @@ namespace Amcache.Classes
             Name = name;
             ProductName = productName;
             ProductVersion = prodVersion;
+            BinProductVersion = binProductVersion;
             ProgramId = programId;
             Publisher = publisher;
             Size = size;
             Version = version;
 
-            FileLastWriteTimestamp = lastwrite;
+            FileKeyLastWriteTimestamp = lastwrite;
 
             ApplicationName = string.Empty;
 
@@ -68,7 +69,7 @@ namespace Amcache.Classes
 
         public string FileExtension { get; }
 
-        public DateTimeOffset FileLastWriteTimestamp { get; }
+        public DateTimeOffset FileKeyLastWriteTimestamp { get; }
 
     }
 }

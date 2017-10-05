@@ -39,7 +39,7 @@ namespace Amcache.Classes
             StoreAppType = storeAppType;
             Type = type;
             Version = version;
-            LastWriteTimestamp = lastwrite;
+            KeyLastWriteTimestamp = lastwrite;
         }
 
         public string BundleManifestPath { get; }
@@ -64,7 +64,7 @@ namespace Amcache.Classes
         public string UninstallString { get; }
         public string Version { get; }
 
-        public DateTimeOffset LastWriteTimestamp { get; }
+        public DateTimeOffset KeyLastWriteTimestamp { get; }
         public List<FileEntryNew> FileEntries { get; }
 
     }
