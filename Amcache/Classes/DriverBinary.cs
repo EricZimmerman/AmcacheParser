@@ -1,18 +1,16 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Amcache.Classes
 {
-   public class DriverBinary
+    public class DriverBinary
     {
-
-        public DriverBinary(string keyname, DateTimeOffset keyLastWriteTimestamp, int driverChecksum,string driverCompany,string driverId,bool driverInBox, bool driverIsKernelMode,DateTimeOffset? driverLastWriteTime,string driverName,string driverPackageStrongName,
-            bool driverSigned,DateTimeOffset? driverTimeStamp,string driverType,string driverVer,int imageSize,string inf,string product,string productVersion,string service,string wdfVersion)
+        public DriverBinary(string keyName, DateTimeOffset keyLastWriteTimestamp, int driverChecksum,
+            string driverCompany, string driverId, bool driverInBox, bool driverIsKernelMode,
+            DateTimeOffset? driverLastWriteTime, string driverName, string driverPackageStrongName,
+            bool driverSigned, DateTimeOffset? driverTimeStamp, string driverType, string driverVer, int imageSize,
+            string inf, string product, string productVersion, string service, string wdfVersion)
         {
-            Keyname = keyname;
+            KeyName = keyName;
             KeyLastWriteTimestamp = keyLastWriteTimestamp;
             DriverCheckSum = driverChecksum;
             DriverCompany = driverCompany;
@@ -32,9 +30,9 @@ namespace Amcache.Classes
             ProductVersion = productVersion;
             Service = service;
             WdfVersion = wdfVersion;
-
         }
-        public string Keyname { get; }
+
+        public string KeyName { get; }
         public DateTimeOffset KeyLastWriteTimestamp { get; }
         public int DriverCheckSum { get; }
         public string DriverCompany { get; }

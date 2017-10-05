@@ -1,14 +1,13 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Amcache.Classes
 {
- public   class DeviceContainer
+    public class DeviceContainer
     {
-        public DeviceContainer(string keyName, DateTimeOffset keyLastWrite, string categories,string discoveryMethod,string friendlyName,string icon,bool isActive,bool isConnected,bool isMachineContainer,bool isNetworked,bool isPaired,string manufacturer,string modelId,string modelName,string modelNumber,string primaryCategory,string state)
+        public DeviceContainer(string keyName, DateTimeOffset keyLastWrite, string categories, string discoveryMethod,
+            string friendlyName, string icon, bool isActive, bool isConnected, bool isMachineContainer,
+            bool isNetworked, bool isPaired, string manufacturer, string modelId, string modelName, string modelNumber,
+            string primaryCategory, string state)
         {
             KeyName = keyName;
             KeyLastWriteTimestamp = keyLastWrite;
@@ -28,6 +27,7 @@ namespace Amcache.Classes
             PrimaryCategory = primaryCategory;
             State = state;
         }
+
         public string KeyName { get; }
         public DateTimeOffset KeyLastWriteTimestamp { get; }
 
@@ -46,8 +46,5 @@ namespace Amcache.Classes
         public string ModelNumber { get; }
         public string PrimaryCategory { get; }
         public string State { get; }
-
-
-
     }
 }

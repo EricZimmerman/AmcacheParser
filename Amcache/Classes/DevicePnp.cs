@@ -1,17 +1,15 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Amcache.Classes
 {
-  public  class DevicePnp
+    public class DevicePnp
     {
-
-        public DevicePnp(string keyname, DateTimeOffset keyLastWriteTimestamp, string busReportedDesc,string clss, string classGuid,string compId,string containerId,string desc,string deviceState,string driverId,
-            string driverName,string driverPackageStrongName,string driverVerDate,string driverVerVersion,string enumerator,string hwid,string inf,
-            string installState,string manufacturer,string matchingId,string model,string parentId,string problemCode, string provider, string service,string stackId)
+        public DevicePnp(string keyName, DateTimeOffset keyLastWriteTimestamp, string busReportedDesc, string clss,
+            string classGuid, string compId, string containerId, string desc, string deviceState, string driverId,
+            string driverName, string driverPackageStrongName, string driverVerDate, string driverVerVersion,
+            string enumerator, string hwid, string inf,
+            string installState, string manufacturer, string matchingId, string model, string parentId,
+            string problemCode, string provider, string service, string stackId)
         {
             BusReportedDescription = busReportedDesc;
             Class = clss;
@@ -38,12 +36,12 @@ namespace Amcache.Classes
             Service = service;
             Stackid = stackId;
 
-            Keyname = keyname;
+            KeyName = keyName;
             KeyLastWriteTimestamp = keyLastWriteTimestamp;
         }
 
 
-        public string Keyname { get; }
+        public string KeyName { get; }
         public DateTimeOffset KeyLastWriteTimestamp { get; }
         public string BusReportedDescription { get; }
         public string Class { get; }
@@ -69,6 +67,5 @@ namespace Amcache.Classes
         public string Provider { get; }
         public string Service { get; }
         public string Stackid { get; }
-
-}
+    }
 }

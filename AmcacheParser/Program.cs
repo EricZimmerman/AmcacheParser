@@ -102,7 +102,8 @@ namespace AmcacheParser
                 "\r\n\r\nAuthor: Eric Zimmerman (saericzimmerman@gmail.com)" +
                 "\r\nhttps://github.com/EricZimmerman/AmcacheParser";
 
-            var footer = @"Examples: AmcacheParser.exe -f ""C:\Temp\amcache\AmcacheWin10.hve"" --csv C:\temp" + "\r\n\t " +
+            var footer = @"Examples: AmcacheParser.exe -f ""C:\Temp\amcache\AmcacheWin10.hve"" --csv C:\temp" +
+                         "\r\n\t " +
                          @" AmcacheParser.exe -f ""C:\Temp\amcache\AmcacheWin10.hve"" -i on --csv C:\temp" + "\r\n\t " +
                          @" AmcacheParser.exe -f ""C:\Temp\amcache\AmcacheWin10.hve"" -w ""c:\temp\whitelist.txt"" --csv C:\temp" +
                          "\r\n\t" +
@@ -158,9 +159,7 @@ namespace AmcacheParser
 
                 if (Helper.IsNewFormat(_fluentCommandLineParser.Object.File))
                 {
-                   
-
-                    var amNew = new Amcache.AmcacheNew(_fluentCommandLineParser.Object.File,
+                    var amNew = new AmcacheNew(_fluentCommandLineParser.Object.File,
                         _fluentCommandLineParser.Object.RecoverDeleted);
 
                     if (amNew.ProgramsEntries.Count == 0 && amNew.UnassociatedFileEntries.Count == 0)
@@ -205,7 +204,8 @@ namespace AmcacheParser
                     }
 
                     var cleanList2 =
-                        amNew.UnassociatedFileEntries.Where(t => whitelistHashes1.Contains(t.SHA1) == useBlacklist2).ToList();
+                        amNew.UnassociatedFileEntries.Where(t => whitelistHashes1.Contains(t.SHA1) == useBlacklist2)
+                            .ToList();
                     var totalProgramFileEntries2 = 0;
 
                     if (Directory.Exists(_fluentCommandLineParser.Object.SaveTo) == false)
@@ -284,7 +284,8 @@ namespace AmcacheParser
                             foreach (var pe in amNew.ProgramsEntries)
                             {
                                 var cleanList22 =
-                                    pe.FileEntries.Where(t => whitelistHashes1.Contains(t.SHA1) == useBlacklist2).ToList();
+                                    pe.FileEntries.Where(t => whitelistHashes1.Contains(t.SHA1) == useBlacklist2)
+                                        .ToList();
 
                                 csv.WriteRecords(cleanList22);
                             }
@@ -294,7 +295,6 @@ namespace AmcacheParser
 
                     //DUMP NEW STUFF HERE
 
-              
 
                     outbase1 = $"{ts1}_{hiveName1}_ShortCuts.tsv";
                     outFile1 = Path.Combine(_fluentCommandLineParser.Object.SaveTo, outbase1);
@@ -398,7 +398,6 @@ namespace AmcacheParser
                     }
 
 
-
                     _logger.Error($"\r\n'{_fluentCommandLineParser.Object.File}' is in new format!");
 
                     var suffix1 = amNew.UnassociatedFileEntries.Count == 1 ? "y" : "ies";
@@ -439,14 +438,13 @@ namespace AmcacheParser
                         _logger.Info($"Total driver packages found: {amNew.DriverPackages.Count:N0}");
                     }
 
-                
 
                     _logger.Info(
                         $"\r\nFound {cleanList2.Count:N0} unassociated file entr{suffix1} {linked1}");
 
                     if (whitelistHashes1.Count > 0)
                     {
-                        var per = (double)(totalProgramFileEntries2 + cleanList2.Count) / amNew.TotalFileEntries;
+                        var per = (double) (totalProgramFileEntries2 + cleanList2.Count) / amNew.TotalFileEntries;
 
                         _logger.Info("");
 
@@ -472,15 +470,12 @@ namespace AmcacheParser
                         $"Total search time: {_sw.Elapsed.TotalSeconds:N3} seconds.");
 
 
-
-
                     return;
                 }
 
-                var am = new Amcache.AmcacheOld(_fluentCommandLineParser.Object.File,
+                var am = new AmcacheOld(_fluentCommandLineParser.Object.File,
                     _fluentCommandLineParser.Object.RecoverDeleted);
 
-               
 
                 if (am.ProgramsEntries.Count == 0 && am.UnassociatedFileEntries.Count == 0)
                 {
@@ -541,7 +536,6 @@ namespace AmcacheParser
                         return;
                     }
                 }
-
 
 
                 foreach (var pe in am.ProgramsEntries)
@@ -634,7 +628,7 @@ namespace AmcacheParser
 
                 if (whitelistHashes.Count > 0)
                 {
-                    var per = (double) (totalProgramFileEntries + cleanList.Count)/am.TotalFileEntries;
+                    var per = (double) (totalProgramFileEntries + cleanList.Count) / am.TotalFileEntries;
 
                     _logger.Info("");
 
@@ -704,8 +698,10 @@ namespace AmcacheParser
     internal class ApplicationArguments
     {
         public string File { get; set; }
+
         //       public string Extension { get; set; } = string.Empty;
         public string Whitelist { get; set; } = string.Empty;
+
         public string Blacklist { get; set; } = string.Empty;
         public string SaveTo { get; set; } = string.Empty;
         public bool IncludeLinked { get; set; } = false;
@@ -787,13 +783,13 @@ namespace AmcacheParser
             Map(m => m.ManifestPath);
             Map(m => m.MsiPackageCode);
             Map(m => m.MsiProductCode);
-            
+
             Map(m => m.PackageFullName);
             Map(m => m.ProgramInstanceId);
             Map(m => m.RegistryKeyPath);
             Map(m => m.RootDirPath);
-            
-            
+
+
             Map(m => m.Type);
             Map(m => m.Source);
             Map(m => m.StoreAppType);
@@ -812,12 +808,12 @@ namespace AmcacheParser
         }
     }
 
-        public sealed class FECacheOutputMapNew : CsvClassMap<FileEntryNew>
+    public sealed class FECacheOutputMapNew : CsvClassMap<FileEntryNew>
     {
         public FECacheOutputMapNew(string dateformat)
         {
             Map(m => m.ApplicationName);
-            
+
             Map(m => m.ProgramId);
             Map(m => m.FileKeyLastWriteTimestamp).TypeConverterOption(dateformat);
             Map(m => m.SHA1);
@@ -825,7 +821,7 @@ namespace AmcacheParser
             Map(m => m.FullPath);
             Map(m => m.Name);
             Map(m => m.FileExtension);
-           
+
             Map(m => m.LinkDate).TypeConverterOption(dateformat);
             Map(m => m.ProductName);
 
@@ -833,7 +829,7 @@ namespace AmcacheParser
 
             Map(m => m.Version);
             Map(m => m.ProductVersion);
-            
+
             Map(m => m.LongPathHash);
 
             Map(m => m.BinaryType);
@@ -841,9 +837,8 @@ namespace AmcacheParser
 
             Map(m => m.BinFileVersion);
             Map(m => m.BinProductVersion);
-        
-            Map(m => m.Language);
 
+            Map(m => m.Language);
         }
     }
 
@@ -851,7 +846,7 @@ namespace AmcacheParser
     {
         public DriverBinaries(string dateformat)
         {
-            Map(m => m.Keyname);
+            Map(m => m.KeyName);
             Map(m => m.KeyLastWriteTimestamp).TypeConverterOption(dateformat);
             Map(m => m.DriverTimeStamp).TypeConverterOption(dateformat);
             Map(m => m.DriverLastWriteTime).TypeConverterOption(dateformat);
@@ -881,7 +876,7 @@ namespace AmcacheParser
     {
         public DevicePnps(string dateformat)
         {
-            Map(m => m.Keyname);
+            Map(m => m.KeyName);
             Map(m => m.KeyLastWriteTimestamp).TypeConverterOption(dateformat);
 
             Map(m => m.BusReportedDescription);
@@ -935,7 +930,6 @@ namespace AmcacheParser
             Map(m => m.ModelNumber);
             Map(m => m.PrimaryCategory);
             Map(m => m.State);
-            
         }
     }
 
@@ -943,13 +937,13 @@ namespace AmcacheParser
     {
         public DriverPackages(string dateformat)
         {
-            Map(m => m.Keyname);
+            Map(m => m.KeyName);
             Map(m => m.KeyLastWriteTimestamp).TypeConverterOption(dateformat);
             Map(m => m.Date).TypeConverterOption(dateformat);
 
             Map(m => m.Class);
 
-   
+
             Map(m => m.Directory);
             Map(m => m.DriverInBox);
             Map(m => m.Hwids);
@@ -958,8 +952,6 @@ namespace AmcacheParser
             Map(m => m.SubmissionId);
             Map(m => m.SYSFILE);
             Map(m => m.Version);
-            
         }
     }
-
 }

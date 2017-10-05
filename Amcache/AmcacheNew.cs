@@ -2,8 +2,6 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Amcache.Classes;
 using NLog;
 using Registry;
@@ -13,17 +11,6 @@ namespace Amcache
     public class AmcacheNew
     {
         private static Logger _logger;
-
-        public List<FileEntryNew> UnassociatedFileEntries { get; }
-        public List<ProgramsEntryNew> ProgramsEntries { get; }
-        public List<DeviceContainer> DeviceContainers { get; }
-        public List<DevicePnp> DevicePnps { get; }
-        public List<DriverBinary> DriveBinaries { get; }
-        public List<DriverPackage> DriverPackages { get; }
-
-        public List<Shortcut> ShortCuts { get; }
-
-        public int TotalFileEntries { get; }
 
         public AmcacheNew(string hive, bool recoverDeleted)
         {
@@ -37,7 +24,7 @@ namespace Amcache
 
             var fileKey = reg.GetKey(@"Root\InventoryApplicationFile");
             var programsKey = reg.GetKey(@"Root\InventoryApplication");
-            
+
 
             UnassociatedFileEntries = new List<FileEntryNew>();
             ProgramsEntries = new List<ProgramsEntryNew>();
@@ -49,7 +36,8 @@ namespace Amcache
 
             if (fileKey == null || programsKey == null)
             {
-                _logger.Error("Hive does not contain a InventoryApplicationFile and/or InventoryApplication key. Processing cannot continue");
+                _logger.Error(
+                    "Hive does not contain a InventoryApplicationFile and/or InventoryApplication key. Processing cannot continue");
                 return;
             }
 
@@ -97,7 +85,8 @@ namespace Amcache
                             case "InstallDate":
                                 if (registryKeyValue.ValueData.Length > 0)
                                 {
-                                    var d = new DateTimeOffset(DateTime.Parse(registryKeyValue.ValueData).Ticks,TimeSpan.Zero);
+                                    var d = new DateTimeOffset(DateTime.Parse(registryKeyValue.ValueData).Ticks,
+                                        TimeSpan.Zero);
                                     installDate = d;
                                 }
                                 break;
@@ -157,9 +146,12 @@ namespace Amcache
                                     $"Unknown value name in InventoryApplication at path {registryKey.KeyPath}: {registryKeyValue.ValueName}");
                                 break;
                         }
-                        }
+                    }
 
-                    var pe = new ProgramsEntryNew(bundleManifestPath,hiddenArp,inboxModernApp,installDate,language,manifestPath,msiPackageCode,msiProductCode,name,osVersionAtInstallTime,packageFullName,programId,programInstanceId,publisher,registryKeyPath,rootDirPath,source,storeAppType,type,uninstallString,version, registryKey.LastWriteTime.Value);
+                    var pe = new ProgramsEntryNew(bundleManifestPath, hiddenArp, inboxModernApp, installDate, language,
+                        manifestPath, msiPackageCode, msiProductCode, name, osVersionAtInstallTime, packageFullName,
+                        programId, programInstanceId, publisher, registryKeyPath, rootDirPath, source, storeAppType,
+                        type, uninstallString, version, registryKey.LastWriteTime.Value);
 
                     ProgramsEntries.Add(pe);
                 }
@@ -168,7 +160,6 @@ namespace Amcache
                     _logger.Error($"Error parsing ProgramsEntry at {registryKey.KeyPath}. Error: {ex.Message}");
                     _logger.Error(
                         $"Please send the following text to saericzimmerman@gmail.com. \r\n\r\nKey data: {registryKey}");
-
                 }
             }
 
@@ -178,9 +169,9 @@ namespace Amcache
                 var binFileVersion = string.Empty;
                 var binProductVersion = string.Empty;
                 var fileId = string.Empty;
-                var isOsComponent =false;
+                var isOsComponent = false;
                 var isPeFile = false;
-                int language = 0;
+                var language = 0;
                 DateTimeOffset? linkDate = null;
                 var longPathHash = string.Empty;
                 var lowerCaseLongPath = string.Empty;
@@ -224,11 +215,12 @@ namespace Amcache
                             case "LinkDate":
                                 if (subKeyValue.ValueData.Length > 0)
                                 {
-                                    var d = new DateTimeOffset(DateTime.Parse(subKeyValue.ValueData).Ticks, TimeSpan.Zero);
+                                    var d = new DateTimeOffset(DateTime.Parse(subKeyValue.ValueData).Ticks,
+                                        TimeSpan.Zero);
                                     linkDate = d;
                                 }
 
-                           
+
                                 break;
                             case "LongPathHash":
                                 longPathHash = subKeyValue.ValueData;
@@ -278,11 +270,12 @@ namespace Amcache
                 }
 
 
-
                 TotalFileEntries += 1;
 
                 Debug.WriteLine(name);
-                var fe = new FileEntryNew(binaryType,binFileVersion,productVersion, fileId,isOsComponent,isPeFile,language,linkDate,longPathHash,lowerCaseLongPath,name,productName,productVersion,programId,publisher,size,version,subKey.LastWriteTime.Value,binProductVersion);
+                var fe = new FileEntryNew(binaryType, binFileVersion, productVersion, fileId, isOsComponent, isPeFile,
+                    language, linkDate, longPathHash, lowerCaseLongPath, name, productName, productVersion, programId,
+                    publisher, size, version, subKey.LastWriteTime.Value, binProductVersion);
 
                 if (hasLinkedProgram)
                 {
@@ -295,7 +288,6 @@ namespace Amcache
                     fe.ApplicationName = "Unassociated";
                     UnassociatedFileEntries.Add(fe);
                 }
-
             }
 
 
@@ -305,7 +297,8 @@ namespace Amcache
             {
                 foreach (var shortCutkeySubKey in shortCutkey.SubKeys)
                 {
-                    ShortCuts.Add(new Shortcut(shortCutkeySubKey.KeyName, shortCutkeySubKey.Values.First().ValueData,shortCutkeySubKey.LastWriteTime.Value));
+                    ShortCuts.Add(new Shortcut(shortCutkeySubKey.KeyName, shortCutkeySubKey.Values.First().ValueData,
+                        shortCutkeySubKey.LastWriteTime.Value));
                 }
             }
 
@@ -384,14 +377,15 @@ namespace Amcache
                                     state = keyValue.ValueData;
                                     break;
                                 default:
-                                _logger.Warn(
-                                    $"Unknown value name when processing DeviceContainer at path '{deviceSubKey.KeyPath}': {keyValue.ValueName}");
-                                break;
-
+                                    _logger.Warn(
+                                        $"Unknown value name when processing DeviceContainer at path '{deviceSubKey.KeyPath}': {keyValue.ValueName}");
+                                    break;
                             }
                         }
 
-                        var dc = new DeviceContainer(deviceSubKey.KeyName,deviceSubKey.LastWriteTime.Value,categories,discoveryMethod,friendlyName,icon,isActive,isConnected,isMachineContainer,isNetworked,isPaired,manufacturer,modelId,modelName,modelNumber,primaryCategory,state);
+                        var dc = new DeviceContainer(deviceSubKey.KeyName, deviceSubKey.LastWriteTime.Value, categories,
+                            discoveryMethod, friendlyName, icon, isActive, isConnected, isMachineContainer, isNetworked,
+                            isPaired, manufacturer, modelId, modelName, modelNumber, primaryCategory, state);
 
                         DeviceContainers.Add(dc);
                     }
@@ -401,10 +395,8 @@ namespace Amcache
                         _logger.Error(
                             $"Please send the following text to saericzimmerman@gmail.com. \r\n\r\nKey data: {deviceSubKey}");
                     }
-
                 }
             }
-
 
 
             var pnpKey = reg.GetKey(@"Root\InventoryDevicePnp");
@@ -529,7 +521,11 @@ namespace Amcache
                             }
                         }
 
-                        var dp = new DevicePnp(pnpsKey.KeyName, pnpKey.LastWriteTime.Value,busReportedDescription,Class,classGuid,compid,containerId,description,deviceState,driverId,driverName,driverPackageStrongName,driverVerDate,driverVerVersion,enumerator,hwid,inf,installState,manufacturer,matchingId,model,parentId,problemCode,provider,service,stackid);
+                        var dp = new DevicePnp(pnpsKey.KeyName, pnpKey.LastWriteTime.Value, busReportedDescription,
+                            Class, classGuid, compid, containerId, description, deviceState, driverId, driverName,
+                            driverPackageStrongName, driverVerDate, driverVerVersion, enumerator, hwid, inf,
+                            installState, manufacturer, matchingId, model, parentId, problemCode, provider, service,
+                            stackid);
 
                         DevicePnps.Add(dp);
                     }
@@ -539,10 +535,8 @@ namespace Amcache
                         _logger.Error(
                             $"Please send the following text to saericzimmerman@gmail.com. \r\n\r\nKey data: {pnpKey}");
                     }
-
                 }
             }
-
 
 
             var binaryKey = reg.GetKey(@"Root\InventoryDriverBinary");
@@ -578,7 +572,7 @@ namespace Amcache
                             switch (keyValue.ValueName)
                             {
                                 case "DriverCheckSum":
-                                    driverCheckSum = Int32.Parse(keyValue.ValueData);
+                                    driverCheckSum = int.Parse(keyValue.ValueData);
                                     break;
                                 case "DriverCompany":
                                     driverCompany = keyValue.ValueData;
@@ -595,10 +589,11 @@ namespace Amcache
                                 case "DriverLastWriteTime":
                                     if (keyValue.ValueData.Length > 0)
                                     {
-                                        var d = new DateTimeOffset(DateTime.Parse(keyValue.ValueData).Ticks, TimeSpan.Zero);
+                                        var d = new DateTimeOffset(DateTime.Parse(keyValue.ValueData).Ticks,
+                                            TimeSpan.Zero);
                                         driverLastWriteTime = d;
                                     }
-                                    
+
                                     break;
                                 case "DriverName":
                                     driverName = keyValue.ValueData;
@@ -648,7 +643,10 @@ namespace Amcache
                             }
                         }
 
-                        var db = new DriverBinary(binKey.KeyName, binaryKey.LastWriteTime.Value,driverCheckSum,driverCompany,driverId,driverInBox,driverIsKernelMode,driverLastWriteTime,driverName,driverPackageStrongName,driverSigned,driverTimeStamp,driverType,driverVersion,imageSize,inf,product,productVersion,service,wdfVersion);
+                        var db = new DriverBinary(binKey.KeyName, binaryKey.LastWriteTime.Value, driverCheckSum,
+                            driverCompany, driverId, driverInBox, driverIsKernelMode, driverLastWriteTime, driverName,
+                            driverPackageStrongName, driverSigned, driverTimeStamp, driverType, driverVersion,
+                            imageSize, inf, product, productVersion, service, wdfVersion);
 
                         DriveBinaries.Add(db);
                     }
@@ -658,7 +656,6 @@ namespace Amcache
                         _logger.Error(
                             $"Please send the following text to saericzimmerman@gmail.com. \r\n\r\nKey data: {binaryKey}");
                     }
-
                 }
             }
 
@@ -697,7 +694,8 @@ namespace Amcache
                                 case "Date":
                                     if (keyValue.ValueData.Length > 0)
                                     {
-                                        var d = new DateTimeOffset(DateTime.Parse(keyValue.ValueData).Ticks, TimeSpan.Zero);
+                                        var d = new DateTimeOffset(DateTime.Parse(keyValue.ValueData).Ticks,
+                                            TimeSpan.Zero);
                                         Date = d;
                                     }
 
@@ -734,7 +732,8 @@ namespace Amcache
                             }
                         }
 
-                        var dp = new DriverPackage(packKey.KeyName, packaheKey.LastWriteTime.Value,Class,ClassGuid,Date,Directory,DriverInBox,Hwids,Inf,Provider,SubmissionId,SYSFILE,Version);
+                        var dp = new DriverPackage(packKey.KeyName, packaheKey.LastWriteTime.Value, Class, ClassGuid,
+                            Date, Directory, DriverInBox, Hwids, Inf, Provider, SubmissionId, SYSFILE, Version);
 
                         DriverPackages.Add(dp);
                     }
@@ -744,10 +743,19 @@ namespace Amcache
                         _logger.Error(
                             $"Please send the following text to saericzimmerman@gmail.com. \r\n\r\nKey data: {packaheKey}");
                     }
-
                 }
             }
-
         }
+
+        public List<FileEntryNew> UnassociatedFileEntries { get; }
+        public List<ProgramsEntryNew> ProgramsEntries { get; }
+        public List<DeviceContainer> DeviceContainers { get; }
+        public List<DevicePnp> DevicePnps { get; }
+        public List<DriverBinary> DriveBinaries { get; }
+        public List<DriverPackage> DriverPackages { get; }
+
+        public List<Shortcut> ShortCuts { get; }
+
+        public int TotalFileEntries { get; }
     }
 }

@@ -1,21 +1,15 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Net.Sockets;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Amcache.Classes
 {
-   public class FileEntryNew
+    public class FileEntryNew
     {
-
         public FileEntryNew(string binaryType, string fileVer, string prodVer, string sha1, bool isOsComp, bool isPe,
             int lang, DateTimeOffset? linkDate, string pathHash, string longPath, string name, string productName,
-            string prodVersion, string programId, string publisher, int size, string version,DateTimeOffset lastwrite, string binProductVersion)
+            string prodVersion, string programId, string publisher, int size, string version, DateTimeOffset lastwrite,
+            string binProductVersion)
         {
-
             BinaryType = binaryType;
             BinFileVersion = fileVer;
             BinProductVersion = prodVer;
@@ -70,6 +64,5 @@ namespace Amcache.Classes
         public string FileExtension { get; }
 
         public DateTimeOffset FileKeyLastWriteTimestamp { get; }
-
     }
 }

@@ -1,17 +1,14 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection.Emit;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Amcache.Classes
 {
-public    class DriverPackage
+    public class DriverPackage
     {
-        public DriverPackage(string keyname, DateTimeOffset keyLastWriteTimestamp,string clss,string classGuid, DateTimeOffset? date,string directory,bool driverInBox,string hwids,string inf,string provider,string submissionId,string sysfile,string version)
+        public DriverPackage(string keyName, DateTimeOffset keyLastWriteTimestamp, string clss, string classGuid,
+            DateTimeOffset? date, string directory, bool driverInBox, string hwids, string inf, string provider,
+            string submissionId, string sysfile, string version)
         {
-            Keyname = keyname;
+            KeyName = keyName;
             KeyLastWriteTimestamp = keyLastWriteTimestamp;
             Class = clss;
             ClassGuid = classGuid;
@@ -25,7 +22,8 @@ public    class DriverPackage
             SYSFILE = sysfile;
             Version = version;
         }
-        public string Keyname { get; }
+
+        public string KeyName { get; }
         public DateTimeOffset KeyLastWriteTimestamp { get; }
         public string Class { get; }
         public string ClassGuid { get; }
@@ -38,6 +36,5 @@ public    class DriverPackage
         public string SubmissionId { get; }
         public string SYSFILE { get; }
         public string Version { get; }
-
     }
 }

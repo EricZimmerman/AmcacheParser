@@ -5,7 +5,8 @@ namespace Amcache.Classes
 {
     public class FileEntryOld
     {
-        public FileEntryOld(string productName, string programID, string sha1, string fullPath, DateTimeOffset? lastMod2,
+        public FileEntryOld(string productName, string programID, string sha1, string fullPath,
+            DateTimeOffset? lastMod2,
             string volumeID, DateTimeOffset volumeLastWrite, string fileID, DateTimeOffset lastWrite, int unknown5,
             string compName, int? langId,
             string fileVerString, string peHash, string fileVerNum, string fileDesc, long unknown1, ulong unknown2,

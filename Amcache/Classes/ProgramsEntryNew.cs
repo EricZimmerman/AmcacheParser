@@ -1,20 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Amcache.Classes
 {
     public class ProgramsEntryNew
     {
- 
-
-
         public ProgramsEntryNew(string bundleManifestPath, bool hiddenArp, bool inboxModernApp,
-            DateTimeOffset? installDate,int language,string manifestPath,string msiPackageCode,string msiProductCode,string name,string osVersionAtInstallTime,string packageFullName,string programId,string programInstanceId,string publisher,string registryKeyPath,string rootDirPath,string source,string storeAppType,string type,string uninstallString,string version, DateTimeOffset lastwrite)
+            DateTimeOffset? installDate, int language, string manifestPath, string msiPackageCode,
+            string msiProductCode, string name, string osVersionAtInstallTime, string packageFullName, string programId,
+            string programInstanceId, string publisher, string registryKeyPath, string rootDirPath, string source,
+            string storeAppType, string type, string uninstallString, string version, DateTimeOffset lastwrite)
         {
-
             FileEntries = new List<FileEntryNew>();
 
 
@@ -66,6 +62,5 @@ namespace Amcache.Classes
 
         public DateTimeOffset KeyLastWriteTimestamp { get; }
         public List<FileEntryNew> FileEntries { get; }
-
     }
 }

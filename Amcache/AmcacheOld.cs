@@ -121,7 +121,7 @@ namespace Amcache
                                         EpochA = DateTimeOffset.FromUnixTimeSeconds(seca).ToUniversalTime();
                                     }
                                 }
-                                catch (Exception )
+                                catch (Exception)
                                 {
                                     //sometimes the number is way too big
                                 }
