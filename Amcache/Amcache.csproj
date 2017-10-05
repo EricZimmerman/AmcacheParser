@@ -54,6 +54,9 @@
     <Compile Include="AmcacheNew.cs" />
     <Compile Include="AmcacheOld.cs" />
     <Compile Include="Classes\DeviceContainer.cs" />
+    <Compile Include="Classes\DevicePnp.cs" />
+    <Compile Include="Classes\DriverBinary.cs" />
+    <Compile Include="Classes\DriverPackage.cs" />
     <Compile Include="Classes\FileEntryNew.cs" />
     <Compile Include="Classes\FileEntryOld.cs" />
     <Compile Include="Classes\ProgramsEntryNew.cs" />

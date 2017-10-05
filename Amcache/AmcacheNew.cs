@@ -17,6 +17,8 @@ namespace Amcache
         public List<FileEntryNew> UnassociatedFileEntries { get; }
         public List<ProgramsEntryNew> ProgramsEntries { get; }
         public List<DeviceContainer> DeviceContainers { get; }
+        public List<DevicePnp> DevicePnps { get; }
+        public List<DriverBinary> DriveBinaries { get; }
 
         public Dictionary<string,string> ShortCuts { get; }
 
@@ -39,6 +41,8 @@ namespace Amcache
             UnassociatedFileEntries = new List<FileEntryNew>();
             ProgramsEntries = new List<ProgramsEntryNew>();
             DeviceContainers = new List<DeviceContainer>();
+            DevicePnps = new List<DevicePnp>();
+            DriveBinaries = new List<DriverBinary>();
             ShortCuts = new Dictionary<string, string>();
 
             if (fileKey == null || programsKey == null)
@@ -401,7 +405,260 @@ namespace Amcache
 
 
 
+            var pnpKey = reg.GetKey(@"Root\InventoryDevicePnp");
 
+            if (pnpKey != null)
+            {
+                foreach (var pnpsKey in pnpKey.SubKeys)
+                {
+                    var busReportedDescription = string.Empty;
+                    var Class = string.Empty;
+                    var classGuid = string.Empty;
+                    var compid = string.Empty;
+                    var containerId = string.Empty;
+                    var description = string.Empty;
+                    var deviceState = string.Empty;
+                    var driverId = string.Empty;
+                    var driverName = string.Empty;
+                    var driverPackageStrongName = string.Empty;
+                    var driverVerDate = string.Empty;
+                    var driverVerVersion = string.Empty;
+                    var enumerator = string.Empty;
+                    var hwid = string.Empty;
+                    var inf = string.Empty;
+                    var installState = string.Empty;
+                    var manufacturer = string.Empty;
+                    var matchingId = string.Empty;
+                    var model = string.Empty;
+                    var parentId = string.Empty;
+                    var problemCode = string.Empty;
+                    var provider = string.Empty;
+                    var service = string.Empty;
+                    var stackid = string.Empty;
+
+                    try
+                    {
+                        foreach (var keyValue in pnpsKey.Values)
+                        {
+                            switch (keyValue.ValueName)
+                            {
+                                case "BusReportedDescription":
+                                    busReportedDescription = keyValue.ValueData;
+                                    break;
+                                case "Class":
+                                    Class = keyValue.ValueData;
+                                    break;
+                                case "ClassGuid":
+                                    classGuid = keyValue.ValueData;
+                                    break;
+                                case "COMPID":
+                                    compid = keyValue.ValueData;
+                                    break;
+                                case "ContainerId":
+                                    containerId = keyValue.ValueData;
+                                    break;
+                                case "Description":
+                                    description = keyValue.ValueData;
+                                    break;
+                                case "DeviceState":
+                                    deviceState = keyValue.ValueData;
+                                    break;
+                                case "DriverId":
+                                    driverId = keyValue.ValueData;
+                                    break;
+                                case "DriverName":
+                                    driverName = keyValue.ValueData;
+                                    break;
+                                case "DriverPackageStrongName":
+                                    driverPackageStrongName = keyValue.ValueData;
+                                    break;
+                                case "DriverVerDate":
+                                    driverVerDate = keyValue.ValueData;
+                                    break;
+                                case "DriverVerVersion":
+                                    driverVerVersion = keyValue.ValueData;
+                                    break;
+                                case "Enumerator":
+                                    enumerator = keyValue.ValueData;
+                                    break;
+                                case "HWID":
+                                    hwid = keyValue.ValueData;
+                                    break;
+                                case "Inf":
+                                    inf = keyValue.ValueData;
+                                    break;
+                                case "InstallState":
+                                    installState = keyValue.ValueData;
+                                    break;
+                                case "LowerClassFilters":
+                                case "LowerFilters":
+                                    break;
+                                case "Manufacturer":
+                                    manufacturer = keyValue.ValueData;
+                                    break;
+                                case "MatchingID":
+                                    matchingId = keyValue.ValueData;
+                                    break;
+                                case "Model":
+                                    model = keyValue.ValueData;
+                                    break;
+                                case "ParentId":
+                                    parentId = keyValue.ValueData;
+                                    break;
+                                case "ProblemCode":
+                                    problemCode = keyValue.ValueData;
+                                    break;
+                                case "Provider":
+                                    provider = keyValue.ValueData;
+                                    break;
+                                case "Service":
+                                    service = keyValue.ValueData;
+                                    break;
+                                case "STACKID":
+                                    stackid = keyValue.ValueData;
+                                    break;
+                                case "UpperClassFilters":
+                                case "UpperFilters":
+                                    break;
+                                default:
+                                    _logger.Warn(
+                                        $"Unknown value name when processing DevicePnp at path '{pnpsKey.KeyPath}': {keyValue.ValueName}");
+                                    break;
+                            }
+                        }
+
+                        var dp = new DevicePnp(pnpsKey.KeyName, pnpKey.LastWriteTime.Value,busReportedDescription,Class,classGuid,compid,containerId,description,deviceState,driverId,driverName,driverPackageStrongName,driverVerDate,driverVerVersion,enumerator,hwid,inf,installState,manufacturer,matchingId,model,parentId,problemCode,provider,service,stackid);
+
+                        DevicePnps.Add(dp);
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.Error($"Error parsing DevicePnp at {pnpKey.KeyPath}. Error: {ex.Message}");
+                        _logger.Error(
+                            $"Please send the following text to saericzimmerman@gmail.com. \r\n\r\nKey data: {pnpKey}");
+                    }
+
+                }
+            }
+
+
+
+            var binaryKey = reg.GetKey(@"Root\InventoryDriverBinary");
+
+            if (binaryKey != null)
+            {
+                foreach (var binKey in binaryKey.SubKeys)
+                {
+                    var driverCheckSum = 0;
+                    var driverCompany = string.Empty;
+                    var driverId = string.Empty;
+                    var driverInBox = false;
+                    var driverIsKernelMode = false;
+                    DateTimeOffset? driverLastWriteTime = null;
+                    var driverName = string.Empty;
+                    var driverPackageStrongName = string.Empty;
+                    var driverSigned = false;
+                    DateTimeOffset? driverTimeStamp = null;
+                    var driverType = string.Empty;
+                    var driverVersion = string.Empty;
+                    var imageSize = 0;
+                    var inf = string.Empty;
+                    var product = string.Empty;
+                    var productVersion = string.Empty;
+                    var service = string.Empty;
+                    var wdfVersion = string.Empty;
+
+
+                    try
+                    {
+                        foreach (var keyValue in binKey.Values)
+                        {
+                            switch (keyValue.ValueName)
+                            {
+                                case "DriverCheckSum":
+                                    driverCheckSum = Int32.Parse(keyValue.ValueData);
+                                    break;
+                                case "DriverCompany":
+                                    driverCompany = keyValue.ValueData;
+                                    break;
+                                case "DriverId":
+                                    driverId = keyValue.ValueData;
+                                    break;
+                                case "DriverInBox":
+                                    driverInBox = keyValue.ValueData == "1";
+                                    break;
+                                case "DriverIsKernelMode":
+                                    driverIsKernelMode = keyValue.ValueData == "1";
+                                    break;
+                                case "DriverLastWriteTime":
+                                    if (keyValue.ValueData.Length > 0)
+                                    {
+                                        var d = new DateTimeOffset(DateTime.Parse(keyValue.ValueData).Ticks, TimeSpan.Zero);
+                                        driverLastWriteTime = new DateTimeOffset?(d);
+                                    }
+                                    
+                                    break;
+                                case "DriverName":
+                                    driverName = keyValue.ValueData;
+                                    break;
+                                case "DriverPackageStrongName":
+                                    driverPackageStrongName = keyValue.ValueData;
+                                    break;
+                                case "DriverSigned":
+                                    driverSigned = keyValue.ValueData == "1";
+                                    break;
+                                case "DriverTimeStamp":
+                                    //DateTimeOffset.FromUnixTimeSeconds(seca).ToUniversalTime();
+                                    var seca = long.Parse(keyValue.ValueData);
+                                    if (seca > 0)
+                                    {
+                                        driverTimeStamp = DateTimeOffset.FromUnixTimeSeconds(seca).ToUniversalTime();
+                                    }
+                                    break;
+                                case "DriverType":
+                                    driverType = keyValue.ValueData;
+                                    break;
+                                case "DriverVersion":
+                                    driverVersion = keyValue.ValueData;
+                                    break;
+                                case "ImageSize":
+                                    imageSize = int.Parse(keyValue.ValueData);
+                                    break;
+                                case "Inf":
+                                    inf = keyValue.ValueData;
+                                    break;
+                                case "Product":
+                                    product = keyValue.ValueData;
+                                    break;
+                                case "ProductVersion":
+                                    productVersion = keyValue.ValueData;
+                                    break;
+                                case "Service":
+                                    service = keyValue.ValueData;
+                                    break;
+                                case "WdfVersion":
+                                    wdfVersion = keyValue.ValueData;
+                                    break;
+                                default:
+                                    _logger.Warn(
+                                        $"Unknown value name when processing DriverBinary at path '{binKey.KeyPath}': {keyValue.ValueName}");
+                                    break;
+                            }
+                        }
+
+                        var db = new DriverBinary(binKey.KeyName, binaryKey.LastWriteTime.Value,driverCheckSum,driverCompany,driverId,driverInBox,driverIsKernelMode,driverLastWriteTime,driverName,driverPackageStrongName,driverSigned,driverTimeStamp,driverType,driverVersion,imageSize,inf,product,productVersion,service,wdfVersion);
+
+                        DriveBinaries.Add(db);
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.Error($"Error parsing DriverBinary at {binaryKey.KeyPath}. Error: {ex.Message}");
+                        _logger.Error(
+                            $"Please send the following text to saericzimmerman@gmail.com. \r\n\r\nKey data: {binaryKey}");
+                    }
+
+                }
+            }
 
         }
     }
