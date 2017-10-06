@@ -8,7 +8,7 @@ using Registry;
 
 namespace Amcache
 {
-    public class AmcacheOld
+    public class Amcache
     {
         private const int ProductName = 0;
         private const int CompanyName = 0x1;
@@ -17,26 +17,26 @@ namespace Amcache
         private const int SwitchBackContext = 0x4;
         private const int FileVersionString = 0x5;
         private const int FileSize = 0x6;
-        private const int PEHeaderSize = 0x7;
+        private const int SizeOfImage = 0x7;
         private const int PEHeaderHash = 0x8;
         private const int PEHeaderChecksum = 0x9;
-        private const int Unknown1 = 0xa;
-        private const int Unknown2 = 0xb;
+        private const int BinProductVersion = 0xa;
+        private const int BinFileVersion = 0xb;
         private const int FileDescription = 0xc;
-        private const int Unknown3 = 0xd;
-        private const int CompileTime = 0xf;
-        private const int Unknown4 = 0x10;
+        private const int LinkerVersion = 0xd;
+        private const int LinkDate = 0xf;
+        private const int BinaryType = 0x10;
         private const int LastModified = 0x11;
         private const int Created = 0x12;
         private const int FullPath = 0x15;
-        private const int Unknown5 = 0x16;
-        private const int LastModified2 = 0x17;
+        private const int IsLocal = 0x16;
+        private const int LastModifiedStore = 0x17;
         private const int ProgramID = 0x100;
-        private const int Unknown6 = 0x106;
+        private const int GuessProgramID = 0x106;
         private const int SHA1 = 0x101;
         private static Logger _logger;
 
-        public AmcacheOld(string hive, bool recoverDeleted)
+        public Amcache(string hive, bool recoverDeleted)
         {
             _logger = LogManager.GetCurrentClassLogger();
 
@@ -50,12 +50,12 @@ namespace Amcache
             var programsKey = reg.GetKey(@"Root\Programs");
 
 
-            UnassociatedFileEntries = new List<FileEntryOld>();
-            ProgramsEntries = new List<ProgramsEntryOld>();
+            UnassociatedFileEntries = new List<FileEntry>();
+            ProgramsEntries = new List<ProgramsEntry>();
 
             if (fileKey == null || programsKey == null)
             {
-                _logger.Error("Hive does not contain a File and/or Programs key. Processing cannot continue");
+                _logger.Error($"Hive does not contain a File and/or Programs key. Processing cannot continue");
                 return;
             }
 
@@ -121,7 +121,7 @@ namespace Amcache
                                         EpochA = DateTimeOffset.FromUnixTimeSeconds(seca).ToUniversalTime();
                                     }
                                 }
-                                catch (Exception)
+                                catch (Exception )
                                 {
                                     //sometimes the number is way too big
                                 }
@@ -179,7 +179,7 @@ namespace Amcache
                         }
                     }
 
-                    var pe = new ProgramsEntryOld(ProgramName0, ProgramVersion1, VenderName2, LocaleID3, InstallSource6,
+                    var pe = new ProgramsEntry(ProgramName0, ProgramVersion1, VenderName2, LocaleID3, InstallSource6,
                         UninstallKey7, Guid10, Guid12, UninstallGuid11, Dword5, Dword13, Dword14, Dword15, UnknownBytes,
                         Qword17, Dword18, EpochA, EpochB, PathListd, Guidf, RawFiles, registryKey.KeyName,
                         registryKey.LastWriteTime.Value);
@@ -214,20 +214,20 @@ namespace Amcache
                     var progID = "";
                     var sha = "";
 
-                    long unknown1 = 0;
-                    ulong unknown2 = 0;
-                    var unknown3 = 0;
-                    var unknown4 = 0;
-                    var unknown5 = 0;
-                    var unknown6 = 0;
+                    long binProdVersion = 0;
+                    ulong binFileVersion = 0;
+                    var linkerVersion = 0;
+                    var binType = 0;
+                    var isLocal = 0;
+                    var gProgramID = 0;
                     int? fileSize = null;
-                    int? peHeaderSize = null;
+                    int? sizeOfImage = null;
                     int? peHeaderChecksum = null;
 
                     DateTimeOffset? created = null;
                     DateTimeOffset? lm = null;
-                    DateTimeOffset? lm2 = null;
-                    DateTimeOffset? compTime = null;
+                    DateTimeOffset? lmStore = null;
+                    DateTimeOffset? linkDate = null;
 
                     var hasLinkedProgram = false;
 
@@ -261,8 +261,8 @@ namespace Amcache
                                 case FileSize:
                                     fileSize = int.Parse(keyValue.ValueData);
                                     break;
-                                case PEHeaderSize:
-                                    peHeaderSize = int.Parse(keyValue.ValueData);
+                                case SizeOfImage:
+                                    sizeOfImage = int.Parse(keyValue.ValueData);
                                     break;
                                 case PEHeaderHash:
                                     peHash = keyValue.ValueData;
@@ -270,25 +270,25 @@ namespace Amcache
                                 case PEHeaderChecksum:
                                     peHeaderChecksum = int.Parse(keyValue.ValueData);
                                     break;
-                                case Unknown1:
-                                    unknown1 = long.Parse(keyValue.ValueData);
+                                case BinProductVersion:
+                                    binProdVersion = long.Parse(keyValue.ValueData);
                                     break;
-                                case Unknown2:
-                                    unknown2 = ulong.Parse(keyValue.ValueData);
+                                case BinFileVersion:
+                                    binFileVersion = ulong.Parse(keyValue.ValueData);
                                     break;
                                 case FileDescription:
                                     fileDesc = keyValue.ValueData;
                                     break;
-                                case Unknown3:
-                                    unknown3 = int.Parse(keyValue.ValueData);
+                                case LinkerVersion:
+                                    linkerVersion = int.Parse(keyValue.ValueData);
                                     break;
-                                case CompileTime:
-                                    compTime =
+                                case LinkDate:
+                                    linkDate =
                                         DateTimeOffset.FromUnixTimeSeconds(long.Parse(keyValue.ValueData))
                                             .ToUniversalTime();
                                     break;
-                                case Unknown4:
-                                    unknown4 = int.Parse(keyValue.ValueData);
+                                case BinaryType:
+                                    binType = int.Parse(keyValue.ValueData);
                                     break;
                                 case LastModified:
                                     lm = DateTimeOffset.FromFileTime(long.Parse(keyValue.ValueData)).ToUniversalTime();
@@ -300,14 +300,14 @@ namespace Amcache
                                 case FullPath:
                                     fullPath = keyValue.ValueData;
                                     break;
-                                case Unknown5:
-                                    unknown5 = int.Parse(keyValue.ValueData);
+                                case IsLocal:
+                                    isLocal = int.Parse(keyValue.ValueData);
                                     break;
-                                case Unknown6:
-                                    unknown6 = int.Parse(keyValue.ValueData);
+                                case GuessProgramID:
+                                    gProgramID = int.Parse(keyValue.ValueData);
                                     break;
-                                case LastModified2:
-                                    lm2 = DateTimeOffset.FromFileTime(long.Parse(keyValue.ValueData)).ToUniversalTime();
+                                case LastModifiedStore:
+                                    lmStore = DateTimeOffset.FromFileTime(long.Parse(keyValue.ValueData)).ToUniversalTime();
                                     break;
                                 case ProgramID:
                                     progID = keyValue.ValueData;
@@ -336,11 +336,11 @@ namespace Amcache
 
                         TotalFileEntries += 1;
 
-                        var fe = new FileEntryOld(prodName, progID, sha, fullPath, lm2, registryKey.KeyName,
+                        var fe = new FileEntry(prodName, progID, sha, fullPath, lmStore, registryKey.KeyName,
                             registryKey.LastWriteTime.Value, subKey.KeyName, subKey.LastWriteTime.Value,
-                            unknown5, compName, langId, fileVerString, peHash, fileVerNum, fileDesc, unknown1, unknown2,
-                            unknown3, unknown4, switchBack, fileSize, compTime, peHeaderSize,
-                            lm, created, peHeaderChecksum, unknown6, subKey.KeyName);
+                            isLocal, compName, langId, fileVerString, peHash, fileVerNum, fileDesc, binProdVersion, binFileVersion,
+                            linkerVersion, binType, switchBack, fileSize, linkDate, sizeOfImage,
+                            lm, created, peHeaderChecksum, gProgramID, subKey.KeyName);
 
                         if (hasLinkedProgram)
                         {
@@ -364,8 +364,8 @@ namespace Amcache
             }
         }
 
-        public List<FileEntryOld> UnassociatedFileEntries { get; }
-        public List<ProgramsEntryOld> ProgramsEntries { get; }
+        public List<FileEntry> UnassociatedFileEntries { get; }
+        public List<ProgramsEntry> ProgramsEntries { get; }
 
         public int TotalFileEntries { get; }
     }

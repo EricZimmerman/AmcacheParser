@@ -3,21 +3,20 @@ using System.IO;
 
 namespace Amcache.Classes
 {
-    public class FileEntryOld
+    public class FileEntry
     {
-        public FileEntryOld(string productName, string programID, string sha1, string fullPath,
-            DateTimeOffset? lastMod2,
-            string volumeID, DateTimeOffset volumeLastWrite, string fileID, DateTimeOffset lastWrite, int unknown5,
+        public FileEntry(string productName, string programID, string sha1, string fullPath, DateTimeOffset? lmStore,
+            string volumeID, DateTimeOffset volumeLastWrite, string fileID, DateTimeOffset lastWrite, int isLocal,
             string compName, int? langId,
-            string fileVerString, string peHash, string fileVerNum, string fileDesc, long unknown1, ulong unknown2,
-            int unknown3, int unknown4, string switchback, int? fileSize, DateTimeOffset? compTime, int? peHeaderSize,
-            DateTimeOffset? lm, DateTimeOffset? created, int? pecheck, int unknown6, string keyName)
+            string fileVerString, string peHash, string fileVerNum, string fileDesc, long binProdVer, ulong binFileVer,
+            int linVer, int binType, string switchback, int? fileSize, DateTimeOffset? linkDate, int? imgSize,
+            DateTimeOffset? lm, DateTimeOffset? created, int? pecheck, int gProgramID, string keyName)
         {
             PEHeaderChecksum = pecheck;
             LastModified = lm;
             Created = created;
-            PEHeaderSize = peHeaderSize;
-            CompileTime = compTime;
+            SizeOfImage = imgSize;
+            LinkDate = linkDate;
             SwitchBackContext = switchback;
             FileSize = fileSize;
             FileDescription = fileDesc;
@@ -34,17 +33,17 @@ namespace Amcache.Classes
 
             FileExtension = Path.GetExtension(fullPath);
 
-            LastModified2 = lastMod2;
+            LastModifiedStore = lmStore;
             FileID = fileID;
             FileIDLastWriteTimestamp = lastWrite;
             VolumeID = volumeID;
             VolumeIDLastWriteTimestamp = volumeLastWrite;
-            Unknown1 = unknown1;
-            Unknown2 = unknown2;
-            Unknown3 = unknown3;
-            Unknown4 = unknown4;
-            Unknown5 = unknown5;
-            Unknown6 = unknown6;
+            BinProductVersion = binProdVer;
+            BinFileVersion = binFileVer;
+            LinkerVersion = linVer;
+            BinaryType = binType;
+            IsLocal = isLocal;
+            GuessProgramID = gProgramID;
             CompanyName = compName;
             LanguageID = langId;
             FileVersionString = fileVerString;
@@ -61,6 +60,7 @@ namespace Amcache.Classes
             {
                 seq = "0";
             }
+
 
             MFTSequenceNumber = Convert.ToInt32(seq, 16);
             var ent = tempKey.Substring(4);
@@ -83,21 +83,21 @@ namespace Amcache.Classes
         public string VolumeID { get; }
         public string SwitchBackContext { get; }
         public string ProgramName { get; set; }
-        public long Unknown1 { get; }
-        public ulong Unknown2 { get; }
-        public int Unknown3 { get; }
-        public int Unknown4 { get; }
-        public int Unknown5 { get; }
-        public int Unknown6 { get; }
+        public long BinProductVersion { get; }
+        public ulong BinFileVersion { get; }
+        public int LinkerVersion { get; }
+        public int BinaryType { get; }
+        public int IsLocal { get; }
+        public int GuessProgramID { get; }
         public int? LanguageID { get; }
         public int? FileSize { get; }
-        public int? PEHeaderSize { get; }
+        public int? SizeOfImage { get; }
         public int? PEHeaderChecksum { get; }
         public DateTimeOffset VolumeIDLastWriteTimestamp { get; }
         public DateTimeOffset FileIDLastWriteTimestamp { get; }
-        public DateTimeOffset? CompileTime { get; }
+        public DateTimeOffset? LinkDate { get; }
         public DateTimeOffset? LastModified { get; }
-        public DateTimeOffset? LastModified2 { get; }
+        public DateTimeOffset? LastModifiedStore { get; }
         public DateTimeOffset? Created { get; }
 
         public static string Reverse(string s)
