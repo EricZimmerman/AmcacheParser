@@ -8,7 +8,7 @@ using Registry;
 
 namespace Amcache
 {
-    public class Amcache
+    public class AmcacheOld
     {
         private const int ProductName = 0;
         private const int CompanyName = 0x1;
@@ -36,7 +36,7 @@ namespace Amcache
         private const int SHA1 = 0x101;
         private static Logger _logger;
 
-        public Amcache(string hive, bool recoverDeleted)
+        public AmcacheOld(string hive, bool recoverDeleted)
         {
             _logger = LogManager.GetCurrentClassLogger();
 
@@ -50,8 +50,8 @@ namespace Amcache
             var programsKey = reg.GetKey(@"Root\Programs");
 
 
-            UnassociatedFileEntries = new List<FileEntry>();
-            ProgramsEntries = new List<ProgramsEntry>();
+            UnassociatedFileEntries = new List<FileEntryOld>();
+            ProgramsEntries = new List<ProgramsEntryOld>();
 
             if (fileKey == null || programsKey == null)
             {
@@ -179,7 +179,7 @@ namespace Amcache
                         }
                     }
 
-                    var pe = new ProgramsEntry(ProgramName0, ProgramVersion1, VenderName2, LocaleID3, InstallSource6,
+                    var pe = new ProgramsEntryOld(ProgramName0, ProgramVersion1, VenderName2, LocaleID3, InstallSource6,
                         UninstallKey7, Guid10, Guid12, UninstallGuid11, Dword5, Dword13, Dword14, Dword15, UnknownBytes,
                         Qword17, Dword18, EpochA, EpochB, PathListd, Guidf, RawFiles, registryKey.KeyName,
                         registryKey.LastWriteTime.Value);
@@ -336,7 +336,7 @@ namespace Amcache
 
                         TotalFileEntries += 1;
 
-                        var fe = new FileEntry(prodName, progID, sha, fullPath, lmStore, registryKey.KeyName,
+                        var fe = new FileEntryOld(prodName, progID, sha, fullPath, lmStore, registryKey.KeyName,
                             registryKey.LastWriteTime.Value, subKey.KeyName, subKey.LastWriteTime.Value,
                             isLocal, compName, langId, fileVerString, peHash, fileVerNum, fileDesc, binProdVersion, binFileVersion,
                             linkerVersion, binType, switchBack, fileSize, linkDate, sizeOfImage,
@@ -364,8 +364,8 @@ namespace Amcache
             }
         }
 
-        public List<FileEntry> UnassociatedFileEntries { get; }
-        public List<ProgramsEntry> ProgramsEntries { get; }
+        public List<FileEntryOld> UnassociatedFileEntries { get; }
+        public List<ProgramsEntryOld> ProgramsEntries { get; }
 
         public int TotalFileEntries { get; }
     }

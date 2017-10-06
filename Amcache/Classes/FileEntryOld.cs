@@ -3,9 +3,9 @@ using System.IO;
 
 namespace Amcache.Classes
 {
-    public class FileEntry
+    public class FileEntryOld
     {
-        public FileEntry(string productName, string programID, string sha1, string fullPath, DateTimeOffset? lmStore,
+        public FileEntryOld(string productName, string programID, string sha1, string fullPath, DateTimeOffset? lmStore,
             string volumeID, DateTimeOffset volumeLastWrite, string fileID, DateTimeOffset lastWrite, int isLocal,
             string compName, int? langId,
             string fileVerString, string peHash, string fileVerNum, string fileDesc, long binProdVer, ulong binFileVer,
