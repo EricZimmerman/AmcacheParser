@@ -417,7 +417,7 @@ namespace AmcacheParser
                     _logger.Info($"Total file entries found: {amNew.TotalFileEntries:N0}");
                     if (amNew.ShortCuts.Count > 0)
                     {
-                        _logger.Info($"Total short cuts found: {amNew.ShortCuts.Count:N0}");
+                        _logger.Info($"Total shortcuts found: {amNew.ShortCuts.Count:N0}");
                     }
                     if (amNew.DeviceContainers.Count > 0)
                     {
