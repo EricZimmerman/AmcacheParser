@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -8,6 +9,7 @@ using Amcache;
 using Amcache.Classes;
 using CsvHelper;
 using CsvHelper.Configuration;
+using CsvHelper.TypeConversion;
 using Exceptionless;
 using Fclp;
 using Microsoft.Win32;
@@ -65,7 +67,7 @@ namespace AmcacheParser
 
             _fluentCommandLineParser.Setup(arg => arg.File)
                 .As('f')
-                .WithDescription("AmcacheOld.hve file to parse. Required").Required();
+                .WithDescription("Amcache.hve file to parse. Required").Required();
 
             _fluentCommandLineParser.Setup(arg => arg.IncludeLinked)
                 .As('i').SetDefault(false)
@@ -153,9 +155,6 @@ namespace AmcacheParser
             try
             {
 
-                //determine format here
-                //fork accordingly
-
                 if (Helper.IsNewFormat(_fluentCommandLineParser.Object.File))
                 {
                     var amNew = new AmcacheNew(_fluentCommandLineParser.Object.File,
@@ -241,14 +240,55 @@ namespace AmcacheParser
                         sw.AutoFlush = true;
 
                         var csv = new CsvWriter(sw);
-                        csv.Configuration.RegisterClassMap(
-                            new FECacheOutputMapNew(_fluentCommandLineParser.Object.DateTimeFormat));
+
+                        var o = new TypeConverterOptions
+                        {
+                            DateTimeStyle = DateTimeStyles.AssumeUniversal & DateTimeStyles.AdjustToUniversal
+                        };
+                        csv.Configuration.TypeConverterOptionsCache.AddOptions<FileEntryNew>(o);
+
+                        var foo = csv.Configuration.AutoMap<FileEntryNew>();
+                        
+                        foo.Map(m => m.ApplicationName).Index(0);
+
+                        foo.Map(m => m.ProgramId).Index(1);
+                        foo.Map(t => t.FileKeyLastWriteTimestamp).ConvertUsing(t =>t.FileKeyLastWriteTimestamp.ToString(_fluentCommandLineParser.Object.DateTimeFormat)).Index(2);
+                        foo. Map(m => m.SHA1).Index(3);
+                        foo.Map(m => m.IsOsComponent).Index(4);
+                        foo.Map(m => m.FullPath).Index(5);
+                        foo.Map(m => m.Name).Index(6);
+                        foo.Map(m => m.FileExtension).Index(7);
+
+                        foo.Map(t => t.LinkDate).ConvertUsing(t =>
+                            t.LinkDate?.ToString(_fluentCommandLineParser.Object.DateTimeFormat)).Index(8);
+                        foo.Map(m => m.ProductName).Index(9);
+
+                        foo.Map(m => m.Size).Index(10);
+
+                        foo.Map(m => m.Version).Index(11);
+                        foo.Map(m => m.ProductVersion).Index(12);
+
+                        foo.Map(m => m.LongPathHash).Index(13);
+
+                        foo.Map(m => m.BinaryType).Index(14);
+                        foo.Map(m => m.IsPeFile).Index(15);
+
+                        foo.Map(m => m.BinFileVersion).Index(16);
+                        foo.Map(m => m.BinProductVersion).Index(17);
+
+                        foo.Map(m => m.Language).Index(18);
+                        foo.Map(m => m.Publisher).Ignore();
+
+
+                        csv.Configuration.RegisterClassMap(foo);
+                   
                         csv.Configuration.Delimiter = "\t";
 
                         csv.WriteHeader<FileEntryNew>();
+                        csv.NextRecord();
                         csv.WriteRecords(cleanList2);
                     }
-
+                    
 
                     if (_fluentCommandLineParser.Object.IncludeLinked)
                     {
@@ -260,11 +300,60 @@ namespace AmcacheParser
                             sw.AutoFlush = true;
 
                             var csv = new CsvWriter(sw);
-                            csv.Configuration.RegisterClassMap(
-                                new PECacheOutputMapNew(_fluentCommandLineParser.Object.DateTimeFormat));
+
+                            var o = new TypeConverterOptions
+                            {
+                                DateTimeStyle = DateTimeStyles.AssumeUniversal & DateTimeStyles.AdjustToUniversal
+                            };
+                            csv.Configuration.TypeConverterOptionsCache.AddOptions<ProgramsEntryNew>(o);
+
+                            var foo = csv.Configuration.AutoMap<ProgramsEntryNew>();
+                            
+                            foo.Map(m => m.ProgramId).Index(0);
+                            foo.Map(t => t.KeyLastWriteTimestamp).ConvertUsing(t =>t.KeyLastWriteTimestamp.ToString(_fluentCommandLineParser.Object.DateTimeFormat)).Index(1);
+                            foo.Map(m => m.Name).Index(2);
+                            foo.Map(m => m.Version).Index(3);
+                            foo.Map(m => m.Publisher).Index(4);
+
+                            foo.Map(t => t.InstallDate).ConvertUsing(row =>
+                            {
+                                if (row.InstallDate.HasValue)
+                                {
+                                    return row.InstallDate.Value.ToString(
+                                        _fluentCommandLineParser.Object.DateTimeFormat);
+                                }
+
+                                return "";
+
+                            } ).Index(5);
+                                
+                            foo.Map(m => m.OSVersionAtInstallTime).Index(6);
+
+                            foo.Map(m => m.BundleManifestPath).Index(7);
+                            foo.Map(m => m.HiddenArp).Index(8);
+                            foo.Map(m => m.InboxModernApp).Index(9);
+                            foo.Map(m => m.Language).Index(10);
+                            foo.Map(m => m.ManifestPath).Index(11);
+                            foo. Map(m => m.MsiPackageCode).Index(12);
+                            foo.Map(m => m.MsiProductCode).Index(13);
+
+                            foo.Map(m => m.PackageFullName).Index(14);
+                            foo.Map(m => m.ProgramInstanceId).Index(15);
+                            foo.Map(m => m.RegistryKeyPath).Index(16);
+                            foo.Map(m => m.RootDirPath).Index(17);
+                            
+                            foo.Map(m => m.Type).Index(18);
+                            foo.Map(m => m.Source).Index(19);
+                            foo.Map(m => m.StoreAppType).Index(20);
+
+                            foo.Map(m => m.UninstallString).Index(21);
+                            
+                            csv.Configuration.RegisterClassMap(foo);
+                            
                             csv.Configuration.Delimiter = "\t";
 
                             csv.WriteHeader<ProgramsEntryNew>();
+                            csv.NextRecord();
                             csv.WriteRecords(amNew.ProgramsEntries);
                         }
 
@@ -274,11 +363,51 @@ namespace AmcacheParser
                         using (var sw = new StreamWriter(outFile1))
                         {
                             var csv = new CsvWriter(sw);
-                            csv.Configuration.RegisterClassMap(
-                                new FECacheOutputMapNew(_fluentCommandLineParser.Object.DateTimeFormat));
+
+                            var o = new TypeConverterOptions
+                            {
+                                DateTimeStyle = DateTimeStyles.AssumeUniversal & DateTimeStyles.AdjustToUniversal
+                            };
+                            csv.Configuration.TypeConverterOptionsCache.AddOptions<FileEntryNew>(o);
+
+                            var foo = csv.Configuration.AutoMap<FileEntryNew>();
+                        
+                            foo.Map(m => m.ApplicationName).Index(0);
+
+                            foo.Map(m => m.ProgramId).Index(1);
+                            foo.Map(t => t.FileKeyLastWriteTimestamp).ConvertUsing(t =>t.FileKeyLastWriteTimestamp.ToString(_fluentCommandLineParser.Object.DateTimeFormat)).Index(2);
+                            foo. Map(m => m.SHA1).Index(3);
+                            foo.Map(m => m.IsOsComponent).Index(4);
+                            foo.Map(m => m.FullPath).Index(5);
+                            foo.Map(m => m.Name).Index(6);
+                            foo.Map(m => m.FileExtension).Index(7);
+
+                            foo.Map(t => t.LinkDate).ConvertUsing(t =>
+                                t.LinkDate?.ToString(_fluentCommandLineParser.Object.DateTimeFormat)).Index(8);
+                            foo.Map(m => m.ProductName).Index(9);
+
+                            foo.Map(m => m.Size).Index(10);
+
+                            foo.Map(m => m.Version).Index(11);
+                            foo.Map(m => m.ProductVersion).Index(12);
+
+                            foo.Map(m => m.LongPathHash).Index(13);
+
+                            foo.Map(m => m.BinaryType).Index(14);
+                            foo.Map(m => m.IsPeFile).Index(15);
+
+                            foo.Map(m => m.BinFileVersion).Index(16);
+                            foo.Map(m => m.BinProductVersion).Index(17);
+
+                            foo.Map(m => m.Language).Index(18);
+                            foo.Map(m => m.Publisher).Ignore();
+
+                            csv.Configuration.RegisterClassMap(foo);
+
                             csv.Configuration.Delimiter = "\t";
 
                             csv.WriteHeader<FileEntryNew>();
+                            csv.NextRecord();
 
                             sw.AutoFlush = true;
 
@@ -294,26 +423,38 @@ namespace AmcacheParser
                     }
 
 
-                    //DUMP NEW STUFF HERE
-
-
                     outbase1 = $"{ts1}_{hiveName1}_ShortCuts.tsv";
                     outFile1 = Path.Combine(_fluentCommandLineParser.Object.SaveTo, outbase1);
 
                     using (var sw = new StreamWriter(outFile1))
                     {
                         var csv = new CsvWriter(sw);
-                        csv.Configuration.RegisterClassMap(
-                            new ShortCuts(_fluentCommandLineParser.Object.DateTimeFormat));
+
+                        var o = new TypeConverterOptions
+                        {
+                            DateTimeStyle = DateTimeStyles.AssumeUniversal & DateTimeStyles.AdjustToUniversal
+                        };
+                        csv.Configuration.TypeConverterOptionsCache.AddOptions<Shortcut>(o);
+
+                        var foo = csv.Configuration.AutoMap<Shortcut>();
+                        
+                        foo.Map(m => m.KeyName).Index(0);
+                        foo.Map(m => m.LnkName).Index(1);
+                        
+                        foo.Map(t => t.KeyLastWriteTimestamp).ConvertUsing(t =>t.KeyLastWriteTimestamp.ToString(_fluentCommandLineParser.Object.DateTimeFormat)).Index(2);
+
+                        csv.Configuration.RegisterClassMap(foo);
+
                         csv.Configuration.Delimiter = "\t";
 
                         csv.WriteHeader<Shortcut>();
-
+                        csv.NextRecord();
                         sw.AutoFlush = true;
 
                         foreach (var sc in amNew.ShortCuts)
                         {
                             csv.WriteRecord(sc);
+                            csv.NextRecord();
                         }
                     }
 
@@ -323,17 +464,51 @@ namespace AmcacheParser
                     using (var sw = new StreamWriter(outFile1))
                     {
                         var csv = new CsvWriter(sw);
-                        csv.Configuration.RegisterClassMap(
-                            new DriverBinaries(_fluentCommandLineParser.Object.DateTimeFormat));
+
+
+                        var o = new TypeConverterOptions
+                        {
+                            DateTimeStyle = DateTimeStyles.AssumeUniversal & DateTimeStyles.AdjustToUniversal
+                        };
+                        csv.Configuration.TypeConverterOptionsCache.AddOptions<DriverBinary>(o);
+
+                        var foo = csv.Configuration.AutoMap<DriverBinary>();
+
+                        foo.Map(m => m.KeyName).Index(0);
+                        foo.Map(t => t.KeyLastWriteTimestamp).ConvertUsing(t =>t.KeyLastWriteTimestamp.ToString(_fluentCommandLineParser.Object.DateTimeFormat)).Index(1);
+                        foo.Map(t => t.DriverTimeStamp).ConvertUsing(t =>t.DriverTimeStamp?.ToString(_fluentCommandLineParser.Object.DateTimeFormat)).Index(2);
+                        foo.Map(t => t.DriverLastWriteTime).ConvertUsing(t =>t.DriverLastWriteTime?.ToString(_fluentCommandLineParser.Object.DateTimeFormat)).Index(3);
+
+                        foo.Map(m => m.DriverName).Index(4);
+
+                        foo.Map(m => m.DriverInBox).Index(5);
+                        foo.Map(m => m.DriverIsKernelMode).Index(6);
+                        foo.Map(m => m.DriverSigned).Index(7);
+                        foo.Map(m => m.DriverCheckSum).Index(8);
+                        foo.Map(m => m.DriverCompany).Index(9);
+                        foo.Map(m => m.DriverId).Index(10);
+                        foo.Map(m => m.DriverPackageStrongName).Index(11);
+                        foo.Map(m => m.DriverType).Index(12);
+                        foo.Map(m => m.DriverVersion).Index(13);
+                        foo.Map(m => m.ImageSize).Index(14);
+                        foo.Map(m => m.Inf).Index(15);
+                        foo.Map(m => m.Product).Index(16);
+                        foo.Map(m => m.ProductVersion).Index(17);
+                        foo.Map(m => m.Service).Index(18);
+                        foo.Map(m => m.WdfVersion).Index(19);
+
+                        csv.Configuration.RegisterClassMap(foo);
+
                         csv.Configuration.Delimiter = "\t";
 
                         csv.WriteHeader<DriverBinary>();
-
+                        csv.NextRecord();
                         sw.AutoFlush = true;
 
                         foreach (var sc in amNew.DriveBinaries)
                         {
                             csv.WriteRecord(sc);
+                            csv.NextRecord();
                         }
                     }
 
@@ -344,17 +519,48 @@ namespace AmcacheParser
                     using (var sw = new StreamWriter(outFile1))
                     {
                         var csv = new CsvWriter(sw);
-                        csv.Configuration.RegisterClassMap(
-                            new DeviceContainers(_fluentCommandLineParser.Object.DateTimeFormat));
+
+
+                        var o = new TypeConverterOptions
+                        {
+                            DateTimeStyle = DateTimeStyles.AssumeUniversal & DateTimeStyles.AdjustToUniversal
+                        };
+                        csv.Configuration.TypeConverterOptionsCache.AddOptions<DeviceContainer>(o);
+
+                        var foo = csv.Configuration.AutoMap<DeviceContainer>();
+
+                        foo.Map(m => m.KeyName).Index(0);
+                        foo.Map(t => t.KeyLastWriteTimestamp).ConvertUsing(t =>t.KeyLastWriteTimestamp.ToString(_fluentCommandLineParser.Object.DateTimeFormat)).Index(1);
+
+                        foo.Map(m => m.Categories).Index(2);
+
+                        foo.Map(m => m.DiscoveryMethod).Index(3);
+                        foo.Map(m => m.FriendlyName).Index(4);
+                        foo.Map(m => m.Icon).Index(5);
+                        foo.Map(m => m.IsActive).Index(6);
+                        foo.Map(m => m.IsConnected).Index(7);
+                        foo.Map(m => m.IsMachineContainer).Index(8);
+                        foo.Map(m => m.IsNetworked).Index(9);
+                        foo.Map(m => m.IsPaired).Index(10);
+                        foo.Map(m => m.Manufacturer).Index(11);
+                        foo.Map(m => m.ModelId).Index(12);
+                        foo.Map(m => m.ModelName).Index(13);
+                        foo.Map(m => m.ModelNumber).Index(14);
+                        foo.Map(m => m.PrimaryCategory).Index(15);
+                        foo.Map(m => m.State).Index(16);
+                        
+                        csv.Configuration.RegisterClassMap(foo);
+
                         csv.Configuration.Delimiter = "\t";
 
                         csv.WriteHeader<DeviceContainer>();
-
+                        csv.NextRecord();
                         sw.AutoFlush = true;
 
                         foreach (var sc in amNew.DeviceContainers)
                         {
                             csv.WriteRecord(sc);
+                            csv.NextRecord();
                         }
                     }
 
@@ -364,17 +570,43 @@ namespace AmcacheParser
                     using (var sw = new StreamWriter(outFile1))
                     {
                         var csv = new CsvWriter(sw);
-                        csv.Configuration.RegisterClassMap(
-                            new DriverPackages(_fluentCommandLineParser.Object.DateTimeFormat));
+
+                        var o = new TypeConverterOptions
+                        {
+                            DateTimeStyle = DateTimeStyles.AssumeUniversal & DateTimeStyles.AdjustToUniversal
+                        };
+                        csv.Configuration.TypeConverterOptionsCache.AddOptions<DriverPackage>(o);
+
+                        var foo = csv.Configuration.AutoMap<DriverPackage>();
+
+                        csv.Configuration.RegisterClassMap(foo);
+                        
+                        foo.Map(m => m.KeyName).Index(0);
+                        foo.Map(t => t.KeyLastWriteTimestamp).ConvertUsing(t =>t.KeyLastWriteTimestamp.ToString(_fluentCommandLineParser.Object.DateTimeFormat)).Index(1);
+                        foo.Map(t => t.Date).ConvertUsing(t =>t.Date?.ToString(_fluentCommandLineParser.Object.DateTimeFormat)).Index(2);
+
+                        foo.Map(m => m.Class).Index(3);
+
+                        foo.Map(m => m.Directory).Index(4);
+                        foo.Map(m => m.DriverInBox).Index(5);
+                        foo.Map(m => m.Hwids).Index(6);
+                        foo.Map(m => m.Inf).Index(7);
+                        foo.Map(m => m.Provider).Index(8);
+                        foo.Map(m => m.SubmissionId).Index(9);
+                        foo.Map(m => m.SYSFILE).Index(10);
+                        foo.Map(m => m.Version).Index(11);
+                        foo.Map(m => m.ClassGuid).Ignore();
+
                         csv.Configuration.Delimiter = "\t";
 
                         csv.WriteHeader<DriverPackage>();
-
+                        csv.NextRecord();
                         sw.AutoFlush = true;
 
                         foreach (var sc in amNew.DriverPackages)
                         {
                             csv.WriteRecord(sc);
+                            csv.NextRecord();
                         }
                     }
 
@@ -384,17 +616,56 @@ namespace AmcacheParser
                     using (var sw = new StreamWriter(outFile1))
                     {
                         var csv = new CsvWriter(sw);
-                        csv.Configuration.RegisterClassMap(
-                            new DevicePnps(_fluentCommandLineParser.Object.DateTimeFormat));
+
+                        var o = new TypeConverterOptions
+                        {
+                            DateTimeStyle = DateTimeStyles.AssumeUniversal & DateTimeStyles.AdjustToUniversal
+                        };
+                        csv.Configuration.TypeConverterOptionsCache.AddOptions<DevicePnp>(o);
+
+                        var foo = csv.Configuration.AutoMap<DevicePnp>();
+
+                        foo.Map(m => m.KeyName).Index(0);
+                        foo.Map(t => t.KeyLastWriteTimestamp).ConvertUsing(t =>t.KeyLastWriteTimestamp.ToString(_fluentCommandLineParser.Object.DateTimeFormat)).Index(1);
+
+                        foo.Map(m => m.BusReportedDescription).Index(2);
+
+                        foo.Map(m => m.Class).Index(3);
+                        foo.Map(m => m.ClassGuid).Index(4);
+                        foo.Map(m => m.Compid).Index(5);
+                        foo.Map(m => m.ContainerId).Index(6);
+                        foo.Map(m => m.Description).Index(7);
+                        foo.Map(m => m.DriverId).Index(8);
+                        foo.Map(m => m.DriverPackageStrongName).Index(9);
+                        foo.Map(m => m.DriverName).Index(10);
+                        foo.Map(m => m.DriverVerDate).Index(11);
+                        foo.Map(m => m.DriverVerVersion).Index(12);
+                        foo.Map(m => m.Enumerator).Index(13);
+                        foo.Map(m => m.HWID).Index(14);
+                        foo.Map(m => m.Inf).Index(15);
+                        foo.Map(m => m.InstallState).Index(16);
+                        foo.Map(m => m.Manufacturer).Index(17);
+                        foo.Map(m => m.MatchingId).Index(18);
+                        foo.Map(m => m.Model).Index(19);
+                        foo.Map(m => m.ParentId).Index(20);
+                        foo.Map(m => m.ProblemCode).Index(21);
+                        foo.Map(m => m.Provider).Index(22);
+                        foo.Map(m => m.Service).Index(23);
+                        foo.Map(m => m.Stackid).Index(24);
+                        foo.Map(m => m.DeviceState).Ignore();
+                        
+                        csv.Configuration.RegisterClassMap(foo);
+
                         csv.Configuration.Delimiter = "\t";
 
                         csv.WriteHeader<DevicePnp>();
-
+                        csv.NextRecord();
                         sw.AutoFlush = true;
 
                         foreach (var sc in amNew.DevicePnps)
                         {
                             csv.WriteRecord(sc);
+                            csv.NextRecord();
                         }
                     }
 
@@ -410,7 +681,6 @@ namespace AmcacheParser
                         linked1 =
                             $"and {totalProgramFileEntries2:N0} program file entries (across {amNew.ProgramsEntries.Count:N0} program entries) ";
                     }
-
 
                     _logger.Info("");
 
@@ -438,7 +708,6 @@ namespace AmcacheParser
                     {
                         _logger.Info($"Total driver packages found: {amNew.DriverPackages.Count:N0}");
                     }
-
 
                     _logger.Info(
                         $"\r\nFound {cleanList2.Count:N0} unassociated file entr{suffix1} {linked1}");
@@ -557,11 +826,56 @@ namespace AmcacheParser
                     sw.AutoFlush = true;
 
                     var csv = new CsvWriter(sw);
-                    csv.Configuration.RegisterClassMap(
-                        new FECacheOutputMapOld(_fluentCommandLineParser.Object.DateTimeFormat));
+
+                    var o = new TypeConverterOptions
+                    {
+                        DateTimeStyle = DateTimeStyles.AssumeUniversal & DateTimeStyles.AdjustToUniversal
+                    };
+                    csv.Configuration.TypeConverterOptionsCache.AddOptions<FileEntryOld>(o);
+
+                    var foo = csv.Configuration.AutoMap<FileEntryOld>();
+
+                    foo.Map(m => m.ProgramName).Index(0);
+                    foo.Map(m => m.ProgramID).Index(1);
+                    foo.Map(m => m.VolumeID).Index(2);
+                    foo.Map(t => t.VolumeIDLastWriteTimestamp).ConvertUsing(t =>t.VolumeIDLastWriteTimestamp.ToString(_fluentCommandLineParser.Object.DateTimeFormat)).Index(3);
+                    foo.Map(m => m.FileID).Index(4);
+                    foo.Map(t => t.FileIDLastWriteTimestamp).ConvertUsing(t =>t.FileIDLastWriteTimestamp.ToString(_fluentCommandLineParser.Object.DateTimeFormat)).Index(5);
+                    foo.Map(m => m.SHA1).Index(6);
+                    foo.Map(m => m.FullPath).Index(7);
+                    foo.Map(m => m.FileExtension).Index(8);
+                    foo.Map(m => m.MFTEntryNumber).Index(9);
+                    foo.Map(m => m.MFTSequenceNumber).Index(10);
+                    foo.Map(m => m.FileSize).Index(11);
+                    foo.Map(m => m.FileVersionString).Index(12);
+                    foo.Map(m => m.FileVersionNumber).Index(13);
+                    foo.Map(m => m.FileDescription).Index(14);
+
+                    foo.Map(m => m.SizeOfImage).Index(15);
+                    foo.Map(m => m.PEHeaderHash).Index(16);
+                    foo.Map(m => m.PEHeaderChecksum).Index(17);
+
+                    foo.Map(m => m.BinProductVersion).Index(18);
+                    foo.Map(m => m.BinFileVersion).Index(19);
+                    foo.Map(m => m.LinkerVersion).Index(20);
+                    foo.Map(m => m.BinaryType).Index(21);
+                    foo.Map(m => m.IsLocal).Index(22);
+                    foo.Map(m => m.GuessProgramID).Index(23);
+
+                    foo.Map(t => t.Created).ConvertUsing(t =>t.Created?.ToString(_fluentCommandLineParser.Object.DateTimeFormat)).Index(24);
+                    foo.Map(t => t.LastModified).ConvertUsing(t =>t.LastModified?.ToString(_fluentCommandLineParser.Object.DateTimeFormat)).Index(25);
+                    foo.Map(t => t.LastModifiedStore).ConvertUsing(t =>t.LastModifiedStore?.ToString(_fluentCommandLineParser.Object.DateTimeFormat)).Index(26);
+                    foo.Map(t => t.LinkDate).ConvertUsing(t =>t.LinkDate?.ToString(_fluentCommandLineParser.Object.DateTimeFormat)).Index(27);
+                    foo.Map(m => m.LanguageID).Index(28);
+
+
+                    csv.Configuration.RegisterClassMap(foo);
+
+
                     csv.Configuration.Delimiter = "\t";
 
                     csv.WriteHeader<FileEntryOld>();
+                    csv.NextRecord();
                     csv.WriteRecords(cleanList);
                 }
 
@@ -575,11 +889,35 @@ namespace AmcacheParser
                         sw.AutoFlush = true;
 
                         var csv = new CsvWriter(sw);
-                        csv.Configuration.RegisterClassMap(
-                            new PECacheOutputMapOld(_fluentCommandLineParser.Object.DateTimeFormat));
+
+                        var o = new TypeConverterOptions
+                        {
+                            DateTimeStyle = DateTimeStyles.AssumeUniversal & DateTimeStyles.AdjustToUniversal
+                        };
+                        csv.Configuration.TypeConverterOptionsCache.AddOptions<ProgramsEntryOld>(o);
+
+                        var foo = csv.Configuration.AutoMap<ProgramsEntryOld>();
+
+                        foo.Map(m => m.ProgramID).Index(0);
+                        foo.Map(t => t.LastWriteTimestamp).ConvertUsing(t =>t.LastWriteTimestamp.ToString(_fluentCommandLineParser.Object.DateTimeFormat)).Index(1);
+                        foo.Map(m => m.ProgramName_0).Index(2);
+                        foo.Map(m => m.ProgramVersion_1).Index(3);
+                        foo.Map(m => m.VendorName_2).Index(4);
+
+                        foo.Map(t => t.InstallDateEpoch_a).ConvertUsing(t =>t.InstallDateEpoch_a?.ToString(_fluentCommandLineParser.Object.DateTimeFormat)).Index(5);
+                        foo.Map(t => t.InstallDateEpoch_b).ConvertUsing(t =>t.InstallDateEpoch_b?.ToString(_fluentCommandLineParser.Object.DateTimeFormat)).Index(6);
+
+                        foo.Map(m => m.LanguageCode_3).Index(7);
+                        foo.Map(m => m.InstallSource_6).Index(8);
+                        foo.Map(m => m.UninstallRegistryKey_7).Index(9);
+                        foo.Map(m => m.PathsList_d).Index(10);
+                        
+                        csv.Configuration.RegisterClassMap(foo);
+
                         csv.Configuration.Delimiter = "\t";
 
                         csv.WriteHeader<ProgramsEntryOld>();
+                        csv.NextRecord();
                         csv.WriteRecords(am.ProgramsEntries);
                     }
 
@@ -589,11 +927,55 @@ namespace AmcacheParser
                     using (var sw = new StreamWriter(outFile))
                     {
                         var csv = new CsvWriter(sw);
-                        csv.Configuration.RegisterClassMap(
-                            new FECacheOutputMapOld(_fluentCommandLineParser.Object.DateTimeFormat));
+                      
+                          var o = new TypeConverterOptions
+                    {
+                        DateTimeStyle = DateTimeStyles.AssumeUniversal & DateTimeStyles.AdjustToUniversal
+                    };
+                    csv.Configuration.TypeConverterOptionsCache.AddOptions<FileEntryOld>(o);
+
+                    var foo = csv.Configuration.AutoMap<FileEntryOld>();
+
+                    foo.Map(m => m.ProgramName).Index(0);
+                    foo.Map(m => m.ProgramID).Index(1);
+                    foo.Map(m => m.VolumeID).Index(2);
+                    foo.Map(t => t.VolumeIDLastWriteTimestamp).ConvertUsing(t =>t.VolumeIDLastWriteTimestamp.ToString(_fluentCommandLineParser.Object.DateTimeFormat)).Index(3);
+                    foo.Map(m => m.FileID).Index(4);
+                    foo.Map(t => t.FileIDLastWriteTimestamp).ConvertUsing(t =>t.FileIDLastWriteTimestamp.ToString(_fluentCommandLineParser.Object.DateTimeFormat)).Index(5);
+                    foo.Map(m => m.SHA1).Index(6);
+                    foo.Map(m => m.FullPath).Index(7);
+                    foo.Map(m => m.FileExtension).Index(8);
+                    foo.Map(m => m.MFTEntryNumber).Index(9);
+                    foo.Map(m => m.MFTSequenceNumber).Index(10);
+                    foo.Map(m => m.FileSize).Index(11);
+                    foo.Map(m => m.FileVersionString).Index(12);
+                    foo.Map(m => m.FileVersionNumber).Index(13);
+                    foo.Map(m => m.FileDescription).Index(14);
+
+                    foo.Map(m => m.SizeOfImage).Index(15);
+                    foo.Map(m => m.PEHeaderHash).Index(16);
+                    foo.Map(m => m.PEHeaderChecksum).Index(17);
+
+                    foo.Map(m => m.BinProductVersion).Index(18);
+                    foo.Map(m => m.BinFileVersion).Index(19);
+                    foo.Map(m => m.LinkerVersion).Index(20);
+                    foo.Map(m => m.BinaryType).Index(21);
+                    foo.Map(m => m.IsLocal).Index(22);
+                    foo.Map(m => m.GuessProgramID).Index(23);
+
+                    foo.Map(t => t.Created).ConvertUsing(t =>t.Created?.ToString(_fluentCommandLineParser.Object.DateTimeFormat)).Index(24);
+                    foo.Map(t => t.LastModified).ConvertUsing(t =>t.LastModified?.ToString(_fluentCommandLineParser.Object.DateTimeFormat)).Index(25);
+                    foo.Map(t => t.LastModifiedStore).ConvertUsing(t =>t.LastModifiedStore?.ToString(_fluentCommandLineParser.Object.DateTimeFormat)).Index(26);
+                    foo.Map(t => t.LinkDate).ConvertUsing(t =>t.LinkDate?.ToString(_fluentCommandLineParser.Object.DateTimeFormat)).Index(27);
+                    foo.Map(m => m.LanguageID).Index(28);
+
+
+                    csv.Configuration.RegisterClassMap(foo);
+
                         csv.Configuration.Delimiter = "\t";
 
                         csv.WriteHeader<FileEntryOld>();
+                        csv.NextRecord();
 
                         sw.AutoFlush = true;
 
@@ -656,11 +1038,15 @@ namespace AmcacheParser
             }
             catch (Exception ex)
             {
-                _logger.Error($"There was an error: {ex.Message}");
-                _logger.Error($"Stacktrace: {ex.StackTrace}");
-                _logger.Info("");
-                _logger.Error(
-                    $"Please send '{_fluentCommandLineParser.Object.File}' to saericzimmerman@gmail.com in order to fix the issue");
+                if (!ex.Message.Contains("Sequence numbers do not match and transaction logs were not found in the same directory as the hive. Abort"))
+                {
+                    _logger.Error($"There was an error: {ex.Message}");
+                    _logger.Error($"Stacktrace: {ex.StackTrace}");
+                    _logger.Info("");
+                    _logger.Error(
+                        $"Please send '{_fluentCommandLineParser.Object.File}' to saericzimmerman@gmail.com in order to fix the issue");
+                }
+                
             }
         }
 
@@ -711,255 +1097,6 @@ namespace AmcacheParser
         public bool PreciseTimestamps { get; set; }
     }
 
-    public sealed class FECacheOutputMapOld : CsvClassMap<FileEntryOld>
-    {
-        public FECacheOutputMapOld(string dateformat)
-        {
-            Map(m => m.ProgramName);
-            Map(m => m.ProgramID);
-            Map(m => m.VolumeID);
-            Map(m => m.VolumeIDLastWriteTimestamp).TypeConverterOption(dateformat);
-            Map(m => m.FileID);
-            Map(m => m.FileIDLastWriteTimestamp).TypeConverterOption(dateformat);
-            Map(m => m.SHA1);
-            Map(m => m.FullPath);
-            Map(m => m.FileExtension);
-            Map(m => m.MFTEntryNumber);
-            Map(m => m.MFTSequenceNumber);
-            Map(m => m.FileSize);
-            Map(m => m.FileVersionString);
-            Map(m => m.FileVersionNumber);
-            Map(m => m.FileDescription);
+   
 
-            Map(m => m.SizeOfImage);
-            Map(m => m.PEHeaderHash);
-            Map(m => m.PEHeaderChecksum);
-
-            Map(m => m.BinProductVersion);
-            Map(m => m.BinFileVersion);
-            Map(m => m.LinkerVersion);
-            Map(m => m.BinaryType);
-            Map(m => m.IsLocal);
-            Map(m => m.GuessProgramID);
-
-            Map(m => m.Created).TypeConverterOption(dateformat);
-            Map(m => m.LastModified).TypeConverterOption(dateformat);
-            Map(m => m.LastModifiedStore).TypeConverterOption(dateformat);
-            Map(m => m.LinkDate).TypeConverterOption(dateformat);
-            Map(m => m.LanguageID);
-        }
-    }
-
-    public sealed class PECacheOutputMapOld : CsvClassMap<ProgramsEntryOld>
-    {
-        public PECacheOutputMapOld(string dateformat)
-        {
-            Map(m => m.ProgramID);
-            Map(m => m.LastWriteTimestamp).TypeConverterOption(dateformat);
-            Map(m => m.ProgramName_0);
-            Map(m => m.ProgramVersion_1);
-            Map(m => m.VendorName_2);
-
-            Map(m => m.InstallDateEpoch_a).TypeConverterOption(dateformat);
-            Map(m => m.InstallDateEpoch_b).TypeConverterOption(dateformat);
-
-            Map(m => m.LanguageCode_3);
-            Map(m => m.InstallSource_6);
-            Map(m => m.UninstallRegistryKey_7);
-            Map(m => m.PathsList_d);
-        }
-    }
-
-
-    public sealed class PECacheOutputMapNew : CsvClassMap<ProgramsEntryNew>
-    {
-        public PECacheOutputMapNew(string dateformat)
-        {
-            Map(m => m.ProgramId);
-            Map(m => m.KeyLastWriteTimestamp).TypeConverterOption(dateformat);
-            Map(m => m.Name);
-            Map(m => m.Version);
-            Map(m => m.Publisher);
-
-            Map(m => m.InstallDate).TypeConverterOption(dateformat);
-            Map(m => m.OSVersionAtInstallTime);
-
-            Map(m => m.BundleManifestPath);
-            Map(m => m.HiddenArp);
-            Map(m => m.InboxModernApp);
-            Map(m => m.Language);
-            Map(m => m.ManifestPath);
-            Map(m => m.MsiPackageCode);
-            Map(m => m.MsiProductCode);
-
-            Map(m => m.PackageFullName);
-            Map(m => m.ProgramInstanceId);
-            Map(m => m.RegistryKeyPath);
-            Map(m => m.RootDirPath);
-
-
-            Map(m => m.Type);
-            Map(m => m.Source);
-            Map(m => m.StoreAppType);
-
-            Map(m => m.UninstallString);
-        }
-    }
-
-    public sealed class ShortCuts : CsvClassMap<Shortcut>
-    {
-        public ShortCuts(string dateformat)
-        {
-            Map(m => m.KeyName);
-            Map(m => m.LnkName);
-            Map(m => m.KeyLastWriteTimestamp).TypeConverterOption(dateformat);
-        }
-    }
-
-    public sealed class FECacheOutputMapNew : CsvClassMap<FileEntryNew>
-    {
-        public FECacheOutputMapNew(string dateformat)
-        {
-            Map(m => m.ApplicationName);
-
-            Map(m => m.ProgramId);
-            Map(m => m.FileKeyLastWriteTimestamp).TypeConverterOption(dateformat);
-            Map(m => m.SHA1);
-            Map(m => m.IsOsComponent);
-            Map(m => m.FullPath);
-            Map(m => m.Name);
-            Map(m => m.FileExtension);
-
-            Map(m => m.LinkDate).TypeConverterOption(dateformat);
-            Map(m => m.ProductName);
-
-            Map(m => m.Size);
-
-            Map(m => m.Version);
-            Map(m => m.ProductVersion);
-
-            Map(m => m.LongPathHash);
-
-            Map(m => m.BinaryType);
-            Map(m => m.IsPeFile);
-
-            Map(m => m.BinFileVersion);
-            Map(m => m.BinProductVersion);
-
-            Map(m => m.Language);
-        }
-    }
-
-    public sealed class DriverBinaries : CsvClassMap<DriverBinary>
-    {
-        public DriverBinaries(string dateformat)
-        {
-            Map(m => m.KeyName);
-            Map(m => m.KeyLastWriteTimestamp).TypeConverterOption(dateformat);
-            Map(m => m.DriverTimeStamp).TypeConverterOption(dateformat);
-            Map(m => m.DriverLastWriteTime).TypeConverterOption(dateformat);
-
-
-            Map(m => m.DriverName);
-
-            Map(m => m.DriverInBox);
-            Map(m => m.DriverIsKernelMode);
-            Map(m => m.DriverSigned);
-            Map(m => m.DriverCheckSum);
-            Map(m => m.DriverCompany);
-            Map(m => m.DriverId);
-            Map(m => m.DriverPackageStrongName);
-            Map(m => m.DriverType);
-            Map(m => m.DriverVersion);
-            Map(m => m.ImageSize);
-            Map(m => m.Inf);
-            Map(m => m.Product);
-            Map(m => m.ProductVersion);
-            Map(m => m.Service);
-            Map(m => m.WdfVersion);
-        }
-    }
-
-    public sealed class DevicePnps : CsvClassMap<DevicePnp>
-    {
-        public DevicePnps(string dateformat)
-        {
-            Map(m => m.KeyName);
-            Map(m => m.KeyLastWriteTimestamp).TypeConverterOption(dateformat);
-
-            Map(m => m.BusReportedDescription);
-
-            Map(m => m.Class);
-            Map(m => m.ClassGuid);
-            Map(m => m.Compid);
-            Map(m => m.ContainerId);
-            Map(m => m.Description);
-            Map(m => m.DriverId);
-            Map(m => m.DriverPackageStrongName);
-            Map(m => m.DriverName);
-            Map(m => m.DriverVerDate);
-            Map(m => m.DriverVerVersion);
-            Map(m => m.Enumerator);
-            Map(m => m.HWID);
-            Map(m => m.Inf);
-            Map(m => m.InstallState);
-            Map(m => m.Manufacturer);
-            Map(m => m.MatchingId);
-            Map(m => m.Model);
-            Map(m => m.ParentId);
-            Map(m => m.ProblemCode);
-            Map(m => m.Provider);
-            Map(m => m.Service);
-            Map(m => m.Stackid);
-        }
-    }
-
-
-    public sealed class DeviceContainers : CsvClassMap<DeviceContainer>
-    {
-        public DeviceContainers(string dateformat)
-        {
-            Map(m => m.KeyName);
-            Map(m => m.KeyLastWriteTimestamp).TypeConverterOption(dateformat);
-
-            Map(m => m.Categories);
-
-            Map(m => m.DiscoveryMethod);
-            Map(m => m.FriendlyName);
-            Map(m => m.Icon);
-            Map(m => m.IsActive);
-            Map(m => m.IsConnected);
-            Map(m => m.IsMachineContainer);
-            Map(m => m.IsNetworked);
-            Map(m => m.IsPaired);
-            Map(m => m.Manufacturer);
-            Map(m => m.ModelId);
-            Map(m => m.ModelName);
-            Map(m => m.ModelNumber);
-            Map(m => m.PrimaryCategory);
-            Map(m => m.State);
-        }
-    }
-
-    public sealed class DriverPackages : CsvClassMap<DriverPackage>
-    {
-        public DriverPackages(string dateformat)
-        {
-            Map(m => m.KeyName);
-            Map(m => m.KeyLastWriteTimestamp).TypeConverterOption(dateformat);
-            Map(m => m.Date).TypeConverterOption(dateformat);
-
-            Map(m => m.Class);
-
-
-            Map(m => m.Directory);
-            Map(m => m.DriverInBox);
-            Map(m => m.Hwids);
-            Map(m => m.Inf);
-            Map(m => m.Provider);
-            Map(m => m.SubmissionId);
-            Map(m => m.SYSFILE);
-            Map(m => m.Version);
-        }
-    }
 }

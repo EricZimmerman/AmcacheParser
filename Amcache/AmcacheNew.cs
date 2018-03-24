@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using Amcache.Classes;
 using NLog;
@@ -20,6 +21,23 @@ namespace Amcache
             {
                 RecoverDeleted = recoverDeleted
             };
+
+            if (reg.Header.PrimarySequenceNumber != reg.Header.SecondarySequenceNumber)
+            {
+                var logFiles = Directory.GetFiles(Path.GetDirectoryName(hive), "*.LOG*");
+
+                if (logFiles.Length == 0)
+                {
+                    var log = LogManager.GetCurrentClassLogger();
+
+                    log.Warn("Registry hive is dirty and no transaction logs were found in the same directory! Aborting!!");
+                    throw new Exception("Sequence numbers do not match and transaction logs were not found in the same directory as the hive. Aborting");
+                }
+
+                reg.ProcessTransactionLogs(logFiles.ToList(),true);
+            }
+
+
             reg.ParseHive();
 
             var fileKey = reg.GetKey(@"Root\InventoryApplicationFile");
