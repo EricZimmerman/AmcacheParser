@@ -19,19 +19,24 @@ namespace Amcache
 
             if (reg.Header.PrimarySequenceNumber != reg.Header.SecondarySequenceNumber)
             {
-                var logFiles = Directory.GetFiles(Path.GetDirectoryName(file), "*.LOG*");
+                var hiveBase = Path.GetFileName(file);
+
+                var logFiles = Directory.GetFiles(Path.GetDirectoryName(file), $"{hiveBase}.LOG*");
 
                 if (logFiles.Length == 0)
                 {
                     LogManager.EnableLogging();
                     var log = LogManager.GetCurrentClassLogger();
 
-                    log.Warn("Registry hive is dirty and no transaction logs were found in the same directory! Aborting!!");
+                    log.Warn("Registry hive is dirty and no transaction logs were found in the same directory! LOGs should have same base name as the hive. Aborting!!");
                     throw new Exception("Sequence numbers do not match and transaction logs were not found in the same directory as the hive. Aborting");
                 }
 
                 reg.ProcessTransactionLogs(logFiles.ToList(),true);
             }
+
+
+
 
        
             reg.ParseHive();
