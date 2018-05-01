@@ -42,7 +42,7 @@ namespace Amcache
             reg.ParseHive();
 
 
-            var fileKey = reg.GetKey(@"Root\InventoryApplication");
+            var fileKey = reg.GetKey(@"Root\InventoryApplicationFile");
 
           LogManager.EnableLogging();
 

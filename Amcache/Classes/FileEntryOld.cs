@@ -10,7 +10,7 @@ namespace Amcache.Classes
             string compName, int? langId,
             string fileVerString, string peHash, string fileVerNum, string fileDesc, long binProdVer, ulong binFileVer,
             int linVer, int binType, string switchback, int? fileSize, DateTimeOffset? linkDate, int? imgSize,
-            DateTimeOffset? lm, DateTimeOffset? created, int? pecheck, int gProgramID, string keyName)
+            DateTimeOffset? lm, DateTimeOffset? created, uint? pecheck, int gProgramID, string keyName)
         {
             PEHeaderChecksum = pecheck;
             LastModified = lm;
@@ -92,7 +92,7 @@ namespace Amcache.Classes
         public int? LanguageID { get; }
         public int? FileSize { get; }
         public int? SizeOfImage { get; }
-        public int? PEHeaderChecksum { get; }
+        public uint? PEHeaderChecksum { get; }
         public DateTimeOffset VolumeIDLastWriteTimestamp { get; }
         public DateTimeOffset FileIDLastWriteTimestamp { get; }
         public DateTimeOffset? LinkDate { get; }

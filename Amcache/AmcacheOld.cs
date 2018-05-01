@@ -242,7 +242,7 @@ namespace Amcache
                     var gProgramID = 0;
                     int? fileSize = null;
                     int? sizeOfImage = null;
-                    int? peHeaderChecksum = null;
+                    uint? peHeaderChecksum = null;
 
                     DateTimeOffset? created = null;
                     DateTimeOffset? lm = null;
@@ -288,7 +288,7 @@ namespace Amcache
                                     peHash = keyValue.ValueData;
                                     break;
                                 case PEHeaderChecksum:
-                                    peHeaderChecksum = int.Parse(keyValue.ValueData);
+                                    peHeaderChecksum = uint.Parse(keyValue.ValueData);
                                     break;
                                 case BinProductVersion:
                                     binProdVersion = long.Parse(keyValue.ValueData);
