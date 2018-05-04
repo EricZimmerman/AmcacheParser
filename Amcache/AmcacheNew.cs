@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using Amcache.Classes;
@@ -106,7 +107,8 @@ namespace Amcache
                             case "InstallDate":
                                 if (registryKeyValue.ValueData.Length > 0)
                                 {
-                                    var d = new DateTimeOffset(DateTime.Parse(registryKeyValue.ValueData).Ticks,
+                                   // _logger.Warn($"registryKeyValue.ValueData for InstallDate as InvariantCulture: {registryKeyValue.ValueData.ToString(CultureInfo.InvariantCulture)}");
+                                    var d = new DateTimeOffset(DateTime.Parse(registryKeyValue.ValueData,DateTimeFormatInfo.InvariantInfo).Ticks,
                                         TimeSpan.Zero);
                                     installDate = d;
                                 }
@@ -236,7 +238,7 @@ namespace Amcache
                             case "LinkDate":
                                 if (subKeyValue.ValueData.Length > 0)
                                 {
-                                    var d = new DateTimeOffset(DateTime.Parse(subKeyValue.ValueData).Ticks,
+                                    var d = new DateTimeOffset(DateTime.Parse(subKeyValue.ValueData,DateTimeFormatInfo.InvariantInfo).Ticks,
                                         TimeSpan.Zero);
                                     linkDate = d;
                                 }
@@ -293,7 +295,7 @@ namespace Amcache
 
                 TotalFileEntries += 1;
 
-                Debug.WriteLine(name);
+           
                 var fe = new FileEntryNew(binaryType, binFileVersion, productVersion, fileId, isOsComponent, isPeFile,
                     language, linkDate, longPathHash, lowerCaseLongPath, name, productName, productVersion, programId,
                     publisher, size, version, subKey.LastWriteTime.Value, binProductVersion);
@@ -610,7 +612,7 @@ namespace Amcache
                                 case "DriverLastWriteTime":
                                     if (keyValue.ValueData.Length > 0)
                                     {
-                                        var d = new DateTimeOffset(DateTime.Parse(keyValue.ValueData).Ticks,
+                                        var d = new DateTimeOffset(DateTime.Parse(keyValue.ValueData,DateTimeFormatInfo.InvariantInfo).Ticks,
                                             TimeSpan.Zero);
                                         driverLastWriteTime = d;
                                     }
@@ -715,7 +717,7 @@ namespace Amcache
                                 case "Date":
                                     if (keyValue.ValueData.Length > 0)
                                     {
-                                        var d = new DateTimeOffset(DateTime.Parse(keyValue.ValueData).Ticks,
+                                        var d = new DateTimeOffset(DateTime.Parse(keyValue.ValueData,DateTimeFormatInfo.InvariantInfo).Ticks,
                                             TimeSpan.Zero);
                                         Date = d;
                                     }

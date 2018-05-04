@@ -6,11 +6,11 @@ using System.Runtime.InteropServices;
 // associated with an assembly.
 
 [assembly: AssemblyTitle("AmcacheParser")]
-[assembly: AssemblyDescription("Parses AmcacheOld.hve files")]
+[assembly: AssemblyDescription("Parses Amcache.hve files")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("Eric Zimmerman")]
 [assembly: AssemblyProduct("AmcacheParser")]
-[assembly: AssemblyCopyright("Copyright ©  2015")]
+[assembly: AssemblyCopyright("Copyright ©  2018")]
 [assembly: AssemblyTrademark("saericzimmerman@gmail.com")]
 [assembly: AssemblyCulture("")]
 
@@ -35,5 +35,5 @@ using System.Runtime.InteropServices;
 // by using the '*' as shown below:
 // [assembly: AssemblyVersion("1.0.*")]
 
-[assembly: AssemblyVersion("1.0.0.1")]
-[assembly: AssemblyFileVersion("1.0.0.1")]
+[assembly: AssemblyVersion("1.0.0.2")]
+[assembly: AssemblyFileVersion("1.0.0.2")]
