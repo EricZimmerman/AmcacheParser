@@ -28,6 +28,8 @@ namespace AmcacheParser
         private static Stopwatch _sw;
         private static FluentCommandLineParser<ApplicationArguments> _fluentCommandLineParser;
 
+        private static string exportExt = "tsv";
+
         private static bool CheckForDotnet46()
         {
             using (
@@ -85,7 +87,7 @@ namespace AmcacheParser
 
             _fluentCommandLineParser.Setup(arg => arg.SaveTo)
                 .As("csv").Required()
-                .WithDescription("Directory where results will be saved. Required");
+                .WithDescription("Directory where results will be saved. Required\r\n");
 
 
             _fluentCommandLineParser.Setup(arg => arg.DateTimeFormat)
@@ -98,6 +100,11 @@ namespace AmcacheParser
                 .As("mp")
                 .WithDescription(
                     "When true, display higher precision for timestamps. Default is false").SetDefault(false);
+
+            _fluentCommandLineParser.Setup(arg => arg.CsvSeparator)
+                .As("cs")
+                .WithDescription(
+                    "When true, use comma instead of tab for field separator. Default is false").SetDefault(false);
 
             var header =
                 $"AmcacheParser version {Assembly.GetExecutingAssembly().GetName().Version}" +
@@ -148,6 +155,10 @@ namespace AmcacheParser
                 _fluentCommandLineParser.Object.DateTimeFormat = _preciseTimeFormat;
             }
 
+            if (_fluentCommandLineParser.Object.CsvSeparator)
+            {
+                exportExt = "csv";
+            }
 
             _sw = new Stopwatch();
             _sw.Start();
@@ -230,7 +241,11 @@ namespace AmcacheParser
                     var ts1 = DateTime.Now.ToString("yyyyMMddHHmmss");
                     var hiveName1 = Path.GetFileNameWithoutExtension(_fluentCommandLineParser.Object.File);
 
-                    var outbase1 = $"{ts1}_{hiveName1}_Unassociated file entries.tsv";
+                    var outbase1 = $"{ts1}_{hiveName1}_Unassociated file entries.{exportExt}";
+
+                    
+
+
                     var outFile1 = Path.Combine(_fluentCommandLineParser.Object.SaveTo, outbase1);
 
                   
@@ -281,8 +296,11 @@ namespace AmcacheParser
 
 
                         csv.Configuration.RegisterClassMap(foo);
-                   
-                        csv.Configuration.Delimiter = "\t";
+
+                        if (_fluentCommandLineParser.Object.CsvSeparator == false)
+                        {
+                            csv.Configuration.Delimiter = "\t";
+                        }
 
                         csv.WriteHeader<FileEntryNew>();
                         csv.NextRecord();
@@ -292,7 +310,7 @@ namespace AmcacheParser
 
                     if (_fluentCommandLineParser.Object.IncludeLinked)
                     {
-                        outbase1 = $"{ts1}_{hiveName1}_Program entries.tsv";
+                        outbase1 = $"{ts1}_{hiveName1}_Program entries.{exportExt}";
                         outFile1 = Path.Combine(_fluentCommandLineParser.Object.SaveTo, outbase1);
 
                         using (var sw = new StreamWriter(outFile1))
@@ -350,14 +368,17 @@ namespace AmcacheParser
                             
                             csv.Configuration.RegisterClassMap(foo);
                             
-                            csv.Configuration.Delimiter = "\t";
+                            if (_fluentCommandLineParser.Object.CsvSeparator == false)
+                            {
+                                csv.Configuration.Delimiter = "\t";
+                            }
 
                             csv.WriteHeader<ProgramsEntryNew>();
                             csv.NextRecord();
                             csv.WriteRecords(amNew.ProgramsEntries);
                         }
 
-                        outbase1 = $"{ts1}_{hiveName1}_Associated file entries.tsv";
+                        outbase1 = $"{ts1}_{hiveName1}_Associated file entries.{exportExt}";
                         outFile1 = Path.Combine(_fluentCommandLineParser.Object.SaveTo, outbase1);
 
                         using (var sw = new StreamWriter(outFile1))
@@ -404,7 +425,10 @@ namespace AmcacheParser
 
                             csv.Configuration.RegisterClassMap(foo);
 
-                            csv.Configuration.Delimiter = "\t";
+                            if (_fluentCommandLineParser.Object.CsvSeparator == false)
+                            {
+                                csv.Configuration.Delimiter = "\t";
+                            }
 
                             csv.WriteHeader<FileEntryNew>();
                             csv.NextRecord();
@@ -423,7 +447,7 @@ namespace AmcacheParser
                     }
 
 
-                    outbase1 = $"{ts1}_{hiveName1}_ShortCuts.tsv";
+                    outbase1 = $"{ts1}_{hiveName1}_ShortCuts.{exportExt}";
                     outFile1 = Path.Combine(_fluentCommandLineParser.Object.SaveTo, outbase1);
 
                     using (var sw = new StreamWriter(outFile1))
@@ -445,7 +469,10 @@ namespace AmcacheParser
 
                         csv.Configuration.RegisterClassMap(foo);
 
-                        csv.Configuration.Delimiter = "\t";
+                        if (_fluentCommandLineParser.Object.CsvSeparator == false)
+                        {
+                            csv.Configuration.Delimiter = "\t";
+                        }
 
                         csv.WriteHeader<Shortcut>();
                         csv.NextRecord();
@@ -458,7 +485,7 @@ namespace AmcacheParser
                         }
                     }
 
-                    outbase1 = $"{ts1}_{hiveName1}_DriveBinaries.tsv";
+                    outbase1 = $"{ts1}_{hiveName1}_DriveBinaries.{exportExt}";
                     outFile1 = Path.Combine(_fluentCommandLineParser.Object.SaveTo, outbase1);
 
                     using (var sw = new StreamWriter(outFile1))
@@ -499,7 +526,10 @@ namespace AmcacheParser
 
                         csv.Configuration.RegisterClassMap(foo);
 
-                        csv.Configuration.Delimiter = "\t";
+                        if (_fluentCommandLineParser.Object.CsvSeparator == false)
+                        {
+                            csv.Configuration.Delimiter = "\t";
+                        }
 
                         csv.WriteHeader<DriverBinary>();
                         csv.NextRecord();
@@ -513,7 +543,7 @@ namespace AmcacheParser
                     }
 
 
-                    outbase1 = $"{ts1}_{hiveName1}_DeviceContainers.tsv";
+                    outbase1 = $"{ts1}_{hiveName1}_DeviceContainers.{exportExt}";
                     outFile1 = Path.Combine(_fluentCommandLineParser.Object.SaveTo, outbase1);
 
                     using (var sw = new StreamWriter(outFile1))
@@ -551,7 +581,10 @@ namespace AmcacheParser
                         
                         csv.Configuration.RegisterClassMap(foo);
 
-                        csv.Configuration.Delimiter = "\t";
+                        if (_fluentCommandLineParser.Object.CsvSeparator == false)
+                        {
+                            csv.Configuration.Delimiter = "\t";
+                        }
 
                         csv.WriteHeader<DeviceContainer>();
                         csv.NextRecord();
@@ -564,7 +597,7 @@ namespace AmcacheParser
                         }
                     }
 
-                    outbase1 = $"{ts1}_{hiveName1}_DriverPackages.tsv";
+                    outbase1 = $"{ts1}_{hiveName1}_DriverPackages.{exportExt}";
                     outFile1 = Path.Combine(_fluentCommandLineParser.Object.SaveTo, outbase1);
 
                     using (var sw = new StreamWriter(outFile1))
@@ -597,7 +630,10 @@ namespace AmcacheParser
                         foo.Map(m => m.Version).Index(11);
                         foo.Map(m => m.ClassGuid).Ignore();
 
-                        csv.Configuration.Delimiter = "\t";
+                        if (_fluentCommandLineParser.Object.CsvSeparator == false)
+                        {
+                            csv.Configuration.Delimiter = "\t";
+                        }
 
                         csv.WriteHeader<DriverPackage>();
                         csv.NextRecord();
@@ -610,7 +646,7 @@ namespace AmcacheParser
                         }
                     }
 
-                    outbase1 = $"{ts1}_{hiveName1}_DevicePnps.tsv";
+                    outbase1 = $"{ts1}_{hiveName1}_DevicePnps.{exportExt}";
                     outFile1 = Path.Combine(_fluentCommandLineParser.Object.SaveTo, outbase1);
 
                     using (var sw = new StreamWriter(outFile1))
@@ -656,7 +692,10 @@ namespace AmcacheParser
                         
                         csv.Configuration.RegisterClassMap(foo);
 
-                        csv.Configuration.Delimiter = "\t";
+                        if (_fluentCommandLineParser.Object.CsvSeparator == false)
+                        {
+                            csv.Configuration.Delimiter = "\t";
+                        }
 
                         csv.WriteHeader<DevicePnp>();
                         csv.NextRecord();
@@ -818,7 +857,7 @@ namespace AmcacheParser
                 var ts = DateTime.Now.ToString("yyyyMMddHHmmss");
                 var hiveName = Path.GetFileNameWithoutExtension(_fluentCommandLineParser.Object.File);
 
-                var outbase = $"{ts}_{hiveName}_Unassociated file entries.tsv";
+                var outbase = $"{ts}_{hiveName}_Unassociated file entries.{exportExt}";
                 var outFile = Path.Combine(_fluentCommandLineParser.Object.SaveTo, outbase);
 
                 using (var sw = new StreamWriter(outFile))
@@ -872,7 +911,10 @@ namespace AmcacheParser
                     csv.Configuration.RegisterClassMap(foo);
 
 
-                    csv.Configuration.Delimiter = "\t";
+                    if (_fluentCommandLineParser.Object.CsvSeparator == false)
+                    {
+                        csv.Configuration.Delimiter = "\t";
+                    }
 
                     csv.WriteHeader<FileEntryOld>();
                     csv.NextRecord();
@@ -881,7 +923,7 @@ namespace AmcacheParser
 
                 if (_fluentCommandLineParser.Object.IncludeLinked)
                 {
-                    outbase = $"{ts}_{hiveName}_Program entries.tsv";
+                    outbase = $"{ts}_{hiveName}_Program entries.{exportExt}";
                     outFile = Path.Combine(_fluentCommandLineParser.Object.SaveTo, outbase);
 
                     using (var sw = new StreamWriter(outFile))
@@ -914,14 +956,17 @@ namespace AmcacheParser
                         
                         csv.Configuration.RegisterClassMap(foo);
 
-                        csv.Configuration.Delimiter = "\t";
+                        if (_fluentCommandLineParser.Object.CsvSeparator == false)
+                        {
+                            csv.Configuration.Delimiter = "\t";
+                        }
 
                         csv.WriteHeader<ProgramsEntryOld>();
                         csv.NextRecord();
                         csv.WriteRecords(am.ProgramsEntries);
                     }
 
-                    outbase = $"{ts}_{hiveName}_Associated file entries.tsv";
+                    outbase = $"{ts}_{hiveName}_Associated file entries.{exportExt}";
                     outFile = Path.Combine(_fluentCommandLineParser.Object.SaveTo, outbase);
 
                     using (var sw = new StreamWriter(outFile))
@@ -972,7 +1017,10 @@ namespace AmcacheParser
 
                     csv.Configuration.RegisterClassMap(foo);
 
-                        csv.Configuration.Delimiter = "\t";
+                        if (_fluentCommandLineParser.Object.CsvSeparator == false)
+                        {
+                            csv.Configuration.Delimiter = "\t";
+                        }
 
                         csv.WriteHeader<FileEntryOld>();
                         csv.NextRecord();
@@ -1095,6 +1143,7 @@ namespace AmcacheParser
         public bool RecoverDeleted { get; set; } = false;
         public string DateTimeFormat { get; set; }
         public bool PreciseTimestamps { get; set; }
+        public bool CsvSeparator { get; set; }
     }
 
    
