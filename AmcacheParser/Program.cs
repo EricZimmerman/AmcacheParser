@@ -87,7 +87,7 @@ namespace AmcacheParser
 
             _fluentCommandLineParser.Setup(arg => arg.SaveTo)
                 .As("csv").Required()
-                .WithDescription("Directory where results will be saved. Required\r\n");
+                .WithDescription("Directory where CSV results will be saved to. Required\r\n");
 
 
             _fluentCommandLineParser.Setup(arg => arg.DateTimeFormat)
