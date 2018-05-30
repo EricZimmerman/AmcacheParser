@@ -28,7 +28,7 @@ namespace Amcache
             {
                 var hiveBase = Path.GetFileName(hive);
 
-                var logFiles = Directory.GetFiles(Path.GetDirectoryName(hive), $"{hiveBase}.LOG*");
+                var logFiles = Directory.GetFiles(Path.GetDirectoryName(hive), $"{hiveBase}.LOG?");
 
                 if (logFiles.Length == 0)
                 {
