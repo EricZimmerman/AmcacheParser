@@ -9,7 +9,8 @@ namespace Amcache.Classes
             DateTimeOffset? installDate, int language, string manifestPath, string msiPackageCode,
             string msiProductCode, string name, string osVersionAtInstallTime, string packageFullName, string programId,
             string programInstanceId, string publisher, string registryKeyPath, string rootDirPath, string source,
-            string storeAppType, string type, string uninstallString, string version, DateTimeOffset lastwrite)
+            string storeAppType, string type, string uninstallString, string version, DateTimeOffset lastwrite,
+            string installDateArpLastModified,DateTimeOffset? installDateMsi, string installDateFromLinkFile)
         {
             FileEntries = new List<FileEntryNew>();
 
@@ -36,12 +37,20 @@ namespace Amcache.Classes
             Type = type;
             Version = version;
             KeyLastWriteTimestamp = lastwrite;
+            InstallDateArpLastModified = installDateArpLastModified;
+            InstallDateMsi = installDateMsi;
+            InstallDateFromLinkFile = installDateFromLinkFile;
         }
 
         public string BundleManifestPath { get; }
         public bool HiddenArp { get; }
         public bool InboxModernApp { get; }
         public DateTimeOffset? InstallDate { get; }
+        public string InstallDateArpLastModified { get; }
+        public DateTimeOffset? InstallDateMsi { get; }
+        public string InstallDateFromLinkFile { get; }
+
+    
         public int Language { get; }
         public string ManifestPath { get; }
         public string MsiPackageCode { get; }
