@@ -87,12 +87,17 @@ namespace Amcache
                 var type = string.Empty;
                 var uninstallString = string.Empty;
                 var version = string.Empty;
+               var installDateArpLastModified = string.Empty;
+                DateTimeOffset? installDateMsi = null;
+              var installDateFromLinkFile = string.Empty;
+
 
 
                 try
                 {
                     foreach (var registryKeyValue in registryKey.Values)
                     {
+                        Debug.WriteLine(registryKeyValue.ValueName);
                         switch (registryKeyValue.ValueName)
                         {
                             case "BundleManifestPath":
@@ -114,7 +119,15 @@ namespace Amcache
                                 }
                                 break;
                             case "Language":
-                                language = int.Parse(registryKeyValue.ValueData);
+                                if (registryKeyValue.ValueData.Length == 0)
+                                {
+                                    language = 0;
+                                }
+                                else
+                                {
+                                    language = int.Parse(registryKeyValue.ValueData);
+                                }
+                          
                                 break;
                             case "ManifestPath":
                                 manifestPath = registryKeyValue.ValueData;
@@ -164,6 +177,27 @@ namespace Amcache
                             case "Version":
                                 version = registryKeyValue.ValueData;
                                 break;
+                            case "InstallDateArpLastModified":
+                                if (registryKeyValue.ValueData.Length > 0)
+                                {
+                                    installDateArpLastModified = registryKeyValue.ValueData;
+                                }
+                                break;
+                            case "InstallDateMsi":
+                                if (registryKeyValue.ValueData.Length > 0)
+                                {
+                                    // _logger.Warn($"registryKeyValue.ValueData for InstallDate as InvariantCulture: {registryKeyValue.ValueData.ToString(CultureInfo.InvariantCulture)}");
+                                    var d = new DateTimeOffset(DateTime.Parse(registryKeyValue.ValueData,DateTimeFormatInfo.InvariantInfo).Ticks,
+                                        TimeSpan.Zero);
+                                    installDateMsi = d;
+                                }
+                                break;
+                            case "InstallDateFromLinkFile":
+                                if (registryKeyValue.ValueData.Length > 0)
+                                {
+                                    installDateFromLinkFile = registryKeyValue.ValueData;
+                                }
+                                break;
                             default:
                                 _logger.Warn(
                                     $"Unknown value name in InventoryApplication at path {registryKey.KeyPath}: {registryKeyValue.ValueName}");
@@ -174,7 +208,7 @@ namespace Amcache
                     var pe = new ProgramsEntryNew(bundleManifestPath, hiddenArp, inboxModernApp, installDate, language,
                         manifestPath, msiPackageCode, msiProductCode, name, osVersionAtInstallTime, packageFullName,
                         programId, programInstanceId, publisher, registryKeyPath, rootDirPath, source, storeAppType,
-                        type, uninstallString, version, registryKey.LastWriteTime.Value);
+                        type, uninstallString, version, registryKey.LastWriteTime.Value,installDateArpLastModified,installDateMsi,installDateFromLinkFile);
 
                     ProgramsEntries.Add(pe);
                 }
@@ -273,7 +307,15 @@ namespace Amcache
                                 publisher = subKeyValue.ValueData;
                                 break;
                             case "Size":
-                                size = int.Parse(subKeyValue.ValueData);
+                                if (subKeyValue.ValueData.StartsWith("0x"))
+                                {
+                                    size = int.Parse(subKeyValue.ValueData.Replace("0x",""),NumberStyles.HexNumber);
+                                }
+                                else
+                                {
+                                    size = int.Parse(subKeyValue.ValueData);
+                                }
+                            
                                 break;
                             case "Version":
                                 version = subKeyValue.ValueData;
