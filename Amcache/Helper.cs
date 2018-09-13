@@ -23,8 +23,15 @@ namespace Amcache
                 if (reg.Header.PrimarySequenceNumber != reg.Header.SecondarySequenceNumber)
                 {
                     var hiveBase = Path.GetFileName(file);
+                    
+                        var dirname = Path.GetDirectoryName(file);
 
-                    var logFiles = Directory.GetFiles(Path.GetDirectoryName(file), $"{hiveBase}.LOG?");
+                if (dirname == "")
+                {
+                    dirname = ".";
+                }
+
+                    var logFiles = Directory.GetFiles(dirname, $"{hiveBase}.LOG?");
 
                     if (logFiles.Length == 0)
                     {
