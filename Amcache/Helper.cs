@@ -9,18 +9,18 @@ namespace Amcache
 {
     public static class Helper
     {
-        public static bool IsNewFormat(string file)
+        public static bool IsNewFormat(string file,bool noLog)
         {
             RegistryKey fileKey = null;
             try
             {
                 var reg = new RegistryHive(file)
                 {
-                    RecoverDeleted = false
+                    RecoverDeleted = true
                 };
                 LogManager.DisableLogging();
 
-                if (reg.Header.PrimarySequenceNumber != reg.Header.SecondarySequenceNumber)
+                if (noLog == false && reg.Header.PrimarySequenceNumber != reg.Header.SecondarySequenceNumber)
                 {
                     var hiveBase = Path.GetFileName(file);
                     

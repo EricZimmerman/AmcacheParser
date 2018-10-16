@@ -99,12 +99,17 @@ namespace AmcacheParser
             _fluentCommandLineParser.Setup(arg => arg.PreciseTimestamps)
                 .As("mp")
                 .WithDescription(
-                    "When true, display higher precision for timestamps. Default is false").SetDefault(false);
+                    "When true, display higher precision for timestamps. Default is FALSE").SetDefault(false);
 
             _fluentCommandLineParser.Setup(arg => arg.CsvSeparator)
                 .As("cs")
                 .WithDescription(
-                    "When true, use comma instead of tab for field separator. Default is true").SetDefault(true);
+                    "When true, use comma instead of tab for field separator. Default is TRUE").SetDefault(true);
+
+            _fluentCommandLineParser.Setup(arg => arg.NoTransLogs)
+                .As("nl")
+                .WithDescription(
+                    "When true, look for and process transaction log files for dirty hives. Default is FALSE").SetDefault(false);
 
             var header =
                 $"AmcacheParser version {Assembly.GetExecutingAssembly().GetName().Version}" +
@@ -166,10 +171,10 @@ namespace AmcacheParser
             try
             {
 
-                if (Helper.IsNewFormat(_fluentCommandLineParser.Object.File))
+                if (Helper.IsNewFormat(_fluentCommandLineParser.Object.File,_fluentCommandLineParser.Object.NoTransLogs))
                 {
                     var amNew = new AmcacheNew(_fluentCommandLineParser.Object.File,
-                        _fluentCommandLineParser.Object.RecoverDeleted);
+                        _fluentCommandLineParser.Object.RecoverDeleted,_fluentCommandLineParser.Object.NoTransLogs);
 
                     if (amNew.ProgramsEntries.Count == 0 && amNew.UnassociatedFileEntries.Count == 0)
                     {
@@ -783,7 +788,7 @@ namespace AmcacheParser
                 }
 
                 var am = new AmcacheOld(_fluentCommandLineParser.Object.File,
-                    _fluentCommandLineParser.Object.RecoverDeleted);
+                    _fluentCommandLineParser.Object.RecoverDeleted,_fluentCommandLineParser.Object.NoTransLogs);
 
 
                 if (am.ProgramsEntries.Count == 0 && am.UnassociatedFileEntries.Count == 0)
@@ -1141,6 +1146,7 @@ namespace AmcacheParser
         public string SaveTo { get; set; } = string.Empty;
         public bool IncludeLinked { get; set; } = false;
         public bool RecoverDeleted { get; set; } = false;
+        public bool NoTransLogs { get; set; } = false;
         public string DateTimeFormat { get; set; }
         public bool PreciseTimestamps { get; set; }
         public bool CsvSeparator { get; set; }

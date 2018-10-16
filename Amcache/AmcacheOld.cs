@@ -37,7 +37,7 @@ namespace Amcache
         private const int SHA1 = 0x101;
         private static Logger _logger;
 
-        public AmcacheOld(string hive, bool recoverDeleted)
+        public AmcacheOld(string hive, bool recoverDeleted, bool noLogs)
         {
             _logger = LogManager.GetCurrentClassLogger();
 
@@ -46,7 +46,7 @@ namespace Amcache
                 RecoverDeleted = recoverDeleted
             };
 
-            if (reg.Header.PrimarySequenceNumber != reg.Header.SecondarySequenceNumber)
+            if (noLogs  == false && reg.Header.PrimarySequenceNumber != reg.Header.SecondarySequenceNumber)
             {
                 var hiveBase = Path.GetFileName(hive);
 

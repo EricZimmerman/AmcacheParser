@@ -14,7 +14,7 @@ namespace Amcache
     {
         private static Logger _logger;
 
-        public AmcacheNew(string hive, bool recoverDeleted)
+        public AmcacheNew(string hive, bool recoverDeleted, bool noLogs)
         {
             _logger = LogManager.GetCurrentClassLogger();
 
@@ -24,7 +24,7 @@ namespace Amcache
             };
 
 
-            if (reg.Header.PrimarySequenceNumber != reg.Header.SecondarySequenceNumber)
+            if (noLogs == false && reg.Header.PrimarySequenceNumber != reg.Header.SecondarySequenceNumber)
             {
                 var hiveBase = Path.GetFileName(hive);
 
