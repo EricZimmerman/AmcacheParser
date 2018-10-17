@@ -44,6 +44,7 @@ namespace Amcache.Classes
                 {
                     break;
                 }
+
                 var segs = chunk.Split('@');
 
                 FilesLinks.Add(new FilesProgramEntry(segs[0], segs[1]));

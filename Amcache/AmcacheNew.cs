@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -41,11 +40,13 @@ namespace Amcache
                 {
                     var log = LogManager.GetCurrentClassLogger();
 
-                    log.Warn("Registry hive is dirty and no transaction logs were found in the same directory! LOGs should have same base name as the hive. Aborting!!");
-                    throw new Exception("Sequence numbers do not match and transaction logs were not found in the same directory as the hive. Aborting");
+                    log.Warn(
+                        "Registry hive is dirty and no transaction logs were found in the same directory! LOGs should have same base name as the hive. Aborting!!");
+                    throw new Exception(
+                        "Sequence numbers do not match and transaction logs were not found in the same directory as the hive. Aborting");
                 }
 
-                reg.ProcessTransactionLogs(logFiles.ToList(),true);
+                reg.ProcessTransactionLogs(logFiles.ToList(), true);
             }
 
 
@@ -63,305 +64,329 @@ namespace Amcache
             DriverPackages = new List<DriverPackage>();
             ShortCuts = new List<Shortcut>();
 
-            if (fileKey == null || programsKey == null)
+//            if (fileKey == null && programsKey == null)
+//            {
+//                _logger.Error(
+//                    "Hive does not contain a InventoryApplicationFile and/or InventoryApplication key. Processing cannot continue");
+//                return;
+//            }
+
+            if (programsKey != null)
             {
-                _logger.Error(
-                    "Hive does not contain a InventoryApplicationFile and/or InventoryApplication key. Processing cannot continue");
-                return;
-            }
-
-
-            foreach (var registryKey in programsKey.SubKeys)
-            {
-                var bundleManifestPath = string.Empty;
-                var hiddenArp = false;
-                var inboxModernApp = false;
-                DateTimeOffset? installDate = null;
-                var language = 0;
-                var manifestPath = string.Empty;
-                var msiPackageCode = string.Empty;
-                var msiProductCode = string.Empty;
-                var name = string.Empty;
-                var osVersionAtInstallTime = string.Empty;
-                var packageFullName = string.Empty;
-                var programId = string.Empty;
-                var programInstanceId = string.Empty;
-                var publisher = string.Empty;
-                var registryKeyPath = string.Empty;
-                var rootDirPath = string.Empty;
-                var source = string.Empty;
-                var storeAppType = string.Empty;
-                var type = string.Empty;
-                var uninstallString = string.Empty;
-                var version = string.Empty;
-               var installDateArpLastModified = string.Empty;
-                DateTimeOffset? installDateMsi = null;
-              var installDateFromLinkFile = string.Empty;
-
-
-
-                try
+                foreach (var registryKey in programsKey.SubKeys)
                 {
-                    foreach (var registryKeyValue in registryKey.Values)
+                    var bundleManifestPath = string.Empty;
+                    var hiddenArp = false;
+                    var inboxModernApp = false;
+                    DateTimeOffset? installDate = null;
+                    var language = 0;
+                    var manifestPath = string.Empty;
+                    var msiPackageCode = string.Empty;
+                    var msiProductCode = string.Empty;
+                    var name = string.Empty;
+                    var osVersionAtInstallTime = string.Empty;
+                    var packageFullName = string.Empty;
+                    var programId = string.Empty;
+                    var programInstanceId = string.Empty;
+                    var publisher = string.Empty;
+                    var registryKeyPath = string.Empty;
+                    var rootDirPath = string.Empty;
+                    var source = string.Empty;
+                    var storeAppType = string.Empty;
+                    var type = string.Empty;
+                    var uninstallString = string.Empty;
+                    var version = string.Empty;
+                    var installDateArpLastModified = string.Empty;
+                    DateTimeOffset? installDateMsi = null;
+                    var installDateFromLinkFile = string.Empty;
+
+
+                    try
                     {
-                        Debug.WriteLine(registryKeyValue.ValueName);
-                        switch (registryKeyValue.ValueName)
+                        foreach (var registryKeyValue in registryKey.Values)
                         {
-                            case "BundleManifestPath":
-                                bundleManifestPath = registryKeyValue.ValueData;
-                                break;
-                            case "HiddenArp":
-                                hiddenArp = registryKeyValue.ValueData == "1";
-                                break;
-                            case "InboxModernApp":
-                                inboxModernApp = registryKeyValue.ValueData == "1";
-                                break;
-                            case "InstallDate":
-                                if (registryKeyValue.ValueData.Length > 0)
-                                {
-                                   // _logger.Warn($"registryKeyValue.ValueData for InstallDate as InvariantCulture: {registryKeyValue.ValueData.ToString(CultureInfo.InvariantCulture)}");
-                                    var d = new DateTimeOffset(DateTime.Parse(registryKeyValue.ValueData,DateTimeFormatInfo.InvariantInfo).Ticks,
-                                        TimeSpan.Zero);
-                                    installDate = d;
-                                }
-                                break;
-                            case "Language":
-                                if (registryKeyValue.ValueData.Length == 0)
-                                {
-                                    language = 0;
-                                }
-                                else
-                                {
-                                    language = int.Parse(registryKeyValue.ValueData);
-                                }
-                          
-                                break;
-                            case "ManifestPath":
-                                manifestPath = registryKeyValue.ValueData;
-                                break;
-                            case "MsiPackageCode":
-                                msiPackageCode = registryKeyValue.ValueData;
-                                break;
-                            case "MsiProductCode":
-                                msiProductCode = registryKeyValue.ValueData;
-                                break;
-                            case "Name":
-                                name = registryKeyValue.ValueData;
-                                break;
-                            case "OSVersionAtInstallTime":
-                                osVersionAtInstallTime = registryKeyValue.ValueData;
-                                break;
-                            case "PackageFullName":
-                                packageFullName = registryKeyValue.ValueData;
-                                break;
-                            case "ProgramId":
-                                programId = registryKeyValue.ValueData;
-                                break;
-                            case "ProgramInstanceId":
-                                programInstanceId = registryKeyValue.ValueData;
-                                break;
-                            case "Publisher":
-                                publisher = registryKeyValue.ValueData;
-                                break;
-                            case "RegistryKeyPath":
-                                registryKeyPath = registryKeyValue.ValueData;
-                                break;
-                            case "RootDirPath":
-                                rootDirPath = registryKeyValue.ValueData;
-                                break;
-                            case "Source":
-                                source = registryKeyValue.ValueData;
-                                break;
-                            case "StoreAppType":
-                                storeAppType = registryKeyValue.ValueData;
-                                break;
-                            case "Type":
-                                type = registryKeyValue.ValueData;
-                                break;
-                            case "UninstallString":
-                                uninstallString = registryKeyValue.ValueData;
-                                break;
-                            case "Version":
-                                version = registryKeyValue.ValueData;
-                                break;
-                            case "InstallDateArpLastModified":
-                                if (registryKeyValue.ValueData.Length > 0)
-                                {
-                                    installDateArpLastModified = registryKeyValue.ValueData;
-                                }
-                                break;
-                            case "InstallDateMsi":
-                                if (registryKeyValue.ValueData.Length > 0)
-                                {
-                                    // _logger.Warn($"registryKeyValue.ValueData for InstallDate as InvariantCulture: {registryKeyValue.ValueData.ToString(CultureInfo.InvariantCulture)}");
-                                    var d = new DateTimeOffset(DateTime.Parse(registryKeyValue.ValueData,DateTimeFormatInfo.InvariantInfo).Ticks,
-                                        TimeSpan.Zero);
-                                    installDateMsi = d;
-                                }
-                                break;
-                            case "InstallDateFromLinkFile":
-                                if (registryKeyValue.ValueData.Length > 0)
-                                {
-                                    installDateFromLinkFile = registryKeyValue.ValueData;
-                                }
-                                break;
-                            default:
-                                _logger.Warn(
-                                    $"Unknown value name in InventoryApplication at path {registryKey.KeyPath}: {registryKeyValue.ValueName}");
-                                break;
+                            switch (registryKeyValue.ValueName)
+                            {
+                                case "BundleManifestPath":
+                                    bundleManifestPath = registryKeyValue.ValueData;
+                                    break;
+                                case "HiddenArp":
+                                    hiddenArp = registryKeyValue.ValueData == "1";
+                                    break;
+                                case "InboxModernApp":
+                                    inboxModernApp = registryKeyValue.ValueData == "1";
+                                    break;
+                                case "InstallDate":
+                                    if (registryKeyValue.ValueData.Length > 0)
+                                    {
+                                        // _logger.Warn($"registryKeyValue.ValueData for InstallDate as InvariantCulture: {registryKeyValue.ValueData.ToString(CultureInfo.InvariantCulture)}");
+                                        var d = new DateTimeOffset(
+                                            DateTime.Parse(registryKeyValue.ValueData, DateTimeFormatInfo.InvariantInfo)
+                                                .Ticks,
+                                            TimeSpan.Zero);
+                                        installDate = d;
+                                    }
+
+                                    break;
+                                case "Language":
+                                    if (registryKeyValue.ValueData.Length == 0)
+                                    {
+                                        language = 0;
+                                    }
+                                    else
+                                    {
+                                        language = int.Parse(registryKeyValue.ValueData);
+                                    }
+
+                                    break;
+                                case "ManifestPath":
+                                    manifestPath = registryKeyValue.ValueData;
+                                    break;
+                                case "MsiPackageCode":
+                                    msiPackageCode = registryKeyValue.ValueData;
+                                    break;
+                                case "MsiProductCode":
+                                    msiProductCode = registryKeyValue.ValueData;
+                                    break;
+                                case "Name":
+                                    name = registryKeyValue.ValueData;
+                                    break;
+                                case "OSVersionAtInstallTime":
+                                    osVersionAtInstallTime = registryKeyValue.ValueData;
+                                    break;
+                                case "PackageFullName":
+                                    packageFullName = registryKeyValue.ValueData;
+                                    break;
+                                case "ProgramId":
+                                    programId = registryKeyValue.ValueData;
+                                    break;
+                                case "ProgramInstanceId":
+                                    programInstanceId = registryKeyValue.ValueData;
+                                    break;
+                                case "Publisher":
+                                    publisher = registryKeyValue.ValueData;
+                                    break;
+                                case "RegistryKeyPath":
+                                    registryKeyPath = registryKeyValue.ValueData;
+                                    break;
+                                case "RootDirPath":
+                                    rootDirPath = registryKeyValue.ValueData;
+                                    break;
+                                case "Source":
+                                    source = registryKeyValue.ValueData;
+                                    break;
+                                case "StoreAppType":
+                                    storeAppType = registryKeyValue.ValueData;
+                                    break;
+                                case "Type":
+                                    type = registryKeyValue.ValueData;
+                                    break;
+                                case "UninstallString":
+                                    uninstallString = registryKeyValue.ValueData;
+                                    break;
+                                case "Version":
+                                    version = registryKeyValue.ValueData;
+                                    break;
+                                case "InstallDateArpLastModified":
+                                    if (registryKeyValue.ValueData.Length > 0)
+                                    {
+                                        installDateArpLastModified = registryKeyValue.ValueData;
+                                    }
+
+                                    break;
+                                case "InstallDateMsi":
+                                    if (registryKeyValue.ValueData.Length > 0)
+                                    {
+                                        // _logger.Warn($"registryKeyValue.ValueData for InstallDate as InvariantCulture: {registryKeyValue.ValueData.ToString(CultureInfo.InvariantCulture)}");
+                                        var d = new DateTimeOffset(
+                                            DateTime.Parse(registryKeyValue.ValueData, DateTimeFormatInfo.InvariantInfo)
+                                                .Ticks,
+                                            TimeSpan.Zero);
+                                        installDateMsi = d;
+                                    }
+
+                                    break;
+                                case "InstallDateFromLinkFile":
+                                    if (registryKeyValue.ValueData.Length > 0)
+                                    {
+                                        installDateFromLinkFile = registryKeyValue.ValueData;
+                                    }
+
+                                    break;
+                                default:
+                                    _logger.Warn(
+                                        $"Unknown value name in InventoryApplication at path {registryKey.KeyPath}: {registryKeyValue.ValueName}");
+                                    break;
+                            }
                         }
+
+                        var pe = new ProgramsEntryNew(bundleManifestPath, hiddenArp, inboxModernApp, installDate,
+                            language,
+                            manifestPath, msiPackageCode, msiProductCode, name, osVersionAtInstallTime, packageFullName,
+                            programId, programInstanceId, publisher, registryKeyPath, rootDirPath, source, storeAppType,
+                            type, uninstallString, version, registryKey.LastWriteTime.Value, installDateArpLastModified,
+                            installDateMsi, installDateFromLinkFile);
+
+                        ProgramsEntries.Add(pe);
                     }
-
-                    var pe = new ProgramsEntryNew(bundleManifestPath, hiddenArp, inboxModernApp, installDate, language,
-                        manifestPath, msiPackageCode, msiProductCode, name, osVersionAtInstallTime, packageFullName,
-                        programId, programInstanceId, publisher, registryKeyPath, rootDirPath, source, storeAppType,
-                        type, uninstallString, version, registryKey.LastWriteTime.Value,installDateArpLastModified,installDateMsi,installDateFromLinkFile);
-
-                    ProgramsEntries.Add(pe);
-                }
-                catch (Exception ex)
-                {
-                    _logger.Error($"Error parsing ProgramsEntry at {registryKey.KeyPath}. Error: {ex.Message}");
-                    _logger.Error(
-                        $"Please send the following text to saericzimmerman@gmail.com. \r\n\r\nKey data: {registryKey}");
-                }
-            }
-
-            foreach (var subKey in fileKey.SubKeys)
-            {
-                var binaryType = string.Empty;
-                var binFileVersion = string.Empty;
-                var binProductVersion = string.Empty;
-                var fileId = string.Empty;
-                var isOsComponent = false;
-                var isPeFile = false;
-                var language = 0;
-                DateTimeOffset? linkDate = null;
-                var longPathHash = string.Empty;
-                var lowerCaseLongPath = string.Empty;
-                var name = string.Empty;
-                var productName = string.Empty;
-                var productVersion = string.Empty;
-                var programId = string.Empty;
-                var publisher = string.Empty;
-                var size = 0;
-                var version = string.Empty;
-
-                var hasLinkedProgram = false;
-
-                try
-                {
-                    foreach (var subKeyValue in subKey.Values)
+                    catch (Exception ex)
                     {
-                        switch (subKeyValue.ValueName)
-                        {
-                            case "BinaryType":
-                                binaryType = subKeyValue.ValueData;
-                                break;
-                            case "BinFileVersion":
-                                binFileVersion = subKeyValue.ValueData;
-                                break;
-                            case "BinProductVersion":
-                                binProductVersion = subKeyValue.ValueData;
-                                break;
-                            case "FileId":
-                                fileId = subKeyValue.ValueData;
-                                break;
-                            case "IsOsComponent":
-                                isOsComponent = subKeyValue.ValueData == "1";
-                                break;
-                            case "IsPeFile":
-                                isPeFile = subKeyValue.ValueData == "1";
-                                break;
-                            case "Language":
-                                language = int.Parse(subKeyValue.ValueData);
-                                break;
-                            case "LinkDate":
-                                if (subKeyValue.ValueData.Length > 0)
-                                {
-                                    var d = new DateTimeOffset(DateTime.Parse(subKeyValue.ValueData,DateTimeFormatInfo.InvariantInfo).Ticks,
-                                        TimeSpan.Zero);
-                                    linkDate = d;
-                                }
-
-
-                                break;
-                            case "LongPathHash":
-                                longPathHash = subKeyValue.ValueData;
-                                break;
-                            case "LowerCaseLongPath":
-                                lowerCaseLongPath = subKeyValue.ValueData;
-                                break;
-                            case "Name":
-                                name = subKeyValue.ValueData;
-                                break;
-                            case "ProductName":
-                                productName = subKeyValue.ValueData;
-                                break;
-                            case "ProductVersion":
-                                productVersion = subKeyValue.ValueData;
-                                break;
-                            case "ProgramId":
-                                programId = subKeyValue.ValueData;
-
-                                var program = ProgramsEntries.SingleOrDefault(t => t.ProgramId == programId);
-                                if (program != null)
-                                {
-                                    hasLinkedProgram = true;
-                                }
-                                break;
-                            case "Publisher":
-                                publisher = subKeyValue.ValueData;
-                                break;
-                            case "Size":
-                                if (subKeyValue.ValueData.StartsWith("0x"))
-                                {
-                                    size = int.Parse(subKeyValue.ValueData.Replace("0x",""),NumberStyles.HexNumber);
-                                }
-                                else
-                                {
-                                    size = int.Parse(subKeyValue.ValueData);
-                                }
-                            
-                                break;
-                            case "Version":
-                                version = subKeyValue.ValueData;
-                                break;
-                            default:
-                                _logger.Warn(
-                                    $"Unknown value name when processing FileEntry at path '{subKey.KeyPath}': {subKeyValue.ValueName}");
-                                break;
-                        }
+                        _logger.Error($"Error parsing ProgramsEntry at {registryKey.KeyPath}. Error: {ex.Message}");
+                        _logger.Error(
+                            $"Please send the following text to saericzimmerman@gmail.com. \r\n\r\nKey data: {registryKey}");
                     }
                 }
-                catch (Exception ex)
-                {
-                    _logger.Error($"Error parsing FileEntry at {subKey.KeyPath}. Error: {ex.Message}");
-                    _logger.Error(
-                        $"Please send the following text to saericzimmerman@gmail.com. \r\n\r\nKey data: {subKey}");
-                }
-
-
-                TotalFileEntries += 1;
-
-           
-                var fe = new FileEntryNew(binaryType, binFileVersion, productVersion, fileId, isOsComponent, isPeFile,
-                    language, linkDate, longPathHash, lowerCaseLongPath, name, productName, productVersion, programId,
-                    publisher, size, version, subKey.LastWriteTime.Value, binProductVersion);
-
-                if (hasLinkedProgram)
-                {
-                    var program = ProgramsEntries.SingleOrDefault(t => t.ProgramId == fe.ProgramId);
-                    fe.ApplicationName = program.Name;
-                    program.FileEntries.Add(fe);
-                }
-                else
-                {
-                    fe.ApplicationName = "Unassociated";
-                    UnassociatedFileEntries.Add(fe);
-                }
+            }
+            else
+            {
+                _logger.Warn("Hive does not contain a Root\\InventoryApplication key.");
             }
 
+
+            if (fileKey != null)
+            {
+                foreach (var subKey in fileKey.SubKeys)
+                {
+                    var binaryType = string.Empty;
+                    var binFileVersion = string.Empty;
+                    var binProductVersion = string.Empty;
+                    var fileId = string.Empty;
+                    var isOsComponent = false;
+                    var isPeFile = false;
+                    var language = 0;
+                    DateTimeOffset? linkDate = null;
+                    var longPathHash = string.Empty;
+                    var lowerCaseLongPath = string.Empty;
+                    var name = string.Empty;
+                    var productName = string.Empty;
+                    var productVersion = string.Empty;
+                    var programId = string.Empty;
+                    var publisher = string.Empty;
+                    var size = 0;
+                    var version = string.Empty;
+
+                    var hasLinkedProgram = false;
+
+                    try
+                    {
+                        foreach (var subKeyValue in subKey.Values)
+                        {
+                            switch (subKeyValue.ValueName)
+                            {
+                                case "BinaryType":
+                                    binaryType = subKeyValue.ValueData;
+                                    break;
+                                case "BinFileVersion":
+                                    binFileVersion = subKeyValue.ValueData;
+                                    break;
+                                case "BinProductVersion":
+                                    binProductVersion = subKeyValue.ValueData;
+                                    break;
+                                case "FileId":
+                                    fileId = subKeyValue.ValueData;
+                                    break;
+                                case "IsOsComponent":
+                                    isOsComponent = subKeyValue.ValueData == "1";
+                                    break;
+                                case "IsPeFile":
+                                    isPeFile = subKeyValue.ValueData == "1";
+                                    break;
+                                case "Language":
+                                    language = int.Parse(subKeyValue.ValueData);
+                                    break;
+                                case "LinkDate":
+                                    if (subKeyValue.ValueData.Length > 0)
+                                    {
+                                        var d = new DateTimeOffset(
+                                            DateTime.Parse(subKeyValue.ValueData, DateTimeFormatInfo.InvariantInfo)
+                                                .Ticks,
+                                            TimeSpan.Zero);
+                                        linkDate = d;
+                                    }
+
+                                    break;
+                                case "LongPathHash":
+                                    longPathHash = subKeyValue.ValueData;
+                                    break;
+                                case "LowerCaseLongPath":
+                                    lowerCaseLongPath = subKeyValue.ValueData;
+                                    break;
+                                case "Name":
+                                    name = subKeyValue.ValueData;
+                                    break;
+                                case "ProductName":
+                                    productName = subKeyValue.ValueData;
+                                    break;
+                                case "ProductVersion":
+                                    productVersion = subKeyValue.ValueData;
+                                    break;
+                                case "ProgramId":
+                                    programId = subKeyValue.ValueData;
+
+                                    var program = ProgramsEntries.SingleOrDefault(t => t.ProgramId == programId);
+                                    if (program != null)
+                                    {
+                                        hasLinkedProgram = true;
+                                    }
+
+                                    break;
+                                case "Publisher":
+                                    publisher = subKeyValue.ValueData;
+                                    break;
+                                case "Size":
+                                    if (subKeyValue.ValueData.StartsWith("0x"))
+                                    {
+                                        size = int.Parse(subKeyValue.ValueData.Replace("0x", ""),
+                                            NumberStyles.HexNumber);
+                                    }
+                                    else
+                                    {
+                                        size = int.Parse(subKeyValue.ValueData);
+                                    }
+
+                                    break;
+                                case "Version":
+                                    version = subKeyValue.ValueData;
+                                    break;
+                                default:
+                                    _logger.Warn(
+                                        $"Unknown value name when processing FileEntry at path '{subKey.KeyPath}': {subKeyValue.ValueName}");
+                                    break;
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.Error($"Error parsing FileEntry at {subKey.KeyPath}. Error: {ex.Message}");
+                        _logger.Error(
+                            $"Please send the following text to saericzimmerman@gmail.com. \r\n\r\nKey data: {subKey}");
+                    }
+
+                    TotalFileEntries += 1;
+
+                    var fe = new FileEntryNew(binaryType, binFileVersion, productVersion, fileId, isOsComponent,
+                        isPeFile,
+                        language, linkDate, longPathHash, lowerCaseLongPath, name, productName, productVersion,
+                        programId,
+                        publisher, size, version, subKey.LastWriteTime.Value, binProductVersion);
+
+                    if (hasLinkedProgram)
+                    {
+                        var program = ProgramsEntries.SingleOrDefault(t => t.ProgramId == fe.ProgramId);
+                        fe.ApplicationName = program.Name;
+                        program.FileEntries.Add(fe);
+                    }
+                    else
+                    {
+                        fe.ApplicationName = "Unassociated";
+                        UnassociatedFileEntries.Add(fe);
+                    }
+                }
+            }
+            else
+            {
+                _logger.Warn("Hive does not contain a Root\\InventoryApplicationFile key.");
+            }
 
             var shortCutkey = reg.GetKey(@"Root\InventoryApplicationShortcut");
 
@@ -661,7 +686,8 @@ namespace Amcache
                                 case "DriverLastWriteTime":
                                     if (keyValue.ValueData.Length > 0)
                                     {
-                                        var d = new DateTimeOffset(DateTime.Parse(keyValue.ValueData,DateTimeFormatInfo.InvariantInfo).Ticks,
+                                        var d = new DateTimeOffset(
+                                            DateTime.Parse(keyValue.ValueData, DateTimeFormatInfo.InvariantInfo).Ticks,
                                             TimeSpan.Zero);
                                         driverLastWriteTime = d;
                                     }
@@ -683,6 +709,7 @@ namespace Amcache
                                     {
                                         driverTimeStamp = DateTimeOffset.FromUnixTimeSeconds(seca).ToUniversalTime();
                                     }
+
                                     break;
                                 case "DriverType":
                                     driverType = keyValue.ValueData;
@@ -766,7 +793,8 @@ namespace Amcache
                                 case "Date":
                                     if (keyValue.ValueData.Length > 0)
                                     {
-                                        var d = new DateTimeOffset(DateTime.Parse(keyValue.ValueData,DateTimeFormatInfo.InvariantInfo).Ticks,
+                                        var d = new DateTimeOffset(
+                                            DateTime.Parse(keyValue.ValueData, DateTimeFormatInfo.InvariantInfo).Ticks,
                                             TimeSpan.Zero);
                                         Date = d;
                                     }

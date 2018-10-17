@@ -8,7 +8,6 @@ using System.Reflection;
 using Amcache;
 using Amcache.Classes;
 using CsvHelper;
-using CsvHelper.Configuration;
 using CsvHelper.TypeConversion;
 using Exceptionless;
 using Fclp;
@@ -170,11 +169,11 @@ namespace AmcacheParser
 
             try
             {
-
-                if (Helper.IsNewFormat(_fluentCommandLineParser.Object.File,_fluentCommandLineParser.Object.NoTransLogs))
+                if (Helper.IsNewFormat(_fluentCommandLineParser.Object.File,
+                    _fluentCommandLineParser.Object.NoTransLogs))
                 {
                     var amNew = new AmcacheNew(_fluentCommandLineParser.Object.File,
-                        _fluentCommandLineParser.Object.RecoverDeleted,_fluentCommandLineParser.Object.NoTransLogs);
+                        _fluentCommandLineParser.Object.RecoverDeleted, _fluentCommandLineParser.Object.NoTransLogs);
 
                     if (amNew.ProgramsEntries.Count == 0 && amNew.UnassociatedFileEntries.Count == 0)
                     {
@@ -195,6 +194,7 @@ namespace AmcacheParser
                             {
                                 whitelistHashes1.Add(readLine.ToLowerInvariant());
                             }
+
                             useBlacklist2 = true;
                         }
                         else
@@ -248,12 +248,7 @@ namespace AmcacheParser
 
                     var outbase1 = $"{ts1}_{hiveName1}_Unassociated file entries.{exportExt}";
 
-                    
-
-
                     var outFile1 = Path.Combine(_fluentCommandLineParser.Object.SaveTo, outbase1);
-
-                  
 
                     using (var sw = new StreamWriter(outFile1))
                     {
@@ -268,12 +263,14 @@ namespace AmcacheParser
                         csv.Configuration.TypeConverterOptionsCache.AddOptions<FileEntryNew>(o);
 
                         var foo = csv.Configuration.AutoMap<FileEntryNew>();
-                        
+
                         foo.Map(m => m.ApplicationName).Index(0);
 
                         foo.Map(m => m.ProgramId).Index(1);
-                        foo.Map(t => t.FileKeyLastWriteTimestamp).ConvertUsing(t =>t.FileKeyLastWriteTimestamp.ToString(_fluentCommandLineParser.Object.DateTimeFormat)).Index(2);
-                        foo. Map(m => m.SHA1).Index(3);
+                        foo.Map(t => t.FileKeyLastWriteTimestamp).ConvertUsing(t =>
+                                t.FileKeyLastWriteTimestamp.ToString(_fluentCommandLineParser.Object.DateTimeFormat))
+                            .Index(2);
+                        foo.Map(m => m.SHA1).Index(3);
                         foo.Map(m => m.IsOsComponent).Index(4);
                         foo.Map(m => m.FullPath).Index(5);
                         foo.Map(m => m.Name).Index(6);
@@ -311,7 +308,7 @@ namespace AmcacheParser
                         csv.NextRecord();
                         csv.WriteRecords(cleanList2);
                     }
-                    
+
 
                     if (_fluentCommandLineParser.Object.IncludeLinked)
                     {
@@ -331,9 +328,11 @@ namespace AmcacheParser
                             csv.Configuration.TypeConverterOptionsCache.AddOptions<ProgramsEntryNew>(o);
 
                             var foo = csv.Configuration.AutoMap<ProgramsEntryNew>();
-                            
+
                             foo.Map(m => m.ProgramId).Index(0);
-                            foo.Map(t => t.KeyLastWriteTimestamp).ConvertUsing(t =>t.KeyLastWriteTimestamp.ToString(_fluentCommandLineParser.Object.DateTimeFormat)).Index(1);
+                            foo.Map(t => t.KeyLastWriteTimestamp).ConvertUsing(t =>
+                                    t.KeyLastWriteTimestamp.ToString(_fluentCommandLineParser.Object.DateTimeFormat))
+                                .Index(1);
                             foo.Map(m => m.Name).Index(2);
                             foo.Map(m => m.Version).Index(3);
                             foo.Map(m => m.Publisher).Index(4);
@@ -347,9 +346,8 @@ namespace AmcacheParser
                                 }
 
                                 return "";
+                            }).Index(5);
 
-                            } ).Index(5);
-                                
                             foo.Map(m => m.OSVersionAtInstallTime).Index(6);
 
                             foo.Map(m => m.BundleManifestPath).Index(7);
@@ -357,22 +355,22 @@ namespace AmcacheParser
                             foo.Map(m => m.InboxModernApp).Index(9);
                             foo.Map(m => m.Language).Index(10);
                             foo.Map(m => m.ManifestPath).Index(11);
-                            foo. Map(m => m.MsiPackageCode).Index(12);
+                            foo.Map(m => m.MsiPackageCode).Index(12);
                             foo.Map(m => m.MsiProductCode).Index(13);
 
                             foo.Map(m => m.PackageFullName).Index(14);
                             foo.Map(m => m.ProgramInstanceId).Index(15);
                             foo.Map(m => m.RegistryKeyPath).Index(16);
                             foo.Map(m => m.RootDirPath).Index(17);
-                            
+
                             foo.Map(m => m.Type).Index(18);
                             foo.Map(m => m.Source).Index(19);
                             foo.Map(m => m.StoreAppType).Index(20);
 
                             foo.Map(m => m.UninstallString).Index(21);
-                            
+
                             csv.Configuration.RegisterClassMap(foo);
-                            
+
                             if (_fluentCommandLineParser.Object.CsvSeparator == false)
                             {
                                 csv.Configuration.Delimiter = "\t";
@@ -397,12 +395,15 @@ namespace AmcacheParser
                             csv.Configuration.TypeConverterOptionsCache.AddOptions<FileEntryNew>(o);
 
                             var foo = csv.Configuration.AutoMap<FileEntryNew>();
-                        
+
                             foo.Map(m => m.ApplicationName).Index(0);
 
                             foo.Map(m => m.ProgramId).Index(1);
-                            foo.Map(t => t.FileKeyLastWriteTimestamp).ConvertUsing(t =>t.FileKeyLastWriteTimestamp.ToString(_fluentCommandLineParser.Object.DateTimeFormat)).Index(2);
-                            foo. Map(m => m.SHA1).Index(3);
+                            foo.Map(t => t.FileKeyLastWriteTimestamp).ConvertUsing(t =>
+                                    t.FileKeyLastWriteTimestamp.ToString(_fluentCommandLineParser.Object
+                                        .DateTimeFormat))
+                                .Index(2);
+                            foo.Map(m => m.SHA1).Index(3);
                             foo.Map(m => m.IsOsComponent).Index(4);
                             foo.Map(m => m.FullPath).Index(5);
                             foo.Map(m => m.Name).Index(6);
@@ -466,11 +467,12 @@ namespace AmcacheParser
                         csv.Configuration.TypeConverterOptionsCache.AddOptions<Shortcut>(o);
 
                         var foo = csv.Configuration.AutoMap<Shortcut>();
-                        
+
                         foo.Map(m => m.KeyName).Index(0);
                         foo.Map(m => m.LnkName).Index(1);
-                        
-                        foo.Map(t => t.KeyLastWriteTimestamp).ConvertUsing(t =>t.KeyLastWriteTimestamp.ToString(_fluentCommandLineParser.Object.DateTimeFormat)).Index(2);
+
+                        foo.Map(t => t.KeyLastWriteTimestamp).ConvertUsing(t =>
+                            t.KeyLastWriteTimestamp.ToString(_fluentCommandLineParser.Object.DateTimeFormat)).Index(2);
 
                         csv.Configuration.RegisterClassMap(foo);
 
@@ -507,9 +509,12 @@ namespace AmcacheParser
                         var foo = csv.Configuration.AutoMap<DriverBinary>();
 
                         foo.Map(m => m.KeyName).Index(0);
-                        foo.Map(t => t.KeyLastWriteTimestamp).ConvertUsing(t =>t.KeyLastWriteTimestamp.ToString(_fluentCommandLineParser.Object.DateTimeFormat)).Index(1);
-                        foo.Map(t => t.DriverTimeStamp).ConvertUsing(t =>t.DriverTimeStamp?.ToString(_fluentCommandLineParser.Object.DateTimeFormat)).Index(2);
-                        foo.Map(t => t.DriverLastWriteTime).ConvertUsing(t =>t.DriverLastWriteTime?.ToString(_fluentCommandLineParser.Object.DateTimeFormat)).Index(3);
+                        foo.Map(t => t.KeyLastWriteTimestamp).ConvertUsing(t =>
+                            t.KeyLastWriteTimestamp.ToString(_fluentCommandLineParser.Object.DateTimeFormat)).Index(1);
+                        foo.Map(t => t.DriverTimeStamp).ConvertUsing(t =>
+                            t.DriverTimeStamp?.ToString(_fluentCommandLineParser.Object.DateTimeFormat)).Index(2);
+                        foo.Map(t => t.DriverLastWriteTime).ConvertUsing(t =>
+                            t.DriverLastWriteTime?.ToString(_fluentCommandLineParser.Object.DateTimeFormat)).Index(3);
 
                         foo.Map(m => m.DriverName).Index(4);
 
@@ -565,7 +570,8 @@ namespace AmcacheParser
                         var foo = csv.Configuration.AutoMap<DeviceContainer>();
 
                         foo.Map(m => m.KeyName).Index(0);
-                        foo.Map(t => t.KeyLastWriteTimestamp).ConvertUsing(t =>t.KeyLastWriteTimestamp.ToString(_fluentCommandLineParser.Object.DateTimeFormat)).Index(1);
+                        foo.Map(t => t.KeyLastWriteTimestamp).ConvertUsing(t =>
+                            t.KeyLastWriteTimestamp.ToString(_fluentCommandLineParser.Object.DateTimeFormat)).Index(1);
 
                         foo.Map(m => m.Categories).Index(2);
 
@@ -583,7 +589,7 @@ namespace AmcacheParser
                         foo.Map(m => m.ModelNumber).Index(14);
                         foo.Map(m => m.PrimaryCategory).Index(15);
                         foo.Map(m => m.State).Index(16);
-                        
+
                         csv.Configuration.RegisterClassMap(foo);
 
                         if (_fluentCommandLineParser.Object.CsvSeparator == false)
@@ -618,10 +624,13 @@ namespace AmcacheParser
                         var foo = csv.Configuration.AutoMap<DriverPackage>();
 
                         csv.Configuration.RegisterClassMap(foo);
-                        
+
                         foo.Map(m => m.KeyName).Index(0);
-                        foo.Map(t => t.KeyLastWriteTimestamp).ConvertUsing(t =>t.KeyLastWriteTimestamp.ToString(_fluentCommandLineParser.Object.DateTimeFormat)).Index(1);
-                        foo.Map(t => t.Date).ConvertUsing(t =>t.Date?.ToString(_fluentCommandLineParser.Object.DateTimeFormat)).Index(2);
+                        foo.Map(t => t.KeyLastWriteTimestamp).ConvertUsing(t =>
+                            t.KeyLastWriteTimestamp.ToString(_fluentCommandLineParser.Object.DateTimeFormat)).Index(1);
+                        foo.Map(t => t.Date)
+                            .ConvertUsing(t => t.Date?.ToString(_fluentCommandLineParser.Object.DateTimeFormat))
+                            .Index(2);
 
                         foo.Map(m => m.Class).Index(3);
 
@@ -667,7 +676,8 @@ namespace AmcacheParser
                         var foo = csv.Configuration.AutoMap<DevicePnp>();
 
                         foo.Map(m => m.KeyName).Index(0);
-                        foo.Map(t => t.KeyLastWriteTimestamp).ConvertUsing(t =>t.KeyLastWriteTimestamp.ToString(_fluentCommandLineParser.Object.DateTimeFormat)).Index(1);
+                        foo.Map(t => t.KeyLastWriteTimestamp).ConvertUsing(t =>
+                            t.KeyLastWriteTimestamp.ToString(_fluentCommandLineParser.Object.DateTimeFormat)).Index(1);
 
                         foo.Map(m => m.BusReportedDescription).Index(2);
 
@@ -694,7 +704,7 @@ namespace AmcacheParser
                         foo.Map(m => m.Service).Index(23);
                         foo.Map(m => m.Stackid).Index(24);
                         foo.Map(m => m.DeviceState).Ignore();
-                        
+
                         csv.Configuration.RegisterClassMap(foo);
 
                         if (_fluentCommandLineParser.Object.CsvSeparator == false)
@@ -733,6 +743,7 @@ namespace AmcacheParser
                     {
                         _logger.Info($"Total shortcuts found: {amNew.ShortCuts.Count:N0}");
                     }
+
                     if (amNew.DeviceContainers.Count > 0)
                     {
                         _logger.Info($"Total device containers found: {amNew.DeviceContainers.Count:N0}");
@@ -774,6 +785,7 @@ namespace AmcacheParser
 
                         _logger.Info($"Percentage of total shown based on {list}: {per:P3} ({1 - per:P3} savings)");
                     }
+
                     _logger.Info("");
 
                     _logger.Info($"Results saved to: {_fluentCommandLineParser.Object.SaveTo}");
@@ -788,7 +800,7 @@ namespace AmcacheParser
                 }
 
                 var am = new AmcacheOld(_fluentCommandLineParser.Object.File,
-                    _fluentCommandLineParser.Object.RecoverDeleted,_fluentCommandLineParser.Object.NoTransLogs);
+                    _fluentCommandLineParser.Object.RecoverDeleted, _fluentCommandLineParser.Object.NoTransLogs);
 
 
                 if (am.ProgramsEntries.Count == 0 && am.UnassociatedFileEntries.Count == 0)
@@ -811,6 +823,7 @@ namespace AmcacheParser
                         {
                             whitelistHashes.Add(readLine.ToLowerInvariant());
                         }
+
                         useBlacklist = true;
                     }
                     else
@@ -882,9 +895,11 @@ namespace AmcacheParser
                     foo.Map(m => m.ProgramName).Index(0);
                     foo.Map(m => m.ProgramID).Index(1);
                     foo.Map(m => m.VolumeID).Index(2);
-                    foo.Map(t => t.VolumeIDLastWriteTimestamp).ConvertUsing(t =>t.VolumeIDLastWriteTimestamp.ToString(_fluentCommandLineParser.Object.DateTimeFormat)).Index(3);
+                    foo.Map(t => t.VolumeIDLastWriteTimestamp).ConvertUsing(t =>
+                        t.VolumeIDLastWriteTimestamp.ToString(_fluentCommandLineParser.Object.DateTimeFormat)).Index(3);
                     foo.Map(m => m.FileID).Index(4);
-                    foo.Map(t => t.FileIDLastWriteTimestamp).ConvertUsing(t =>t.FileIDLastWriteTimestamp.ToString(_fluentCommandLineParser.Object.DateTimeFormat)).Index(5);
+                    foo.Map(t => t.FileIDLastWriteTimestamp).ConvertUsing(t =>
+                        t.FileIDLastWriteTimestamp.ToString(_fluentCommandLineParser.Object.DateTimeFormat)).Index(5);
                     foo.Map(m => m.SHA1).Index(6);
                     foo.Map(m => m.FullPath).Index(7);
                     foo.Map(m => m.FileExtension).Index(8);
@@ -906,10 +921,16 @@ namespace AmcacheParser
                     foo.Map(m => m.IsLocal).Index(22);
                     foo.Map(m => m.GuessProgramID).Index(23);
 
-                    foo.Map(t => t.Created).ConvertUsing(t =>t.Created?.ToString(_fluentCommandLineParser.Object.DateTimeFormat)).Index(24);
-                    foo.Map(t => t.LastModified).ConvertUsing(t =>t.LastModified?.ToString(_fluentCommandLineParser.Object.DateTimeFormat)).Index(25);
-                    foo.Map(t => t.LastModifiedStore).ConvertUsing(t =>t.LastModifiedStore?.ToString(_fluentCommandLineParser.Object.DateTimeFormat)).Index(26);
-                    foo.Map(t => t.LinkDate).ConvertUsing(t =>t.LinkDate?.ToString(_fluentCommandLineParser.Object.DateTimeFormat)).Index(27);
+                    foo.Map(t => t.Created)
+                        .ConvertUsing(t => t.Created?.ToString(_fluentCommandLineParser.Object.DateTimeFormat))
+                        .Index(24);
+                    foo.Map(t => t.LastModified).ConvertUsing(t =>
+                        t.LastModified?.ToString(_fluentCommandLineParser.Object.DateTimeFormat)).Index(25);
+                    foo.Map(t => t.LastModifiedStore).ConvertUsing(t =>
+                        t.LastModifiedStore?.ToString(_fluentCommandLineParser.Object.DateTimeFormat)).Index(26);
+                    foo.Map(t => t.LinkDate)
+                        .ConvertUsing(t => t.LinkDate?.ToString(_fluentCommandLineParser.Object.DateTimeFormat))
+                        .Index(27);
                     foo.Map(m => m.LanguageID).Index(28);
 
 
@@ -946,19 +967,22 @@ namespace AmcacheParser
                         var foo = csv.Configuration.AutoMap<ProgramsEntryOld>();
 
                         foo.Map(m => m.ProgramID).Index(0);
-                        foo.Map(t => t.LastWriteTimestamp).ConvertUsing(t =>t.LastWriteTimestamp.ToString(_fluentCommandLineParser.Object.DateTimeFormat)).Index(1);
+                        foo.Map(t => t.LastWriteTimestamp).ConvertUsing(t =>
+                            t.LastWriteTimestamp.ToString(_fluentCommandLineParser.Object.DateTimeFormat)).Index(1);
                         foo.Map(m => m.ProgramName_0).Index(2);
                         foo.Map(m => m.ProgramVersion_1).Index(3);
                         foo.Map(m => m.VendorName_2).Index(4);
 
-                        foo.Map(t => t.InstallDateEpoch_a).ConvertUsing(t =>t.InstallDateEpoch_a?.ToString(_fluentCommandLineParser.Object.DateTimeFormat)).Index(5);
-                        foo.Map(t => t.InstallDateEpoch_b).ConvertUsing(t =>t.InstallDateEpoch_b?.ToString(_fluentCommandLineParser.Object.DateTimeFormat)).Index(6);
+                        foo.Map(t => t.InstallDateEpoch_a).ConvertUsing(t =>
+                            t.InstallDateEpoch_a?.ToString(_fluentCommandLineParser.Object.DateTimeFormat)).Index(5);
+                        foo.Map(t => t.InstallDateEpoch_b).ConvertUsing(t =>
+                            t.InstallDateEpoch_b?.ToString(_fluentCommandLineParser.Object.DateTimeFormat)).Index(6);
 
                         foo.Map(m => m.LanguageCode_3).Index(7);
                         foo.Map(m => m.InstallSource_6).Index(8);
                         foo.Map(m => m.UninstallRegistryKey_7).Index(9);
                         foo.Map(m => m.PathsList_d).Index(10);
-                        
+
                         csv.Configuration.RegisterClassMap(foo);
 
                         if (_fluentCommandLineParser.Object.CsvSeparator == false)
@@ -977,50 +1001,60 @@ namespace AmcacheParser
                     using (var sw = new StreamWriter(outFile))
                     {
                         var csv = new CsvWriter(sw);
-                      
-                          var o = new TypeConverterOptions
-                    {
-                        DateTimeStyle = DateTimeStyles.AssumeUniversal & DateTimeStyles.AdjustToUniversal
-                    };
-                    csv.Configuration.TypeConverterOptionsCache.AddOptions<FileEntryOld>(o);
 
-                    var foo = csv.Configuration.AutoMap<FileEntryOld>();
+                        var o = new TypeConverterOptions
+                        {
+                            DateTimeStyle = DateTimeStyles.AssumeUniversal & DateTimeStyles.AdjustToUniversal
+                        };
+                        csv.Configuration.TypeConverterOptionsCache.AddOptions<FileEntryOld>(o);
 
-                    foo.Map(m => m.ProgramName).Index(0);
-                    foo.Map(m => m.ProgramID).Index(1);
-                    foo.Map(m => m.VolumeID).Index(2);
-                    foo.Map(t => t.VolumeIDLastWriteTimestamp).ConvertUsing(t =>t.VolumeIDLastWriteTimestamp.ToString(_fluentCommandLineParser.Object.DateTimeFormat)).Index(3);
-                    foo.Map(m => m.FileID).Index(4);
-                    foo.Map(t => t.FileIDLastWriteTimestamp).ConvertUsing(t =>t.FileIDLastWriteTimestamp.ToString(_fluentCommandLineParser.Object.DateTimeFormat)).Index(5);
-                    foo.Map(m => m.SHA1).Index(6);
-                    foo.Map(m => m.FullPath).Index(7);
-                    foo.Map(m => m.FileExtension).Index(8);
-                    foo.Map(m => m.MFTEntryNumber).Index(9);
-                    foo.Map(m => m.MFTSequenceNumber).Index(10);
-                    foo.Map(m => m.FileSize).Index(11);
-                    foo.Map(m => m.FileVersionString).Index(12);
-                    foo.Map(m => m.FileVersionNumber).Index(13);
-                    foo.Map(m => m.FileDescription).Index(14);
+                        var foo = csv.Configuration.AutoMap<FileEntryOld>();
 
-                    foo.Map(m => m.SizeOfImage).Index(15);
-                    foo.Map(m => m.PEHeaderHash).Index(16);
-                    foo.Map(m => m.PEHeaderChecksum).Index(17);
+                        foo.Map(m => m.ProgramName).Index(0);
+                        foo.Map(m => m.ProgramID).Index(1);
+                        foo.Map(m => m.VolumeID).Index(2);
+                        foo.Map(t => t.VolumeIDLastWriteTimestamp).ConvertUsing(t =>
+                                t.VolumeIDLastWriteTimestamp.ToString(_fluentCommandLineParser.Object.DateTimeFormat))
+                            .Index(3);
+                        foo.Map(m => m.FileID).Index(4);
+                        foo.Map(t => t.FileIDLastWriteTimestamp).ConvertUsing(t =>
+                                t.FileIDLastWriteTimestamp.ToString(_fluentCommandLineParser.Object.DateTimeFormat))
+                            .Index(5);
+                        foo.Map(m => m.SHA1).Index(6);
+                        foo.Map(m => m.FullPath).Index(7);
+                        foo.Map(m => m.FileExtension).Index(8);
+                        foo.Map(m => m.MFTEntryNumber).Index(9);
+                        foo.Map(m => m.MFTSequenceNumber).Index(10);
+                        foo.Map(m => m.FileSize).Index(11);
+                        foo.Map(m => m.FileVersionString).Index(12);
+                        foo.Map(m => m.FileVersionNumber).Index(13);
+                        foo.Map(m => m.FileDescription).Index(14);
 
-                    foo.Map(m => m.BinProductVersion).Index(18);
-                    foo.Map(m => m.BinFileVersion).Index(19);
-                    foo.Map(m => m.LinkerVersion).Index(20);
-                    foo.Map(m => m.BinaryType).Index(21);
-                    foo.Map(m => m.IsLocal).Index(22);
-                    foo.Map(m => m.GuessProgramID).Index(23);
+                        foo.Map(m => m.SizeOfImage).Index(15);
+                        foo.Map(m => m.PEHeaderHash).Index(16);
+                        foo.Map(m => m.PEHeaderChecksum).Index(17);
 
-                    foo.Map(t => t.Created).ConvertUsing(t =>t.Created?.ToString(_fluentCommandLineParser.Object.DateTimeFormat)).Index(24);
-                    foo.Map(t => t.LastModified).ConvertUsing(t =>t.LastModified?.ToString(_fluentCommandLineParser.Object.DateTimeFormat)).Index(25);
-                    foo.Map(t => t.LastModifiedStore).ConvertUsing(t =>t.LastModifiedStore?.ToString(_fluentCommandLineParser.Object.DateTimeFormat)).Index(26);
-                    foo.Map(t => t.LinkDate).ConvertUsing(t =>t.LinkDate?.ToString(_fluentCommandLineParser.Object.DateTimeFormat)).Index(27);
-                    foo.Map(m => m.LanguageID).Index(28);
+                        foo.Map(m => m.BinProductVersion).Index(18);
+                        foo.Map(m => m.BinFileVersion).Index(19);
+                        foo.Map(m => m.LinkerVersion).Index(20);
+                        foo.Map(m => m.BinaryType).Index(21);
+                        foo.Map(m => m.IsLocal).Index(22);
+                        foo.Map(m => m.GuessProgramID).Index(23);
+
+                        foo.Map(t => t.Created)
+                            .ConvertUsing(t => t.Created?.ToString(_fluentCommandLineParser.Object.DateTimeFormat))
+                            .Index(24);
+                        foo.Map(t => t.LastModified).ConvertUsing(t =>
+                            t.LastModified?.ToString(_fluentCommandLineParser.Object.DateTimeFormat)).Index(25);
+                        foo.Map(t => t.LastModifiedStore).ConvertUsing(t =>
+                            t.LastModifiedStore?.ToString(_fluentCommandLineParser.Object.DateTimeFormat)).Index(26);
+                        foo.Map(t => t.LinkDate)
+                            .ConvertUsing(t => t.LinkDate?.ToString(_fluentCommandLineParser.Object.DateTimeFormat))
+                            .Index(27);
+                        foo.Map(m => m.LanguageID).Index(28);
 
 
-                    csv.Configuration.RegisterClassMap(foo);
+                        csv.Configuration.RegisterClassMap(foo);
 
                         if (_fluentCommandLineParser.Object.CsvSeparator == false)
                         {
@@ -1080,6 +1114,7 @@ namespace AmcacheParser
 
                     _logger.Info($"Percentage of total shown based on {list}: {per:P3} ({1 - per:P3} savings)");
                 }
+
                 _logger.Info("");
 
                 _logger.Info($"Results saved to: {_fluentCommandLineParser.Object.SaveTo}");
@@ -1091,7 +1126,9 @@ namespace AmcacheParser
             }
             catch (Exception ex)
             {
-                if (!ex.Message.Contains("Sequence numbers do not match and transaction logs were not found in the same directory as the hive. Abort"))
+                if (!ex.Message.Contains(
+                    "Sequence numbers do not match and transaction logs were not found in the same directory as the hive. Abort")
+                )
                 {
                     _logger.Error($"There was an error: {ex.Message}");
                     _logger.Error($"Stacktrace: {ex.StackTrace}");
@@ -1099,7 +1136,6 @@ namespace AmcacheParser
                     _logger.Error(
                         $"Please send '{_fluentCommandLineParser.Object.File}' to saericzimmerman@gmail.com in order to fix the issue");
                 }
-                
             }
         }
 
@@ -1128,6 +1164,7 @@ namespace AmcacheParser
             {
                 return string.Empty;
             }
+
             var a = s.ToCharArray();
             a[0] = char.ToUpper(a[0]);
             return new string(a);
@@ -1151,7 +1188,4 @@ namespace AmcacheParser
         public bool PreciseTimestamps { get; set; }
         public bool CsvSeparator { get; set; }
     }
-
-   
-
 }

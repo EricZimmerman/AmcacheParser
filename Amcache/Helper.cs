@@ -9,7 +9,7 @@ namespace Amcache
 {
     public static class Helper
     {
-        public static bool IsNewFormat(string file,bool noLog)
+        public static bool IsNewFormat(string file, bool noLog)
         {
             RegistryKey fileKey = null;
             try
@@ -23,13 +23,13 @@ namespace Amcache
                 if (noLog == false && reg.Header.PrimarySequenceNumber != reg.Header.SecondarySequenceNumber)
                 {
                     var hiveBase = Path.GetFileName(file);
-                    
-                        var dirname = Path.GetDirectoryName(file);
 
-                if (dirname == "")
-                {
-                    dirname = ".";
-                }
+                    var dirname = Path.GetDirectoryName(file);
+
+                    if (dirname == "")
+                    {
+                        dirname = ".";
+                    }
 
                     var logFiles = Directory.GetFiles(dirname, $"{hiveBase}.LOG?");
 
@@ -38,17 +38,19 @@ namespace Amcache
                         LogManager.EnableLogging();
                         var log = LogManager.GetCurrentClassLogger();
 
-                        log.Warn("Registry hive is dirty and no transaction logs were found in the same directory! LOGs should have same base name as the hive. Aborting!!");
-                        throw new Exception("Sequence numbers do not match and transaction logs were not found in the same directory as the hive. Aborting");
+                        log.Warn(
+                            "Registry hive is dirty and no transaction logs were found in the same directory! LOGs should have same base name as the hive. Aborting!!");
+                        throw new Exception(
+                            "Sequence numbers do not match and transaction logs were not found in the same directory as the hive. Aborting");
                     }
 
-                    reg.ProcessTransactionLogs(logFiles.ToList(),true);
+                    reg.ProcessTransactionLogs(logFiles.ToList(), true);
                 }
 
-       
+
                 reg.ParseHive();
 
-                 fileKey = reg.GetKey(@"Root\InventoryApplicationFile");
+                fileKey = reg.GetKey(@"Root\InventoryApplicationFile");
 
                 LogManager.EnableLogging();
             }

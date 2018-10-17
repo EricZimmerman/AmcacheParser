@@ -46,7 +46,7 @@ namespace Amcache
                 RecoverDeleted = recoverDeleted
             };
 
-            if (noLogs  == false && reg.Header.PrimarySequenceNumber != reg.Header.SecondarySequenceNumber)
+            if (noLogs == false && reg.Header.PrimarySequenceNumber != reg.Header.SecondarySequenceNumber)
             {
                 var hiveBase = Path.GetFileName(hive);
 
@@ -63,11 +63,13 @@ namespace Amcache
                 {
                     var log = LogManager.GetCurrentClassLogger();
 
-                    log.Warn("Registry hive is dirty and no transaction logs were found in the same directory! LOGs should have same base name as the hive. Aborting!!");
-                    throw new Exception("Sequence numbers do not match and transaction logs were not found in the same directory as the hive. Aborting");
+                    log.Warn(
+                        "Registry hive is dirty and no transaction logs were found in the same directory! LOGs should have same base name as the hive. Aborting!!");
+                    throw new Exception(
+                        "Sequence numbers do not match and transaction logs were not found in the same directory as the hive. Aborting");
                 }
 
-                reg.ProcessTransactionLogs(logFiles.ToList(),true);
+                reg.ProcessTransactionLogs(logFiles.ToList(), true);
             }
 
 
@@ -82,7 +84,7 @@ namespace Amcache
 
             if (fileKey == null || programsKey == null)
             {
-                _logger.Error($"Hive does not contain a File and/or Programs key. Processing cannot continue");
+                _logger.Error("Hive does not contain a File and/or Programs key. Processing cannot continue");
                 return;
             }
 
@@ -148,7 +150,7 @@ namespace Amcache
                                         EpochA = DateTimeOffset.FromUnixTimeSeconds(seca).ToUniversalTime();
                                     }
                                 }
-                                catch (Exception )
+                                catch (Exception)
                                 {
                                     //sometimes the number is way too big
                                 }
@@ -334,7 +336,8 @@ namespace Amcache
                                     gProgramID = int.Parse(keyValue.ValueData);
                                     break;
                                 case LastModifiedStore:
-                                    lmStore = DateTimeOffset.FromFileTime(long.Parse(keyValue.ValueData)).ToUniversalTime();
+                                    lmStore = DateTimeOffset.FromFileTime(long.Parse(keyValue.ValueData))
+                                        .ToUniversalTime();
                                     break;
                                 case ProgramID:
                                     progID = keyValue.ValueData;
@@ -365,7 +368,8 @@ namespace Amcache
 
                         var fe = new FileEntryOld(prodName, progID, sha, fullPath, lmStore, registryKey.KeyName,
                             registryKey.LastWriteTime.Value, subKey.KeyName, subKey.LastWriteTime.Value,
-                            isLocal, compName, langId, fileVerString, peHash, fileVerNum, fileDesc, binProdVersion, binFileVersion,
+                            isLocal, compName, langId, fileVerString, peHash, fileVerNum, fileDesc, binProdVersion,
+                            binFileVersion,
                             linkerVersion, binType, switchBack, fileSize, linkDate, sizeOfImage,
                             lm, created, peHeaderChecksum, gProgramID, subKey.KeyName);
 
