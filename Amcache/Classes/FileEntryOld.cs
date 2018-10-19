@@ -18,6 +18,12 @@ namespace Amcache.Classes
             SizeOfImage = imgSize;
             LinkDate = linkDate;
             SwitchBackContext = switchback;
+
+            if (SwitchBackContext == null)
+            {
+                SwitchBackContext = " ";
+            }
+
             FileSize = fileSize;
             FileDescription = fileDesc;
             ProductName = productName;
@@ -45,6 +51,12 @@ namespace Amcache.Classes
             IsLocal = isLocal;
             GuessProgramID = gProgramID;
             CompanyName = compName;
+
+            if (CompanyName == null)
+            {
+                CompanyName = " ";
+            }
+
             LanguageID = langId;
             FileVersionString = fileVerString;
             FileVersionNumber = fileVerNum;
