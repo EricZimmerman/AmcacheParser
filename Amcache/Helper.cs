@@ -20,13 +20,13 @@ namespace Amcache
                 };
                 LogManager.DisableLogging();
 
-                if (noLog == false && reg.Header.PrimarySequenceNumber != reg.Header.SecondarySequenceNumber)
+                if (reg.Header.PrimarySequenceNumber != reg.Header.SecondarySequenceNumber)
                 {
                     var hiveBase = Path.GetFileName(file);
-
+                
                     var dirname = Path.GetDirectoryName(file);
 
-                    if (dirname == "")
+                    if (string.IsNullOrEmpty(dirname))
                     {
                         dirname = ".";
                     }
@@ -35,16 +35,21 @@ namespace Amcache
 
                     if (logFiles.Length == 0)
                     {
-                        LogManager.EnableLogging();
                         var log = LogManager.GetCurrentClassLogger();
 
-                        log.Warn(
-                            "Registry hive is dirty and no transaction logs were found in the same directory! LOGs should have same base name as the hive. Aborting!!");
-                        throw new Exception(
-                            "Sequence numbers do not match and transaction logs were not found in the same directory as the hive. Aborting");
-                    }
+                        if (noLog == false)
+                        {
+                            log.Warn("Registry hive is dirty and no transaction logs were found in the same directory! LOGs should have same base name as the hive. Aborting!!");
+                            throw new Exception("Sequence numbers do not match and transaction logs were not found in the same directory as the hive. Aborting");
+                        }
 
-                    reg.ProcessTransactionLogs(logFiles.ToList(), true);
+                        log.Warn("Registry hive is dirty and no transaction logs were found in the same directory. Data may be missing! Continuing anyways...");
+
+                    }
+                    else
+                    {
+                        reg.ProcessTransactionLogs(logFiles.ToList(),true);
+                    }
                 }
 
 
@@ -54,7 +59,7 @@ namespace Amcache
 
                 LogManager.EnableLogging();
             }
-            catch (Exception e)
+            catch (Exception )
             {
                 LogManager.EnableLogging();
             }

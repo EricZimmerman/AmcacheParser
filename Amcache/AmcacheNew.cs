@@ -23,13 +23,13 @@ namespace Amcache
             };
 
 
-            if (noLogs == false && reg.Header.PrimarySequenceNumber != reg.Header.SecondarySequenceNumber)
+            if (reg.Header.PrimarySequenceNumber != reg.Header.SecondarySequenceNumber)
             {
                 var hiveBase = Path.GetFileName(hive);
-
+                
                 var dirname = Path.GetDirectoryName(hive);
 
-                if (dirname == "")
+                if (string.IsNullOrEmpty(dirname))
                 {
                     dirname = ".";
                 }
@@ -40,13 +40,21 @@ namespace Amcache
                 {
                     var log = LogManager.GetCurrentClassLogger();
 
-                    log.Warn(
-                        "Registry hive is dirty and no transaction logs were found in the same directory! LOGs should have same base name as the hive. Aborting!!");
-                    throw new Exception(
-                        "Sequence numbers do not match and transaction logs were not found in the same directory as the hive. Aborting");
+                    if (noLogs == false)
+                    {
+                        log.Warn("Registry hive is dirty and no transaction logs were found in the same directory! LOGs should have same base name as the hive. Aborting!!");
+                        throw new Exception("Sequence numbers do not match and transaction logs were not found in the same directory as the hive. Aborting");
+                    }
+                    else
+                    {
+                        log.Warn("Registry hive is dirty and no transaction logs were found in the same directory. Data may be missing! Continuing anyways...");
+                    }
+               
                 }
-
-                reg.ProcessTransactionLogs(logFiles.ToList(), true);
+                else
+                {
+                    reg.ProcessTransactionLogs(logFiles.ToList(),true);
+                }
             }
 
 
