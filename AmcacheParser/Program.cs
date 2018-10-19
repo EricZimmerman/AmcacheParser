@@ -932,12 +932,8 @@ namespace AmcacheParser
                         .ConvertUsing(t => t.LinkDate?.ToString(_fluentCommandLineParser.Object.DateTimeFormat))
                         .Index(27);
                     foo.Map(m => m.LanguageID).Index(28);
-                    foo.Map(m => m.CompanyName).Ignore();
-                    foo.Map(m => m.SwitchBackContext).Ignore();
-
 
                     csv.Configuration.RegisterClassMap(foo);
-
 
                     if (_fluentCommandLineParser.Object.CsvSeparator == false)
                     {
