@@ -28,14 +28,6 @@ namespace Amcache.Classes
             FullPath = longPath;
             Name = name;
             ProductName = productName;
-
-            if (ProductName == null)
-            {
-                ProductName = " ";
-            }
-
-        
-
             ProductVersion = prodVersion;
             BinProductVersion = binProductVersion;
             ProgramId = programId;

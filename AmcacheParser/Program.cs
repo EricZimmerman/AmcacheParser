@@ -18,6 +18,8 @@ using NLog.Targets;
 
 namespace AmcacheParser
 {
+    using Amcache.Converters;
+
     internal class Program
     {
         private static readonly string _preciseTimeFormat = "yyyy-MM-dd HH:mm:ss.fffffff";
@@ -276,9 +278,9 @@ namespace AmcacheParser
                         foo.Map(m => m.Name).Index(6);
                         foo.Map(m => m.FileExtension).Index(7);
 
-                        foo.Map(t => t.LinkDate).ConvertUsing(t =>
-                            t.LinkDate?.ToString(_fluentCommandLineParser.Object.DateTimeFormat)).Index(8);
-                        foo.Map(m => m.ProductName).Index(9);
+                        foo.Map(t => t.LinkDate).ConvertUsing(
+                            t => t.LinkDate == null ? string.Empty : t.LinkDate?.ToString(_fluentCommandLineParser.Object.DateTimeFormat)).Index(8);
+                        foo.Map(m => m.ProductName).TypeConverter<CustomNullTypeConverter<string>>().Index(9);
 
                         foo.Map(m => m.Size).Index(10);
 
@@ -296,7 +298,6 @@ namespace AmcacheParser
                         foo.Map(m => m.Language).Index(18);
                         foo.Map(m => m.Publisher).Ignore();
 
-
                         csv.Configuration.RegisterClassMap(foo);
 
                         if (_fluentCommandLineParser.Object.CsvSeparator == false)
@@ -308,7 +309,6 @@ namespace AmcacheParser
                         csv.NextRecord();
                         csv.WriteRecords(cleanList2);
                     }
-
 
                     if (_fluentCommandLineParser.Object.IncludeLinked)
                     {
@@ -905,14 +905,14 @@ namespace AmcacheParser
                     foo.Map(m => m.FileExtension).Index(8);
                     foo.Map(m => m.MFTEntryNumber).Index(9);
                     foo.Map(m => m.MFTSequenceNumber).Index(10);
-                    foo.Map(m => m.FileSize).Index(11);
+                    foo.Map(m => m.FileSize).TypeConverter<CustomNullTypeConverter<string>>().Index(11);
                     foo.Map(m => m.FileVersionString).Index(12);
                     foo.Map(m => m.FileVersionNumber).Index(13);
                     foo.Map(m => m.FileDescription).Index(14);
 
-                    foo.Map(m => m.SizeOfImage).Index(15);
+                    foo.Map(m => m.SizeOfImage).TypeConverter<CustomNullTypeConverter<string>>().Index(15);
                     foo.Map(m => m.PEHeaderHash).Index(16);
-                    foo.Map(m => m.PEHeaderChecksum).Index(17);
+                    foo.Map(m => m.PEHeaderChecksum).TypeConverter<CustomNullTypeConverter<string>>().Index(17);
 
                     foo.Map(m => m.BinProductVersion).Index(18);
                     foo.Map(m => m.BinFileVersion).Index(19);
@@ -922,16 +922,20 @@ namespace AmcacheParser
                     foo.Map(m => m.GuessProgramID).Index(23);
 
                     foo.Map(t => t.Created)
-                        .ConvertUsing(t => t.Created?.ToString(_fluentCommandLineParser.Object.DateTimeFormat))
+                        .ConvertUsing(t => t.Created == null ? string.Empty : t.Created?.ToString(_fluentCommandLineParser.Object.DateTimeFormat))
                         .Index(24);
                     foo.Map(t => t.LastModified).ConvertUsing(t =>
-                        t.LastModified?.ToString(_fluentCommandLineParser.Object.DateTimeFormat)).Index(25);
+                        t.LastModified == null ? string.Empty : t.LastModified?.ToString(_fluentCommandLineParser.Object.DateTimeFormat)).Index(25);
                     foo.Map(t => t.LastModifiedStore).ConvertUsing(t =>
-                        t.LastModifiedStore?.ToString(_fluentCommandLineParser.Object.DateTimeFormat)).Index(26);
+                        t.LastModifiedStore == null ? string.Empty : t.LastModifiedStore?.ToString(_fluentCommandLineParser.Object.DateTimeFormat)).Index(26);
                     foo.Map(t => t.LinkDate)
-                        .ConvertUsing(t => t.LinkDate?.ToString(_fluentCommandLineParser.Object.DateTimeFormat))
+                        .ConvertUsing(t => t.LinkDate == null ? string.Empty : t.LinkDate?.ToString(_fluentCommandLineParser.Object.DateTimeFormat))
                         .Index(27);
-                    foo.Map(m => m.LanguageID).Index(28);
+                    foo.Map(m => m.LanguageID).TypeConverter<CustomNullTypeConverter<string>>().Index(28);
+
+                    foo.Map(m => m.ProductName).TypeConverter<CustomNullTypeConverter<string>>().Index(29);
+                    foo.Map(m => m.CompanyName).TypeConverter<CustomNullTypeConverter<string>>().Index(30);
+                    foo.Map(m => m.SwitchBackContext).TypeConverter<CustomNullTypeConverter<string>>().Index(31);
 
                     csv.Configuration.RegisterClassMap(foo);
 
