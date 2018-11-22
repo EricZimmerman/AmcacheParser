@@ -8,7 +8,7 @@ namespace Amcache.Classes
         public FileEntryNew(string binaryType, string fileVer, string prodVer, string sha1, bool isOsComp, bool isPe,
             int lang, DateTimeOffset? linkDate, string pathHash, string longPath, string name, string productName,
             string prodVersion, string programId, string publisher, int size, string version, DateTimeOffset lastwrite,
-            string binProductVersion)
+            string binProductVersion, uint usn)
         {
             BinaryType = binaryType;
             BinFileVersion = fileVer;
@@ -39,6 +39,8 @@ namespace Amcache.Classes
 
             ApplicationName = string.Empty;
 
+            Usn = usn;
+
             FileExtension = Path.GetExtension(longPath);
         }
 
@@ -59,6 +61,7 @@ namespace Amcache.Classes
         public string ProgramId { get; }
         public string Publisher { get; }
         public int Size { get; }
+        public uint Usn { get; }
         public string Version { get; }
 
         public string FileExtension { get; }

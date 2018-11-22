@@ -271,6 +271,7 @@ namespace Amcache
                     var programId = string.Empty;
                     var publisher = string.Empty;
                     var size = 0;
+                    uint usn = 0;
                     var version = string.Empty;
 
                     var hasLinkedProgram = false;
@@ -356,6 +357,9 @@ namespace Amcache
                                 case "Version":
                                     version = subKeyValue.ValueData;
                                     break;
+                                case "Usn":
+                                    usn = uint.Parse(subKeyValue.ValueData);
+                                    break;
                                 default:
                                     _logger.Warn(
                                         $"Unknown value name when processing FileEntry at path '{subKey.KeyPath}': {subKeyValue.ValueName}");
@@ -376,7 +380,7 @@ namespace Amcache
                         isPeFile,
                         language, linkDate, longPathHash, lowerCaseLongPath, name, productName, productVersion,
                         programId,
-                        publisher, size, version, subKey.LastWriteTime.Value, binProductVersion);
+                        publisher, size, version, subKey.LastWriteTime.Value, binProductVersion,usn);
 
                     if (hasLinkedProgram)
                     {

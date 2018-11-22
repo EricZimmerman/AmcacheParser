@@ -294,9 +294,11 @@ namespace AmcacheParser
 
                         foo.Map(m => m.BinFileVersion).Index(16);
                         foo.Map(m => m.BinProductVersion).Index(17);
+                        
 
                         foo.Map(m => m.Language).Index(18);
                         foo.Map(m => m.Publisher).Ignore();
+                        foo.Map(m => m.Usn).Ignore();
 
                         csv.Configuration.RegisterClassMap(foo);
 
