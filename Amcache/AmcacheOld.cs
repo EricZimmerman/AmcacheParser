@@ -58,11 +58,10 @@ namespace Amcache
                 }
 
                 var logFiles = Directory.GetFiles(dirname, $"{hiveBase}.LOG?");
+                var log = LogManager.GetCurrentClassLogger();
 
                 if (logFiles.Length == 0)
                 {
-                    var log = LogManager.GetCurrentClassLogger();
-
                     if (noLogs == false)
                     {
                         log.Warn("Registry hive is dirty and no transaction logs were found in the same directory! LOGs should have same base name as the hive. Aborting!!");
@@ -76,7 +75,14 @@ namespace Amcache
                 }
                 else
                 {
-                    reg.ProcessTransactionLogs(logFiles.ToList(),true);
+                    if (noLogs == false)
+                    {
+                        reg.ProcessTransactionLogs(logFiles.ToList(),true);
+                    }
+                    else
+                    {
+                        log.Warn("Registry hive is dirty and transaction logs were found in the same directory, but --nl was provided. Data may be missing! Continuing anyways...");
+                    }
                 }
             }
 

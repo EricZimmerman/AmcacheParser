@@ -35,11 +35,10 @@ namespace Amcache
                 }
 
                 var logFiles = Directory.GetFiles(dirname, $"{hiveBase}.LOG?");
+                var log = LogManager.GetCurrentClassLogger();
 
                 if (logFiles.Length == 0)
                 {
-                    var log = LogManager.GetCurrentClassLogger();
-
                     if (noLogs == false)
                     {
                         log.Warn("Registry hive is dirty and no transaction logs were found in the same directory! LOGs should have same base name as the hive. Aborting!!");
@@ -53,7 +52,15 @@ namespace Amcache
                 }
                 else
                 {
-                    reg.ProcessTransactionLogs(logFiles.ToList(),true);
+                    if (noLogs == false)
+                    {
+                        reg.ProcessTransactionLogs(logFiles.ToList(),true);
+                    }
+                    else
+                    {
+                        log.Warn("Registry hive is dirty and transaction logs were found in the same directory, but --nl was provided. Data may be missing! Continuing anyways...");
+                    }
+                    
                 }
             }
 
@@ -271,7 +278,7 @@ namespace Amcache
                     var programId = string.Empty;
                     var publisher = string.Empty;
                     var size = 0;
-                    uint usn = 0;
+                    ulong usn = 0;
                     var version = string.Empty;
 
                     var hasLinkedProgram = false;
@@ -358,7 +365,7 @@ namespace Amcache
                                     version = subKeyValue.ValueData;
                                     break;
                                 case "Usn":
-                                    usn = uint.Parse(subKeyValue.ValueData);
+                                    usn = ulong.Parse(subKeyValue.ValueData);
                                     break;
                                 default:
                                     _logger.Warn(
