@@ -15,6 +15,7 @@ using Microsoft.Win32;
 using NLog;
 using NLog.Config;
 using NLog.Targets;
+using ServiceStack;
 
 namespace AmcacheParser
 {
@@ -29,25 +30,7 @@ namespace AmcacheParser
         private static Stopwatch _sw;
         private static FluentCommandLineParser<ApplicationArguments> _fluentCommandLineParser;
 
-        private static string exportExt = "tsv";
 
-        private static bool CheckForDotnet46()
-        {
-            using (
-                var ndpKey =
-                    RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry32)
-                        .OpenSubKey("SOFTWARE\\Microsoft\\NET Framework Setup\\NDP\\v4\\Full\\"))
-            {
-                if (ndpKey == null)
-                {
-                    return false;
-                }
-
-                var releaseKey = Convert.ToInt32(ndpKey.GetValue("Release"));
-
-                return releaseKey >= 393295;
-            }
-        }
 
         private static void Main(string[] args)
         {
@@ -56,11 +39,7 @@ namespace AmcacheParser
 
             _logger = LogManager.GetCurrentClassLogger();
 
-            if (!CheckForDotnet46())
-            {
-                _logger.Warn(".net 4.6 not detected. Please install .net 4.6 and try again.");
-                return;
-            }
+        
 
 
             _fluentCommandLineParser = new FluentCommandLineParser<ApplicationArguments>
@@ -86,9 +65,12 @@ namespace AmcacheParser
                 .WithDescription(
                     "Path to file containing SHA-1 hashes to *include* from the results. Blacklisting overrides whitelisting");
 
-            _fluentCommandLineParser.Setup(arg => arg.SaveTo)
+            _fluentCommandLineParser.Setup(arg => arg.CsvDirectory)
                 .As("csv").Required()
-                .WithDescription("Directory where CSV results will be saved to. Required\r\n");
+                .WithDescription("Directory where CSV results will be saved to. Required");
+            _fluentCommandLineParser.Setup(arg => arg.CsvName)
+                .As("csvf")
+                .WithDescription("File name to save CSV formatted results to. When present, overrides default name\r\n");
 
 
             _fluentCommandLineParser.Setup(arg => arg.DateTimeFormat)
@@ -102,11 +84,7 @@ namespace AmcacheParser
                 .WithDescription(
                     "When true, display higher precision for timestamps. Default is FALSE").SetDefault(false);
 
-            _fluentCommandLineParser.Setup(arg => arg.CsvSeparator)
-                .As("cs")
-                .WithDescription(
-                    "When true, use comma instead of tab for field separator. Default is TRUE").SetDefault(true);
-
+         
             _fluentCommandLineParser.Setup(arg => arg.NoTransLogs)
                 .As("nl")
                 .WithDescription(
@@ -119,7 +97,7 @@ namespace AmcacheParser
 
             var footer = @"Examples: AmcacheParser.exe -f ""C:\Temp\amcache\AmcacheWin10.hve"" --csv C:\temp" +
                          "\r\n\t " +
-                         @" AmcacheParser.exe -f ""C:\Temp\amcache\AmcacheWin10.hve"" -i on --csv C:\temp" + "\r\n\t " +
+                         @" AmcacheParser.exe -f ""C:\Temp\amcache\AmcacheWin10.hve"" -i on --csv C:\temp --csvf foo.csv" + "\r\n\t " +
                          @" AmcacheParser.exe -f ""C:\Temp\amcache\AmcacheWin10.hve"" -w ""c:\temp\whitelist.txt"" --csv C:\temp" +
                          "\r\n\t" +
                          "\r\n\t" +
@@ -161,10 +139,7 @@ namespace AmcacheParser
                 _fluentCommandLineParser.Object.DateTimeFormat = _preciseTimeFormat;
             }
 
-            if (_fluentCommandLineParser.Object.CsvSeparator)
-            {
-                exportExt = "csv";
-            }
+       
 
             _sw = new Stopwatch();
             _sw.Start();
@@ -224,16 +199,16 @@ namespace AmcacheParser
                             .ToList();
                     var totalProgramFileEntries2 = 0;
 
-                    if (Directory.Exists(_fluentCommandLineParser.Object.SaveTo) == false)
+                    if (Directory.Exists(_fluentCommandLineParser.Object.CsvDirectory) == false)
                     {
                         try
                         {
-                            Directory.CreateDirectory(_fluentCommandLineParser.Object.SaveTo);
+                            Directory.CreateDirectory(_fluentCommandLineParser.Object.CsvDirectory);
                         }
                         catch (Exception ex)
                         {
                             _logger.Error(
-                                $"There was an error creating directory '{_fluentCommandLineParser.Object.SaveTo}'. Error: {ex.Message} Exiting");
+                                $"There was an error creating directory '{_fluentCommandLineParser.Object.CsvDirectory}'. Error: {ex.Message} Exiting");
                             return;
                         }
                     }
@@ -248,9 +223,15 @@ namespace AmcacheParser
                     var ts1 = DateTime.Now.ToString("yyyyMMddHHmmss");
                     var hiveName1 = Path.GetFileNameWithoutExtension(_fluentCommandLineParser.Object.File);
 
-                    var outbase1 = $"{ts1}_{hiveName1}_Unassociated file entries.{exportExt}";
+                    var outbase1 = $"{ts1}_{hiveName1}_UnassociatedFileEntries.csv";
 
-                    var outFile1 = Path.Combine(_fluentCommandLineParser.Object.SaveTo, outbase1);
+                    if (_fluentCommandLineParser.Object.CsvName.IsNullOrEmpty() == false)
+                    {
+                        outbase1 =
+                            $"{Path.GetFileNameWithoutExtension(_fluentCommandLineParser.Object.CsvName)}_UnassociatedFileEntries{Path.GetExtension(_fluentCommandLineParser.Object.CsvName)}";
+                    }
+
+                    var outFile1 = Path.Combine(_fluentCommandLineParser.Object.CsvDirectory, outbase1);
 
                     using (var sw = new StreamWriter(outFile1))
                     {
@@ -302,10 +283,7 @@ namespace AmcacheParser
 
                         csv.Configuration.RegisterClassMap(foo);
 
-                        if (_fluentCommandLineParser.Object.CsvSeparator == false)
-                        {
-                            csv.Configuration.Delimiter = "\t";
-                        }
+           
 
                         csv.WriteHeader<FileEntryNew>();
                         csv.NextRecord();
@@ -314,8 +292,15 @@ namespace AmcacheParser
 
                     if (_fluentCommandLineParser.Object.IncludeLinked)
                     {
-                        outbase1 = $"{ts1}_{hiveName1}_Program entries.{exportExt}";
-                        outFile1 = Path.Combine(_fluentCommandLineParser.Object.SaveTo, outbase1);
+                        outbase1 = $"{ts1}_{hiveName1}_ProgramEntries.csv";
+
+                        if (_fluentCommandLineParser.Object.CsvName.IsNullOrEmpty() == false)
+                        {
+                            outbase1 =
+                                $"{Path.GetFileNameWithoutExtension(_fluentCommandLineParser.Object.CsvName)}_ProgramEntries{Path.GetExtension(_fluentCommandLineParser.Object.CsvName)}";
+                        }
+
+                        outFile1 = Path.Combine(_fluentCommandLineParser.Object.CsvDirectory, outbase1);
 
                         using (var sw = new StreamWriter(outFile1))
                         {
@@ -373,18 +358,22 @@ namespace AmcacheParser
 
                             csv.Configuration.RegisterClassMap(foo);
 
-                            if (_fluentCommandLineParser.Object.CsvSeparator == false)
-                            {
-                                csv.Configuration.Delimiter = "\t";
-                            }
+                 
 
                             csv.WriteHeader<ProgramsEntryNew>();
                             csv.NextRecord();
                             csv.WriteRecords(amNew.ProgramsEntries);
                         }
 
-                        outbase1 = $"{ts1}_{hiveName1}_Associated file entries.{exportExt}";
-                        outFile1 = Path.Combine(_fluentCommandLineParser.Object.SaveTo, outbase1);
+                        outbase1 = $"{ts1}_{hiveName1}_AssociatedFileEntries.csv";
+
+                        if (_fluentCommandLineParser.Object.CsvName.IsNullOrEmpty() == false)
+                        {
+                            outbase1 =
+                                $"{Path.GetFileNameWithoutExtension(_fluentCommandLineParser.Object.CsvName)}_AssociatedFileEntries{Path.GetExtension(_fluentCommandLineParser.Object.CsvName)}";
+                        }
+
+                        outFile1 = Path.Combine(_fluentCommandLineParser.Object.CsvDirectory, outbase1);
 
                         using (var sw = new StreamWriter(outFile1))
                         {
@@ -433,10 +422,7 @@ namespace AmcacheParser
 
                             csv.Configuration.RegisterClassMap(foo);
 
-                            if (_fluentCommandLineParser.Object.CsvSeparator == false)
-                            {
-                                csv.Configuration.Delimiter = "\t";
-                            }
+                      
 
                             csv.WriteHeader<FileEntryNew>();
                             csv.NextRecord();
@@ -455,8 +441,15 @@ namespace AmcacheParser
                     }
 
 
-                    outbase1 = $"{ts1}_{hiveName1}_ShortCuts.{exportExt}";
-                    outFile1 = Path.Combine(_fluentCommandLineParser.Object.SaveTo, outbase1);
+                    outbase1 = $"{ts1}_{hiveName1}_ShortCuts.csv";
+
+                    if (_fluentCommandLineParser.Object.CsvName.IsNullOrEmpty() == false)
+                    {
+                        outbase1 =
+                            $"{Path.GetFileNameWithoutExtension(_fluentCommandLineParser.Object.CsvName)}_ShortCuts{Path.GetExtension(_fluentCommandLineParser.Object.CsvName)}";
+                    }
+
+                    outFile1 = Path.Combine(_fluentCommandLineParser.Object.CsvDirectory, outbase1);
 
                     using (var sw = new StreamWriter(outFile1))
                     {
@@ -478,10 +471,7 @@ namespace AmcacheParser
 
                         csv.Configuration.RegisterClassMap(foo);
 
-                        if (_fluentCommandLineParser.Object.CsvSeparator == false)
-                        {
-                            csv.Configuration.Delimiter = "\t";
-                        }
+                  
 
                         csv.WriteHeader<Shortcut>();
                         csv.NextRecord();
@@ -494,8 +484,15 @@ namespace AmcacheParser
                         }
                     }
 
-                    outbase1 = $"{ts1}_{hiveName1}_DriveBinaries.{exportExt}";
-                    outFile1 = Path.Combine(_fluentCommandLineParser.Object.SaveTo, outbase1);
+                    outbase1 = $"{ts1}_{hiveName1}_DriveBinaries.csv";
+
+                    if (_fluentCommandLineParser.Object.CsvName.IsNullOrEmpty() == false)
+                    {
+                        outbase1 =
+                            $"{Path.GetFileNameWithoutExtension(_fluentCommandLineParser.Object.CsvName)}_DriveBinaries{Path.GetExtension(_fluentCommandLineParser.Object.CsvName)}";
+                    }
+
+                    outFile1 = Path.Combine(_fluentCommandLineParser.Object.CsvDirectory, outbase1);
 
                     using (var sw = new StreamWriter(outFile1))
                     {
@@ -538,10 +535,7 @@ namespace AmcacheParser
 
                         csv.Configuration.RegisterClassMap(foo);
 
-                        if (_fluentCommandLineParser.Object.CsvSeparator == false)
-                        {
-                            csv.Configuration.Delimiter = "\t";
-                        }
+               
 
                         csv.WriteHeader<DriverBinary>();
                         csv.NextRecord();
@@ -555,8 +549,15 @@ namespace AmcacheParser
                     }
 
 
-                    outbase1 = $"{ts1}_{hiveName1}_DeviceContainers.{exportExt}";
-                    outFile1 = Path.Combine(_fluentCommandLineParser.Object.SaveTo, outbase1);
+                    outbase1 = $"{ts1}_{hiveName1}_DeviceContainers.csv";
+
+                    if (_fluentCommandLineParser.Object.CsvName.IsNullOrEmpty() == false)
+                    {
+                        outbase1 =
+                            $"{Path.GetFileNameWithoutExtension(_fluentCommandLineParser.Object.CsvName)}_DeviceContainers{Path.GetExtension(_fluentCommandLineParser.Object.CsvName)}";
+                    }
+
+                    outFile1 = Path.Combine(_fluentCommandLineParser.Object.CsvDirectory, outbase1);
 
                     using (var sw = new StreamWriter(outFile1))
                     {
@@ -594,10 +595,7 @@ namespace AmcacheParser
 
                         csv.Configuration.RegisterClassMap(foo);
 
-                        if (_fluentCommandLineParser.Object.CsvSeparator == false)
-                        {
-                            csv.Configuration.Delimiter = "\t";
-                        }
+        
 
                         csv.WriteHeader<DeviceContainer>();
                         csv.NextRecord();
@@ -610,8 +608,15 @@ namespace AmcacheParser
                         }
                     }
 
-                    outbase1 = $"{ts1}_{hiveName1}_DriverPackages.{exportExt}";
-                    outFile1 = Path.Combine(_fluentCommandLineParser.Object.SaveTo, outbase1);
+                    outbase1 = $"{ts1}_{hiveName1}_DriverPackages.csv";
+
+                    if (_fluentCommandLineParser.Object.CsvName.IsNullOrEmpty() == false)
+                    {
+                        outbase1 =
+                            $"{Path.GetFileNameWithoutExtension(_fluentCommandLineParser.Object.CsvName)}_DriverPackages{Path.GetExtension(_fluentCommandLineParser.Object.CsvName)}";
+                    }
+
+                    outFile1 = Path.Combine(_fluentCommandLineParser.Object.CsvDirectory, outbase1);
 
                     using (var sw = new StreamWriter(outFile1))
                     {
@@ -646,10 +651,7 @@ namespace AmcacheParser
                         foo.Map(m => m.Version).Index(11);
                         foo.Map(m => m.ClassGuid).Ignore();
 
-                        if (_fluentCommandLineParser.Object.CsvSeparator == false)
-                        {
-                            csv.Configuration.Delimiter = "\t";
-                        }
+                     
 
                         csv.WriteHeader<DriverPackage>();
                         csv.NextRecord();
@@ -662,8 +664,16 @@ namespace AmcacheParser
                         }
                     }
 
-                    outbase1 = $"{ts1}_{hiveName1}_DevicePnps.{exportExt}";
-                    outFile1 = Path.Combine(_fluentCommandLineParser.Object.SaveTo, outbase1);
+                    outbase1 = $"{ts1}_{hiveName1}_DevicePnps.csv";
+
+                    if (_fluentCommandLineParser.Object.CsvName.IsNullOrEmpty() == false)
+                    {
+                        outbase1 =
+                            $"{Path.GetFileNameWithoutExtension(_fluentCommandLineParser.Object.CsvName)}_DevicePnps{Path.GetExtension(_fluentCommandLineParser.Object.CsvName)}";
+                    }
+
+
+                    outFile1 = Path.Combine(_fluentCommandLineParser.Object.CsvDirectory, outbase1);
 
                     using (var sw = new StreamWriter(outFile1))
                     {
@@ -709,10 +719,7 @@ namespace AmcacheParser
 
                         csv.Configuration.RegisterClassMap(foo);
 
-                        if (_fluentCommandLineParser.Object.CsvSeparator == false)
-                        {
-                            csv.Configuration.Delimiter = "\t";
-                        }
+                
 
                         csv.WriteHeader<DevicePnp>();
                         csv.NextRecord();
@@ -790,7 +797,7 @@ namespace AmcacheParser
 
                     _logger.Info("");
 
-                    _logger.Info($"Results saved to: {_fluentCommandLineParser.Object.SaveTo}");
+                    _logger.Info($"Results saved to: {_fluentCommandLineParser.Object.CsvDirectory}");
 
 
                     _logger.Info("");
@@ -852,16 +859,16 @@ namespace AmcacheParser
                     am.UnassociatedFileEntries.Where(t => whitelistHashes.Contains(t.SHA1) == useBlacklist).ToList();
                 var totalProgramFileEntries = 0;
 
-                if (Directory.Exists(_fluentCommandLineParser.Object.SaveTo) == false)
+                if (Directory.Exists(_fluentCommandLineParser.Object.CsvDirectory) == false)
                 {
                     try
                     {
-                        Directory.CreateDirectory(_fluentCommandLineParser.Object.SaveTo);
+                        Directory.CreateDirectory(_fluentCommandLineParser.Object.CsvDirectory);
                     }
                     catch (Exception ex)
                     {
                         _logger.Error(
-                            $"There was an error creating directory '{_fluentCommandLineParser.Object.SaveTo}'. Error: {ex.Message} Exiting");
+                            $"There was an error creating directory '{_fluentCommandLineParser.Object.CsvDirectory}'. Error: {ex.Message} Exiting");
                         return;
                     }
                 }
@@ -877,8 +884,15 @@ namespace AmcacheParser
                 var ts = DateTime.Now.ToString("yyyyMMddHHmmss");
                 var hiveName = Path.GetFileNameWithoutExtension(_fluentCommandLineParser.Object.File);
 
-                var outbase = $"{ts}_{hiveName}_Unassociated file entries.{exportExt}";
-                var outFile = Path.Combine(_fluentCommandLineParser.Object.SaveTo, outbase);
+                var outbase = $"{ts}_{hiveName}_UnassociatedFileEntries.csv";
+
+                if (_fluentCommandLineParser.Object.CsvName.IsNullOrEmpty() == false)
+                {
+                    outbase =
+                        $"{Path.GetFileNameWithoutExtension(_fluentCommandLineParser.Object.CsvName)}_UnassociatedFileEntries{Path.GetExtension(_fluentCommandLineParser.Object.CsvName)}";
+                }
+
+                var outFile = Path.Combine(_fluentCommandLineParser.Object.CsvDirectory, outbase);
 
                 using (var sw = new StreamWriter(outFile))
                 {
@@ -941,10 +955,7 @@ namespace AmcacheParser
 
                     csv.Configuration.RegisterClassMap(foo);
 
-                    if (_fluentCommandLineParser.Object.CsvSeparator == false)
-                    {
-                        csv.Configuration.Delimiter = "\t";
-                    }
+               
 
                     csv.WriteHeader<FileEntryOld>();
                     csv.NextRecord();
@@ -953,8 +964,15 @@ namespace AmcacheParser
 
                 if (_fluentCommandLineParser.Object.IncludeLinked)
                 {
-                    outbase = $"{ts}_{hiveName}_Program entries.{exportExt}";
-                    outFile = Path.Combine(_fluentCommandLineParser.Object.SaveTo, outbase);
+                    outbase = $"{ts}_{hiveName}_ProgramEntries.csv";
+
+                    if (_fluentCommandLineParser.Object.CsvName.IsNullOrEmpty() == false)
+                    {
+                        outbase =
+                            $"{Path.GetFileNameWithoutExtension(_fluentCommandLineParser.Object.CsvName)}_ProgramEntries{Path.GetExtension(_fluentCommandLineParser.Object.CsvName)}";
+                    }
+
+                    outFile = Path.Combine(_fluentCommandLineParser.Object.CsvDirectory, outbase);
 
                     using (var sw = new StreamWriter(outFile))
                     {
@@ -989,18 +1007,22 @@ namespace AmcacheParser
 
                         csv.Configuration.RegisterClassMap(foo);
 
-                        if (_fluentCommandLineParser.Object.CsvSeparator == false)
-                        {
-                            csv.Configuration.Delimiter = "\t";
-                        }
+          
 
                         csv.WriteHeader<ProgramsEntryOld>();
                         csv.NextRecord();
                         csv.WriteRecords(am.ProgramsEntries);
                     }
 
-                    outbase = $"{ts}_{hiveName}_Associated file entries.{exportExt}";
-                    outFile = Path.Combine(_fluentCommandLineParser.Object.SaveTo, outbase);
+                    outbase = $"{ts}_{hiveName}_AssociatedFileEntries.csv";
+
+                    if (_fluentCommandLineParser.Object.CsvName.IsNullOrEmpty() == false)
+                    {
+                        outbase =
+                            $"{Path.GetFileNameWithoutExtension(_fluentCommandLineParser.Object.CsvName)}_AssociatedFileEntries{Path.GetExtension(_fluentCommandLineParser.Object.CsvName)}";
+                    }
+
+                    outFile = Path.Combine(_fluentCommandLineParser.Object.CsvDirectory, outbase);
 
                     using (var sw = new StreamWriter(outFile))
                     {
@@ -1060,10 +1082,6 @@ namespace AmcacheParser
 
                         csv.Configuration.RegisterClassMap(foo);
 
-                        if (_fluentCommandLineParser.Object.CsvSeparator == false)
-                        {
-                            csv.Configuration.Delimiter = "\t";
-                        }
 
                         csv.WriteHeader<FileEntryOld>();
                         csv.NextRecord();
@@ -1121,7 +1139,7 @@ namespace AmcacheParser
 
                 _logger.Info("");
 
-                _logger.Info($"Results saved to: {_fluentCommandLineParser.Object.SaveTo}");
+                _logger.Info($"Results saved to: {_fluentCommandLineParser.Object.CsvDirectory}");
 
 
                 _logger.Info("");
@@ -1184,12 +1202,12 @@ namespace AmcacheParser
         public string Whitelist { get; set; } = string.Empty;
 
         public string Blacklist { get; set; } = string.Empty;
-        public string SaveTo { get; set; } = string.Empty;
+        public string CsvDirectory { get; set; } = string.Empty;
+        public string CsvName { get; set; } = string.Empty;
         public bool IncludeLinked { get; set; } = false;
         public bool RecoverDeleted { get; set; } = false;
         public bool NoTransLogs { get; set; } = false;
         public string DateTimeFormat { get; set; }
         public bool PreciseTimestamps { get; set; }
-        public bool CsvSeparator { get; set; }
     }
 }
