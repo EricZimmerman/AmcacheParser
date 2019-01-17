@@ -5,6 +5,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Security.Principal;
 using Amcache;
 using Amcache.Classes;
 using CsvHelper;
@@ -139,7 +140,10 @@ namespace AmcacheParser
                 _fluentCommandLineParser.Object.DateTimeFormat = _preciseTimeFormat;
             }
 
-       
+            if (IsAdministrator() == false)
+            {
+                _logger.Fatal("Warning: Administrator privileges not found!\r\n");
+            }
 
             _sw = new Stopwatch();
             _sw.Start();
@@ -1152,11 +1156,21 @@ namespace AmcacheParser
                     "Sequence numbers do not match and transaction logs were not found in the same directory as the hive. Abort")
                 )
                 {
-                    _logger.Error($"There was an error: {ex.Message}");
-                    _logger.Error($"Stacktrace: {ex.StackTrace}");
-                    _logger.Info("");
-                    _logger.Error(
-                        $"Please send '{_fluentCommandLineParser.Object.File}' to saericzimmerman@gmail.com in order to fix the issue");
+                    if (ex.Message.Contains("Administrator privileges not found"))
+                    {
+                        _logger.Fatal($"Could not access '{_fluentCommandLineParser.Object.File}' because it is in use");
+                        _logger.Error("");
+                        _logger.Fatal("Rerun the program with Administrator privileges to try again\r\n");
+                    }
+                    else
+                    {
+                        _logger.Error($"There was an error: {ex.Message}");
+                        _logger.Error($"Stacktrace: {ex.StackTrace}");
+                        _logger.Info("");
+                        _logger.Error(
+                            $"Please send '{_fluentCommandLineParser.Object.File}' to saericzimmerman@gmail.com in order to fix the issue");                        
+                    }
+
                 }
             }
         }
@@ -1198,7 +1212,16 @@ namespace AmcacheParser
             a[0] = char.ToUpper(a[0]);
             return new string(a);
         }
+
+        private static bool IsAdministrator()
+        {
+            _logger.Debug("Checking for admin rights");
+            var identity = WindowsIdentity.GetCurrent();
+            var principal = new WindowsPrincipal(identity);
+            return principal.IsInRole(WindowsBuiltInRole.Administrator);
+        }
     }
+
 
 
     internal class ApplicationArguments

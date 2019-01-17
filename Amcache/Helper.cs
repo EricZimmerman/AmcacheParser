@@ -1,9 +1,11 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using NLog;
 using Registry;
 using Registry.Abstractions;
+
 
 namespace Amcache
 {
@@ -12,20 +14,50 @@ namespace Amcache
         public static bool IsNewFormat(string file, bool noLog)
         {
             RegistryKey fileKey = null;
+            RegistryHive reg;
+
+            var dirname = Path.GetDirectoryName(file);
+            var hiveBase = Path.GetFileName(file);
+
+            List<RawCopy.RawCopyReturn> rawFiles = null;
+
             try
             {
-                var reg = new RegistryHive(file)
+                try
                 {
-                    RecoverDeleted = true
-                };
+                     reg = new RegistryHive(file)
+                    {
+                        RecoverDeleted = true
+                    };
+                }
+                catch (IOException)
+                {
+                    //file is in use
+
+                    if (RawCopy.Helper.IsAdministrator() == false)
+                    {
+                        throw new UnauthorizedAccessException("Administrator privileges not found!");
+                    }
+
+                    var files = new List<string>();
+                    files.Add(file);
+
+                    var logFiles = Directory.GetFiles(dirname, $"{hiveBase}.LOG?");
+
+                    foreach (var logFile in logFiles)
+                    {
+                        files.Add(logFile);
+                    }
+
+                    rawFiles = RawCopy.Helper.GetFiles(files);
+
+                    reg = new RegistryHive(rawFiles.First().FileBytes,rawFiles.First().InputFilename);
+                }
+
                 LogManager.DisableLogging();
 
                 if (reg.Header.PrimarySequenceNumber != reg.Header.SecondarySequenceNumber)
                 {
-                    var hiveBase = Path.GetFileName(file);
-                
-                    var dirname = Path.GetDirectoryName(file);
-
                     if (string.IsNullOrEmpty(dirname))
                     {
                         dirname = ".";
@@ -48,7 +80,21 @@ namespace Amcache
                     }
                     else
                     {
-                        reg.ProcessTransactionLogs(logFiles.ToList(),true);
+                        if (rawFiles != null)
+                        {
+                            var lt = new List<TransactionLogFileInfo>();
+                            foreach (var rawCopyReturn in rawFiles.Skip(1).ToList())
+                            {
+                                var tt = new TransactionLogFileInfo(rawCopyReturn.InputFilename,rawCopyReturn.FileBytes);
+                                lt.Add(tt);
+                            }
+
+                            reg.ProcessTransactionLogs(lt,true);
+                        }
+                        else
+                        {
+                            reg.ProcessTransactionLogs(logFiles.ToList(),true);    
+                        }
                     }
                 }
 

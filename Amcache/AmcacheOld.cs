@@ -39,18 +39,51 @@ namespace Amcache
 
         public AmcacheOld(string hive, bool recoverDeleted, bool noLogs)
         {
-            _logger = LogManager.GetCurrentClassLogger();
+           _logger = LogManager.GetCurrentClassLogger();
 
-            var reg = new RegistryHive(hive)
+            RegistryHive reg;
+
+            var dirname = Path.GetDirectoryName(hive);
+            var hiveBase = Path.GetFileName(hive);
+
+            List<RawCopy.RawCopyReturn> rawFiles = null;
+
+            try
             {
-                RecoverDeleted = recoverDeleted
-            };
+                reg = new RegistryHive(hive)
+                {
+                    RecoverDeleted = true
+                };
+            }
+            catch (IOException)
+            {
+                //file is in use
+
+                if (RawCopy.Helper.IsAdministrator() == false)
+                {
+                    throw new UnauthorizedAccessException("Administrator privileges not found!");
+                }
+
+                _logger.Warn($"'{hive}' is in use. Rerouting...\r\n");
+
+                var files = new List<string>();
+                files.Add(hive);
+
+                var logFiles = Directory.GetFiles(dirname, $"{hiveBase}.LOG?");
+
+                foreach (var logFile in logFiles)
+                {
+                    files.Add(logFile);
+                }
+
+                rawFiles = RawCopy.Helper.GetFiles(files);
+
+                reg = new RegistryHive(rawFiles.First().FileBytes,rawFiles.First().InputFilename);
+            }
 
             if (reg.Header.PrimarySequenceNumber != reg.Header.SecondarySequenceNumber)
             {
-                var hiveBase = Path.GetFileName(hive);
                 
-                var dirname = Path.GetDirectoryName(hive);
 
                 if (string.IsNullOrEmpty(dirname))
                 {
@@ -77,12 +110,27 @@ namespace Amcache
                 {
                     if (noLogs == false)
                     {
-                        reg.ProcessTransactionLogs(logFiles.ToList(),true);
+                        if (rawFiles != null)
+                        {
+                            var lt = new List<TransactionLogFileInfo>();
+                            foreach (var rawCopyReturn in rawFiles.Skip(1).ToList())
+                            {
+                                var tt = new TransactionLogFileInfo(rawCopyReturn.InputFilename,rawCopyReturn.FileBytes);
+                                lt.Add(tt);
+                            }
+
+                            reg.ProcessTransactionLogs(lt,true);
+                        }
+                        else
+                        {
+                            reg.ProcessTransactionLogs(logFiles.ToList(),true);    
+                        }
                     }
                     else
                     {
                         log.Warn("Registry hive is dirty and transaction logs were found in the same directory, but --nl was provided. Data may be missing! Continuing anyways...");
                     }
+                    
                 }
             }
 

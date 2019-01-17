@@ -31,6 +31,9 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="RawCopy">
+      <HintPath>Dependencies\RawCopy.dll</HintPath>
+    </Reference>
     <Reference Include="Registry, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>Dependencies\Registry.dll</HintPath>
@@ -73,7 +76,7 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="CsvHelper">
-      <Version>12.0.1</Version>
+      <Version>12.1.1</Version>
     </PackageReference>
     <PackageReference Include="NFluent">
       <Version>2.4.0</Version>
