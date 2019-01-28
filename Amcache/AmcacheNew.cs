@@ -97,10 +97,10 @@ namespace Amcache
 
                             reg.ProcessTransactionLogs(lt,true);
                         }
-//                        else
-//                        {
-//                            reg.ProcessTransactionLogs(logFiles.ToList(),true);    
-//                        }
+                        else
+                        {
+                            reg.ProcessTransactionLogs(logFiles.ToList(),true);    
+                        }
                     }
                     else
                     {
