@@ -10,7 +10,7 @@ namespace Amcache.Classes
             string msiProductCode, string name, string osVersionAtInstallTime, string packageFullName, string programId,
             string programInstanceId, string publisher, string registryKeyPath, string rootDirPath, string source,
             string storeAppType, string type, string uninstallString, string version, DateTimeOffset lastwrite,
-            string installDateArpLastModified, DateTimeOffset? installDateMsi, string installDateFromLinkFile)
+            string installDateArpLastModified, DateTimeOffset? installDateMsi, string installDateFromLinkFile, string manufacturer)
         {
             FileEntries = new List<FileEntryNew>();
 
@@ -40,6 +40,7 @@ namespace Amcache.Classes
             InstallDateArpLastModified = installDateArpLastModified;
             InstallDateMsi = installDateMsi;
             InstallDateFromLinkFile = installDateFromLinkFile;
+            Manufacturer = manufacturer;
         }
 
         public string BundleManifestPath { get; }
@@ -68,6 +69,7 @@ namespace Amcache.Classes
         public string Type { get; }
         public string UninstallString { get; }
         public string Version { get; }
+        public string Manufacturer { get; }
 
         public DateTimeOffset KeyLastWriteTimestamp { get; }
         public List<FileEntryNew> FileEntries { get; }

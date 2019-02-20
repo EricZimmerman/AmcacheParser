@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.IO;
 
 namespace Amcache.Classes
@@ -7,12 +8,14 @@ namespace Amcache.Classes
     {
         public FileEntryNew(string binaryType, string fileVer, string prodVer, string sha1, bool isOsComp, bool isPe,
             int lang, DateTimeOffset? linkDate, string pathHash, string longPath, string name, string productName,
-            string prodVersion, string programId, string publisher, int size, string version, DateTimeOffset lastwrite,
-            string binProductVersion, ulong usn)
+            string prodVersion, string programId, string publisher, long size, string version, DateTimeOffset lastwrite,
+            string binProductVersion, ulong usn, string description)
         {
             BinaryType = binaryType;
             BinFileVersion = fileVer;
             BinProductVersion = prodVer;
+
+          
 
             SHA1 = string.Empty;
             if (sha1.Length > 4)
@@ -40,8 +43,24 @@ namespace Amcache.Classes
             ApplicationName = string.Empty;
 
             Usn = usn;
+            Description = description;
 
-            FileExtension = Path.GetExtension(longPath);
+            try
+            {
+                FileExtension = Path.GetExtension(longPath);
+            }
+            catch (Exception )
+            {
+                try
+                {
+                    FileExtension = Path.GetExtension(name);
+                }
+                catch (Exception)
+                {
+                 
+                }
+            }
+            
         }
 
         public string BinaryType { get; }
@@ -60,11 +79,12 @@ namespace Amcache.Classes
         public string ProductVersion { get; }
         public string ProgramId { get; }
         public string Publisher { get; }
-        public int Size { get; }
+        public long Size { get; }
         public ulong Usn { get; }
         public string Version { get; }
 
         public string FileExtension { get; }
+        public string Description { get; }
 
         public DateTimeOffset FileKeyLastWriteTimestamp { get; }
     }

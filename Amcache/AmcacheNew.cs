@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using Amcache.Classes;
 using NLog;
 using Registry;
@@ -160,6 +162,8 @@ namespace Amcache
                     var installDateArpLastModified = string.Empty;
                     DateTimeOffset? installDateMsi = null;
                     var installDateFromLinkFile = string.Empty;
+                    var manufacturer = string.Empty;
+                    var driverVerVersion = string.Empty;
 
 
                     try
@@ -274,6 +278,26 @@ namespace Amcache
                                     }
 
                                     break;
+                                case "DriverVerVersion":
+                                case "BusReportedDescription":
+                                case "HWID":
+                                case "COMPID":
+                                case "STACKID":
+                                case "UpperClassFilters":
+                                case "UpperFilters":
+                                case "LowerFilters":
+                                case "(default)":
+
+
+                                    break;
+
+                                case "Manufacturer":
+                                    if (registryKeyValue.ValueData.Length > 0)
+                                    {
+                                        manufacturer = registryKeyValue.ValueData;
+                                    }
+                                    break;
+
                                 default:
                                     _logger.Warn(
                                         $"Unknown value name in InventoryApplication at path {registryKey.KeyPath}: {registryKeyValue.ValueName}");
@@ -286,7 +310,7 @@ namespace Amcache
                             manifestPath, msiPackageCode, msiProductCode, name, osVersionAtInstallTime, packageFullName,
                             programId, programInstanceId, publisher, registryKeyPath, rootDirPath, source, storeAppType,
                             type, uninstallString, version, registryKey.LastWriteTime.Value, installDateArpLastModified,
-                            installDateMsi, installDateFromLinkFile);
+                            installDateMsi, installDateFromLinkFile,manufacturer);
 
                         ProgramsEntries.Add(pe);
                     }
@@ -323,9 +347,10 @@ namespace Amcache
                     var productVersion = string.Empty;
                     var programId = string.Empty;
                     var publisher = string.Empty;
-                    var size = 0;
+                    long size = 0;
                     ulong usn = 0;
                     var version = string.Empty;
+                    var description = string.Empty;
 
                     var hasLinkedProgram = false;
 
@@ -333,6 +358,7 @@ namespace Amcache
                     {
                         foreach (var subKeyValue in subKey.Values)
                         {
+
                             switch (subKeyValue.ValueName)
                             {
                                 case "BinaryType":
@@ -396,16 +422,53 @@ namespace Amcache
                                     publisher = subKeyValue.ValueData;
                                     break;
                                 case "Size":
-                                    if (subKeyValue.ValueData.StartsWith("0x"))
+                                    try
                                     {
-                                        size = int.Parse(subKeyValue.ValueData.Replace("0x", ""),
-                                            NumberStyles.HexNumber);
-                                    }
-                                    else
-                                    {
-                                        size = int.Parse(subKeyValue.ValueData);
-                                    }
+                                        if (subKeyValue.ValueData.StartsWith("0x"))
+                                        {
+                                            size = long.Parse(subKeyValue.ValueData.Replace("0x", ""),
+                                                NumberStyles.HexNumber);
+                                        }
+                                        else
+                                        {
 
+                                
+                                            size = long.Parse(subKeyValue.ValueData);
+                                        }
+
+                                    }
+                                    catch (Exception e)
+                                    {
+                                       
+                                    }
+                                 
+                                    break;
+
+                                case "BusReportedDescription":
+                                case "FileSize":
+                                case "Model":
+                                case "Manufacturer":
+                                case "ParentId":
+                                case "MatchingID":
+                                case "ClassGuid":
+                                case "DriverName":
+                                case "Enumerator":
+                                case "Service":
+                                case "DeviceState":
+                                case "InstallState":
+                                case "DriverVerVersion":
+                                case "DriverPackageStrongName":
+                                case "DriverVerDate":
+                                case "ContainerId":
+                                case "HiddenArp":
+                                case "Inf":
+                                case "ProblemCode":
+                              
+                                case "Provider":
+                                case "Class":
+                                    break;
+                                case "Description":
+                                    description = subKeyValue.ValueData;
                                     break;
                                 case "Version":
                                     version = subKeyValue.ValueData;
@@ -414,8 +477,12 @@ namespace Amcache
                                     usn = ulong.Parse(subKeyValue.ValueData);
                                     break;
                                 default:
-                                    _logger.Warn(
+                                    if (subKeyValue.VkRecord.IsFree == false)
+                                    {
+       _logger.Warn(
                                         $"Unknown value name when processing FileEntry at path '{subKey.KeyPath}': {subKeyValue.ValueName}");
+                                    }
+                             
                                     break;
                             }
                         }
@@ -429,11 +496,13 @@ namespace Amcache
 
                     TotalFileEntries += 1;
 
+               
+
                     var fe = new FileEntryNew(binaryType, binFileVersion, productVersion, fileId, isOsComponent,
                         isPeFile,
                         language, linkDate, longPathHash, lowerCaseLongPath, name, productName, productVersion,
                         programId,
-                        publisher, size, version, subKey.LastWriteTime.Value, binProductVersion,usn);
+                        publisher, size, version, subKey.LastWriteTime.Value, binProductVersion,usn,description);
 
                     if (hasLinkedProgram)
                     {
@@ -538,6 +607,14 @@ namespace Amcache
                                 case "State":
                                     state = keyValue.ValueData;
                                     break;
+                                case "(default)":
+                                case "Model":
+                                case "BusReportedDescription":
+                                case "Version":
+                                case "LowerClassFilters":
+                                case "UpperClassFilters":
+                                    break;
+                                    
                                 default:
                                     _logger.Warn(
                                         $"Unknown value name when processing DeviceContainer at path '{deviceSubKey.KeyPath}': {keyValue.ValueName}");
@@ -675,6 +752,7 @@ namespace Amcache
                                     break;
                                 case "UpperClassFilters":
                                 case "UpperFilters":
+                                case "(default)":
                                     break;
                                 default:
                                     _logger.Warn(
@@ -799,6 +877,10 @@ namespace Amcache
                                     break;
                                 case "WdfVersion":
                                     wdfVersion = keyValue.ValueData;
+                                    break;
+                                case "(default)":
+                                case "COMPID":
+                                case "HWID":
                                     break;
                                 default:
                                     _logger.Warn(
