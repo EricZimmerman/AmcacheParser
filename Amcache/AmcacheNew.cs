@@ -1,12 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Runtime.CompilerServices;
 using Amcache.Classes;
 using NLog;
+using RawCopy;
 using Registry;
 
 namespace Amcache
@@ -24,7 +23,7 @@ namespace Amcache
             var dirname = Path.GetDirectoryName(hive);
             var hiveBase = Path.GetFileName(hive);
 
-            List<RawCopy.RawCopyReturn> rawFiles = null;
+            List<RawCopyReturn> rawFiles = null;
 
             try
             {
@@ -56,13 +55,11 @@ namespace Amcache
 
                 rawFiles = RawCopy.Helper.GetFiles(files);
 
-                reg = new RegistryHive(rawFiles.First().FileBytes,rawFiles.First().InputFilename);
+                reg = new RegistryHive(rawFiles.First().FileBytes, rawFiles.First().InputFilename);
             }
 
             if (reg.Header.PrimarySequenceNumber != reg.Header.SecondarySequenceNumber)
             {
-                
-
                 if (string.IsNullOrEmpty(dirname))
                 {
                     dirname = ".";
@@ -75,14 +72,14 @@ namespace Amcache
                 {
                     if (noLogs == false)
                     {
-                        log.Warn("Registry hive is dirty and no transaction logs were found in the same directory! LOGs should have same base name as the hive. Aborting!!");
-                        throw new Exception("Sequence numbers do not match and transaction logs were not found in the same directory as the hive. Aborting");
+                        log.Warn(
+                            "Registry hive is dirty and no transaction logs were found in the same directory! LOGs should have same base name as the hive. Aborting!!");
+                        throw new Exception(
+                            "Sequence numbers do not match and transaction logs were not found in the same directory as the hive. Aborting");
                     }
-                    else
-                    {
-                        log.Warn("Registry hive is dirty and no transaction logs were found in the same directory. Data may be missing! Continuing anyways...");
-                    }
-               
+
+                    log.Warn(
+                        "Registry hive is dirty and no transaction logs were found in the same directory. Data may be missing! Continuing anyways...");
                 }
                 else
                 {
@@ -93,22 +90,23 @@ namespace Amcache
                             var lt = new List<TransactionLogFileInfo>();
                             foreach (var rawCopyReturn in rawFiles.Skip(1).ToList())
                             {
-                                var tt = new TransactionLogFileInfo(rawCopyReturn.InputFilename,rawCopyReturn.FileBytes);
+                                var tt = new TransactionLogFileInfo(rawCopyReturn.InputFilename,
+                                    rawCopyReturn.FileBytes);
                                 lt.Add(tt);
                             }
 
-                            reg.ProcessTransactionLogs(lt,true);
+                            reg.ProcessTransactionLogs(lt, true);
                         }
                         else
                         {
-                            reg.ProcessTransactionLogs(logFiles.ToList(),true);    
+                            reg.ProcessTransactionLogs(logFiles.ToList(), true);
                         }
                     }
                     else
                     {
-                        log.Warn("Registry hive is dirty and transaction logs were found in the same directory, but --nl was provided. Data may be missing! Continuing anyways...");
+                        log.Warn(
+                            "Registry hive is dirty and transaction logs were found in the same directory, but --nl was provided. Data may be missing! Continuing anyways...");
                     }
-                    
                 }
             }
 
@@ -286,6 +284,7 @@ namespace Amcache
                                 case "UpperClassFilters":
                                 case "UpperFilters":
                                 case "LowerFilters":
+                                case "BinFileVersion":
                                 case "(default)":
 
 
@@ -296,6 +295,7 @@ namespace Amcache
                                     {
                                         manufacturer = registryKeyValue.ValueData;
                                     }
+
                                     break;
 
                                 default:
@@ -310,15 +310,18 @@ namespace Amcache
                             manifestPath, msiPackageCode, msiProductCode, name, osVersionAtInstallTime, packageFullName,
                             programId, programInstanceId, publisher, registryKeyPath, rootDirPath, source, storeAppType,
                             type, uninstallString, version, registryKey.LastWriteTime.Value, installDateArpLastModified,
-                            installDateMsi, installDateFromLinkFile,manufacturer);
+                            installDateMsi, installDateFromLinkFile, manufacturer);
 
                         ProgramsEntries.Add(pe);
                     }
                     catch (Exception ex)
                     {
-                        _logger.Error($"Error parsing ProgramsEntry at {registryKey.KeyPath}. Error: {ex.Message}");
-                        _logger.Error(
-                            $"Please send the following text to saericzimmerman@gmail.com. \r\n\r\nKey data: {registryKey}");
+                        if (registryKey.NkRecord.IsFree == false)
+                        {
+                            _logger.Error($"Error parsing ProgramsEntry at {registryKey.KeyPath}. Error: {ex.Message}");
+                            _logger.Error(
+                                $"Please send the following text to saericzimmerman@gmail.com. \r\n\r\nKey data: {registryKey}");
+                        }
                     }
                 }
             }
@@ -358,7 +361,6 @@ namespace Amcache
                     {
                         foreach (var subKeyValue in subKey.Values)
                         {
-
                             switch (subKeyValue.ValueName)
                             {
                                 case "BinaryType":
@@ -431,17 +433,13 @@ namespace Amcache
                                         }
                                         else
                                         {
-
-                                
                                             size = long.Parse(subKeyValue.ValueData);
                                         }
-
                                     }
                                     catch (Exception e)
                                     {
-                                       
                                     }
-                                 
+
                                     break;
 
                                 case "BusReportedDescription":
@@ -463,7 +461,7 @@ namespace Amcache
                                 case "HiddenArp":
                                 case "Inf":
                                 case "ProblemCode":
-                              
+
                                 case "Provider":
                                 case "Class":
                                     break;
@@ -479,36 +477,41 @@ namespace Amcache
                                 default:
                                     if (subKeyValue.VkRecord.IsFree == false)
                                     {
-       _logger.Warn(
-                                        $"Unknown value name when processing FileEntry at path '{subKey.KeyPath}': {subKeyValue.ValueName}");
+                                        _logger.Warn(
+                                            $"Unknown value name when processing FileEntry at path '{subKey.KeyPath}': {subKeyValue.ValueName}");
                                     }
-                             
+
                                     break;
                             }
                         }
                     }
                     catch (Exception ex)
                     {
-                        _logger.Error($"Error parsing FileEntry at {subKey.KeyPath}. Error: {ex.Message}");
-                        _logger.Error(
-                            $"Please send the following text to saericzimmerman@gmail.com. \r\n\r\nKey data: {subKey}");
+                        if (subKey.NkRecord.IsFree == false)
+                        {
+                            _logger.Error($"Error parsing FileEntry at {subKey.KeyPath}. Error: {ex.Message}");
+                            _logger.Error(
+                                $"Please send the following text to saericzimmerman@gmail.com. \r\n\r\nKey data: {subKey}");
+                        }
                     }
 
                     TotalFileEntries += 1;
 
-               
 
                     var fe = new FileEntryNew(binaryType, binFileVersion, productVersion, fileId, isOsComponent,
                         isPeFile,
                         language, linkDate, longPathHash, lowerCaseLongPath, name, productName, productVersion,
                         programId,
-                        publisher, size, version, subKey.LastWriteTime.Value, binProductVersion,usn,description);
+                        publisher, size, version, subKey.LastWriteTime.Value, binProductVersion, usn, description);
 
                     if (hasLinkedProgram)
                     {
                         var program = ProgramsEntries.SingleOrDefault(t => t.ProgramId == fe.ProgramId);
-                        fe.ApplicationName = program.Name;
-                        program.FileEntries.Add(fe);
+                        if (program != null)
+                        {
+                            fe.ApplicationName = program.Name;
+                            program.FileEntries.Add(fe);
+                        }
                     }
                     else
                     {
@@ -612,9 +615,10 @@ namespace Amcache
                                 case "BusReportedDescription":
                                 case "Version":
                                 case "LowerClassFilters":
+                                case "ManifestPath":
                                 case "UpperClassFilters":
                                     break;
-                                    
+
                                 default:
                                     _logger.Warn(
                                         $"Unknown value name when processing DeviceContainer at path '{deviceSubKey.KeyPath}': {keyValue.ValueName}");
@@ -630,9 +634,13 @@ namespace Amcache
                     }
                     catch (Exception ex)
                     {
-                        _logger.Error($"Error parsing DeviceContainer at {deviceSubKey.KeyPath}. Error: {ex.Message}");
-                        _logger.Error(
-                            $"Please send the following text to saericzimmerman@gmail.com. \r\n\r\nKey data: {deviceSubKey}");
+                        if (deviceSubKey.NkRecord.IsFree == false)
+                        {
+                            _logger.Error(
+                                $"Error parsing DeviceContainer at {deviceSubKey.KeyPath}. Error: {ex.Message}");
+                            _logger.Error(
+                                $"Please send the following text to saericzimmerman@gmail.com. \r\n\r\nKey data: {deviceSubKey}");
+                        }
                     }
                 }
             }
@@ -771,9 +779,12 @@ namespace Amcache
                     }
                     catch (Exception ex)
                     {
-                        _logger.Error($"Error parsing DevicePnp at {pnpKey.KeyPath}. Error: {ex.Message}");
-                        _logger.Error(
-                            $"Please send the following text to saericzimmerman@gmail.com. \r\n\r\nKey data: {pnpKey}");
+                        if (pnpKey.NkRecord.IsFree == false)
+                        {
+                            _logger.Error($"Error parsing DevicePnp at {pnpKey.KeyPath}. Error: {ex.Message}");
+                            _logger.Error(
+                                $"Please send the following text to saericzimmerman@gmail.com. \r\n\r\nKey data: {pnpKey}");
+                        }
                     }
                 }
             }
@@ -898,9 +909,12 @@ namespace Amcache
                     }
                     catch (Exception ex)
                     {
-                        _logger.Error($"Error parsing DriverBinary at {binaryKey.KeyPath}. Error: {ex.Message}");
-                        _logger.Error(
-                            $"Please send the following text to saericzimmerman@gmail.com. \r\n\r\nKey data: {binaryKey}");
+                        if (binaryKey.NkRecord.IsFree == false)
+                        {
+                            _logger.Error($"Error parsing DriverBinary at {binaryKey.KeyPath}. Error: {ex.Message}");
+                            _logger.Error(
+                                $"Please send the following text to saericzimmerman@gmail.com. \r\n\r\nKey data: {binaryKey}");
+                        }
                     }
                 }
             }
@@ -986,9 +1000,12 @@ namespace Amcache
                     }
                     catch (Exception ex)
                     {
-                        _logger.Error($"Error parsing DriverPackage at {packaheKey.KeyPath}. Error: {ex.Message}");
-                        _logger.Error(
-                            $"Please send the following text to saericzimmerman@gmail.com. \r\n\r\nKey data: {packaheKey}");
+                        if (packaheKey.NkRecord.IsFree == false)
+                        {
+                            _logger.Error($"Error parsing DriverPackage at {packaheKey.KeyPath}. Error: {ex.Message}");
+                            _logger.Error(
+                                $"Please send the following text to saericzimmerman@gmail.com. \r\n\r\nKey data: {packaheKey}");
+                        }
                     }
                 }
             }
