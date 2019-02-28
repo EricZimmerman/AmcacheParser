@@ -35,3 +35,5 @@ If you use the -i option, AmcacheParser will export a Programs entry list and it
 With whitelisting and blacklisting you can further reduce the output by excluding certain file entries (whitelisting) or including only file entries whose SHA-1 is found in a blacklist file.
 
 Note that AmcacheParser strips the extra 0s from the front of the SHA-1 value, so you can use the SHA-1s as shown in the output files for generating whitelists or blacklists.
+
+Open Source Development funding and support provided by the following contributors: [SANS Institute](http://sans.org/) and [SANS DFIR](http://dfir.sans.org/).
