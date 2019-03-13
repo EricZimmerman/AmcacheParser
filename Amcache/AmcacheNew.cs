@@ -760,6 +760,8 @@ namespace Amcache
                                     break;
                                 case "UpperClassFilters":
                                 case "UpperFilters":
+                                case "ExtendedInfs":
+                                case "DeviceInterfaceClasses":
                                 case "(default)":
                                     break;
                                 default:
@@ -985,7 +987,9 @@ namespace Amcache
                                 case "Version":
                                     Version = keyValue.ValueData;
                                     break;
+                                    case "IsActive":
 
+                                        break;
                                 default:
                                     _logger.Warn(
                                         $"Unknown value name when processing DriverPackage at path '{packKey.KeyPath}': {keyValue.ValueName}");
