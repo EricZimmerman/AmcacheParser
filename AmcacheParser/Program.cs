@@ -89,7 +89,15 @@ namespace AmcacheParser
             _fluentCommandLineParser.Setup(arg => arg.NoTransLogs)
                 .As("nl")
                 .WithDescription(
-                    "When true, ignore transaction log files for dirty hives. Default is FALSE").SetDefault(false);
+                    "When true, ignore transaction log files for dirty hives. Default is FALSE\r\n").SetDefault(false);
+
+            _fluentCommandLineParser.Setup(arg => arg.Debug)
+                .As("debug")
+                .WithDescription("Show debug information during processing").SetDefault(false);
+
+            _fluentCommandLineParser.Setup(arg => arg.Trace)
+                .As("trace")
+                .WithDescription("Show trace information during processing\r\n").SetDefault(false);
 
             var header =
                 $"AmcacheParser version {Assembly.GetExecutingAssembly().GetName().Version}" +
@@ -145,6 +153,18 @@ namespace AmcacheParser
                 _logger.Fatal("Warning: Administrator privileges not found!\r\n");
             }
 
+            if (_fluentCommandLineParser.Object.Debug)
+            {
+                LogManager.Configuration.LoggingRules.First().EnableLoggingForLevel(LogLevel.Debug);
+            }
+
+            if (_fluentCommandLineParser.Object.Trace)
+            {
+                LogManager.Configuration.LoggingRules.First().EnableLoggingForLevel(LogLevel.Trace);
+            }
+
+            LogManager.ReconfigExistingLoggers();
+
             _sw = new Stopwatch();
             _sw.Start();
 
@@ -153,6 +173,8 @@ namespace AmcacheParser
                 if (Helper.IsNewFormat(_fluentCommandLineParser.Object.File,
                     _fluentCommandLineParser.Object.NoTransLogs))
                 {
+                    _logger.Debug($"Processing new format hive");
+
                     var amNew = new AmcacheNew(_fluentCommandLineParser.Object.File,
                         _fluentCommandLineParser.Object.RecoverDeleted, _fluentCommandLineParser.Object.NoTransLogs);
 
@@ -286,9 +308,7 @@ namespace AmcacheParser
                         foo.Map(m => m.Usn).Ignore();
 
                         csv.Configuration.RegisterClassMap(foo);
-
-           
-
+                        
                         csv.WriteHeader<FileEntryNew>();
                         csv.NextRecord();
                         csv.WriteRecords(cleanList2);
@@ -361,9 +381,7 @@ namespace AmcacheParser
                             foo.Map(m => m.UninstallString).Index(21);
 
                             csv.Configuration.RegisterClassMap(foo);
-
-                 
-
+                            
                             csv.WriteHeader<ProgramsEntryNew>();
                             csv.NextRecord();
                             csv.WriteRecords(amNew.ProgramsEntries);
@@ -425,9 +443,7 @@ namespace AmcacheParser
                             foo.Map(m => m.Publisher).Ignore();
 
                             csv.Configuration.RegisterClassMap(foo);
-
-                      
-
+                            
                             csv.WriteHeader<FileEntryNew>();
                             csv.NextRecord();
 
@@ -474,9 +490,7 @@ namespace AmcacheParser
                             t.KeyLastWriteTimestamp.ToString(_fluentCommandLineParser.Object.DateTimeFormat)).Index(2);
 
                         csv.Configuration.RegisterClassMap(foo);
-
-                  
-
+                        
                         csv.WriteHeader<Shortcut>();
                         csv.NextRecord();
                         sw.AutoFlush = true;
@@ -538,9 +552,7 @@ namespace AmcacheParser
                         foo.Map(m => m.WdfVersion).Index(19);
 
                         csv.Configuration.RegisterClassMap(foo);
-
-               
-
+                        
                         csv.WriteHeader<DriverBinary>();
                         csv.NextRecord();
                         sw.AutoFlush = true;
@@ -598,9 +610,7 @@ namespace AmcacheParser
                         foo.Map(m => m.State).Index(16);
 
                         csv.Configuration.RegisterClassMap(foo);
-
-        
-
+                        
                         csv.WriteHeader<DeviceContainer>();
                         csv.NextRecord();
                         sw.AutoFlush = true;
@@ -655,9 +665,7 @@ namespace AmcacheParser
                         foo.Map(m => m.Version).Index(11);
                         foo.Map(m => m.ClassGuid).Ignore();
 
-                     
-
-                        csv.WriteHeader<DriverPackage>();
+                     csv.WriteHeader<DriverPackage>();
                         csv.NextRecord();
                         sw.AutoFlush = true;
 
@@ -722,9 +730,7 @@ namespace AmcacheParser
                         foo.Map(m => m.DeviceState).Ignore();
 
                         csv.Configuration.RegisterClassMap(foo);
-
-                
-
+                        
                         csv.WriteHeader<DevicePnp>();
                         csv.NextRecord();
                         sw.AutoFlush = true;
@@ -811,6 +817,8 @@ namespace AmcacheParser
 
                     return;
                 }
+
+                _logger.Debug($"Processing old format hive");
 
                 var am = new AmcacheOld(_fluentCommandLineParser.Object.File,
                     _fluentCommandLineParser.Object.RecoverDeleted, _fluentCommandLineParser.Object.NoTransLogs);
@@ -1239,5 +1247,7 @@ namespace AmcacheParser
         public bool NoTransLogs { get; set; } = false;
         public string DateTimeFormat { get; set; }
         public bool PreciseTimestamps { get; set; }
+        public bool Debug { get; set; }
+        public bool Trace { get; set; }
     }
 }

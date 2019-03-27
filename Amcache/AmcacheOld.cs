@@ -39,7 +39,7 @@ namespace Amcache
 
         public AmcacheOld(string hive, bool recoverDeleted, bool noLogs)
         {
-           _logger = LogManager.GetCurrentClassLogger();
+           _logger = LogManager.GetLogger("AmcacheOld");
 
             RegistryHive reg;
 
@@ -84,7 +84,6 @@ namespace Amcache
             if (reg.Header.PrimarySequenceNumber != reg.Header.SecondarySequenceNumber)
             {
                 
-
                 if (string.IsNullOrEmpty(dirname))
                 {
                     dirname = ".";
@@ -151,6 +150,8 @@ namespace Amcache
             }
 
             //First, we get data for all the Program entries under Programs key
+
+            _logger.Debug("Getting Programs data");
 
             foreach (var registryKey in programsKey.SubKeys)
             {
@@ -287,6 +288,7 @@ namespace Amcache
 
             //For each Programs entry, add the related Files entries from Files\Volume subkey, put the rest in unassociated
 
+            _logger.Debug("Getting Files data");
 
             foreach (var registryKey in fileKey.SubKeys)
             {

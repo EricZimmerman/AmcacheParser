@@ -125,12 +125,8 @@ namespace Amcache
             DriverPackages = new List<DriverPackage>();
             ShortCuts = new List<Shortcut>();
 
-//            if (fileKey == null && programsKey == null)
-//            {
-//                _logger.Error(
-//                    "Hive does not contain a InventoryApplicationFile and/or InventoryApplication key. Processing cannot continue");
-//                return;
-//            }
+            _logger.Debug("Getting Programs data");
+
 
             if (programsKey != null)
             {
@@ -330,6 +326,8 @@ namespace Amcache
                 _logger.Warn("Hive does not contain a Root\\InventoryApplication key.");
             }
 
+            _logger.Debug("Getting Files data");
+
 
             if (fileKey != null)
             {
@@ -525,16 +523,25 @@ namespace Amcache
                 _logger.Warn("Hive does not contain a Root\\InventoryApplicationFile key.");
             }
 
+            _logger.Debug("Getting Shortcut data");
+
             var shortCutkey = reg.GetKey(@"Root\InventoryApplicationShortcut");
 
             if (shortCutkey != null)
             {
                 foreach (var shortCutkeySubKey in shortCutkey.SubKeys)
                 {
-                    ShortCuts.Add(new Shortcut(shortCutkeySubKey.KeyName, shortCutkeySubKey.Values.First().ValueData,
+                    var lnkName = "";
+                    if (shortCutkeySubKey.Values.Count > 0)
+                    {
+                        lnkName = shortCutkeySubKey.Values.First().ValueData;
+                    }
+                    ShortCuts.Add(new Shortcut(shortCutkeySubKey.KeyName, lnkName,
                         shortCutkeySubKey.LastWriteTime.Value));
                 }
             }
+
+            _logger.Debug("Getting InventoryDeviceContainer data");
 
 
             var deviceKey = reg.GetKey(@"Root\InventoryDeviceContainer");
@@ -645,6 +652,7 @@ namespace Amcache
                 }
             }
 
+            _logger.Debug("Getting InventoryDevicePnp data");
 
             var pnpKey = reg.GetKey(@"Root\InventoryDevicePnp");
 
@@ -791,6 +799,7 @@ namespace Amcache
                 }
             }
 
+            _logger.Debug("Getting InventoryDriverBinary data");
 
             var binaryKey = reg.GetKey(@"Root\InventoryDriverBinary");
 
@@ -921,6 +930,7 @@ namespace Amcache
                 }
             }
 
+            _logger.Debug("Getting InventoryDriverPackage data");
 
             var packaheKey = reg.GetKey(@"Root\InventoryDriverPackage");
 
