@@ -9,7 +9,7 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>Amcache</RootNamespace>
     <AssemblyName>Amcache</AssemblyName>
-    <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.6.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <TargetFrameworkProfile />
   </PropertyGroup>
@@ -31,12 +31,9 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="RawCopy">
-      <HintPath>Dependencies\RawCopy.dll</HintPath>
-    </Reference>
-    <Reference Include="Registry, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+    <Reference Include="RawCopy_ERZ_2_2_32, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>Dependencies\Registry.dll</HintPath>
+      <HintPath>Dependencies\RawCopy_ERZ_2_2_32.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Configuration" />
@@ -69,9 +66,6 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="Dependencies\Registry.dll" />
-  </ItemGroup>
-  <ItemGroup>
     <None Include="app.config" />
   </ItemGroup>
   <ItemGroup>
@@ -84,6 +78,14 @@
     <PackageReference Include="NLog">
       <Version>4.6.0</Version>
     </PackageReference>
+    <PackageReference Include="Registry">
+      <Version>1.1.0</Version>
+    </PackageReference>
+  </ItemGroup>
+  <ItemGroup />
+  <ItemGroup>
+    <Content Include="Dependencies\RawCopy_ERZ_2_2_32.dll" />
+    <Content Include="Dependencies\RawCopy_ERZ_2_2_32.pdb" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

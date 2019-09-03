@@ -78,7 +78,11 @@ namespace Amcache
 
                 rawFiles = RawCopy.Helper.GetFiles(files);
 
-                reg = new RegistryHive(rawFiles.First().FileBytes,rawFiles.First().InputFilename);
+                var b = new byte[rawFiles.First().FileStream.Length];
+
+                rawFiles.First().FileStream.Read(b, 0, (int) rawFiles.First().FileStream.Length);
+
+                reg = new RegistryHive(b,rawFiles.First().InputFilename);
             }
 
             if (reg.Header.PrimarySequenceNumber != reg.Header.SecondarySequenceNumber)
@@ -114,7 +118,11 @@ namespace Amcache
                             var lt = new List<TransactionLogFileInfo>();
                             foreach (var rawCopyReturn in rawFiles.Skip(1).ToList())
                             {
-                                var tt = new TransactionLogFileInfo(rawCopyReturn.InputFilename,rawCopyReturn.FileBytes);
+                                var b = new byte[rawCopyReturn.FileStream.Length];
+
+                                rawCopyReturn.FileStream.Read(b, 0, (int) rawFiles.First().FileStream.Length);
+
+                                var tt = new TransactionLogFileInfo(rawCopyReturn.InputFilename,b);
                                 lt.Add(tt);
                             }
 

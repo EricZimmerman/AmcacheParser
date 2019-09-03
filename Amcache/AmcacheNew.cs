@@ -55,7 +55,11 @@ namespace Amcache
 
                 rawFiles = RawCopy.Helper.GetFiles(files);
 
-                reg = new RegistryHive(rawFiles.First().FileBytes, rawFiles.First().InputFilename);
+                var b = new byte[rawFiles.First().FileStream.Length];
+
+                rawFiles.First().FileStream.Read(b, 0, (int) rawFiles.First().FileStream.Length);
+
+                reg = new RegistryHive(b, rawFiles.First().InputFilename);
             }
 
             if (reg.Header.PrimarySequenceNumber != reg.Header.SecondarySequenceNumber)
@@ -90,8 +94,11 @@ namespace Amcache
                             var lt = new List<TransactionLogFileInfo>();
                             foreach (var rawCopyReturn in rawFiles.Skip(1).ToList())
                             {
-                                var tt = new TransactionLogFileInfo(rawCopyReturn.InputFilename,
-                                    rawCopyReturn.FileBytes);
+                                var b = new byte[rawCopyReturn.FileStream.Length];
+
+                                rawCopyReturn.FileStream.Read(b, 0, (int) rawFiles.First().FileStream.Length);
+
+                                var tt = new TransactionLogFileInfo(rawCopyReturn.InputFilename,b);
                                 lt.Add(tt);
                             }
 
@@ -779,7 +786,7 @@ namespace Amcache
                             }
                         }
 
-                        var dp = new DevicePnp(pnpsKey.KeyName, pnpKey.LastWriteTime.Value, busReportedDescription,
+                        var dp = new DevicePnp(pnpsKey.KeyName, pnpsKey.LastWriteTime.Value, busReportedDescription,
                             Class, classGuid, compid, containerId, description, deviceState, driverId, driverName,
                             driverPackageStrongName, driverVerDate, driverVerVersion, enumerator, hwid, inf,
                             installState, manufacturer, matchingId, model, parentId, problemCode, provider, service,
@@ -911,7 +918,7 @@ namespace Amcache
                             }
                         }
 
-                        var db = new DriverBinary(binKey.KeyName, binaryKey.LastWriteTime.Value, driverCheckSum,
+                        var db = new DriverBinary(binKey.KeyName, binKey.LastWriteTime.Value, driverCheckSum,
                             driverCompany, driverId, driverInBox, driverIsKernelMode, driverLastWriteTime, driverName,
                             driverPackageStrongName, driverSigned, driverTimeStamp, driverType, driverVersion,
                             imageSize, inf, product, productVersion, service, wdfVersion);
@@ -1007,7 +1014,7 @@ namespace Amcache
                             }
                         }
 
-                        var dp = new DriverPackage(packKey.KeyName, packaheKey.LastWriteTime.Value, Class, ClassGuid,
+                        var dp = new DriverPackage(packKey.KeyName, packKey.LastWriteTime.Value, Class, ClassGuid,
                             Date, Directory, DriverInBox, Hwids, Inf, Provider, SubmissionId, SYSFILE, Version);
 
                         DriverPackages.Add(dp);
