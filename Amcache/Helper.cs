@@ -91,7 +91,7 @@ namespace Amcache
                             {
                                 var b = new byte[rawCopyReturn.FileStream.Length];
 
-                                rawCopyReturn.FileStream.Read(b, 0, (int) rawFiles.First().FileStream.Length);
+                                rawCopyReturn.FileStream.Read(b, 0, (int) rawCopyReturn.FileStream.Length);
 
                                 var tt = new TransactionLogFileInfo(rawCopyReturn.InputFilename,b);
                                 lt.Add(tt);
@@ -113,7 +113,7 @@ namespace Amcache
 
                 LogManager.EnableLogging();
             }
-            catch (Exception )
+            catch (Exception ex )
             {
                 LogManager.EnableLogging();
             }

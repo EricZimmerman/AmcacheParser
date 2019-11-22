@@ -96,7 +96,7 @@ namespace Amcache
                             {
                                 var b = new byte[rawCopyReturn.FileStream.Length];
 
-                                rawCopyReturn.FileStream.Read(b, 0, (int) rawFiles.First().FileStream.Length);
+                                rawCopyReturn.FileStream.Read(b, 0, (int) rawCopyReturn.FileStream.Length);
 
                                 var tt = new TransactionLogFileInfo(rawCopyReturn.InputFilename,b);
                                 lt.Add(tt);
@@ -778,6 +778,11 @@ namespace Amcache
                                 case "ExtendedInfs":
                                 case "DeviceInterfaceClasses":
                                 case "(default)":
+                                case "DeviceExtDriversFlightIds":
+                                case "InstallDate":
+                                case "FirstInstallDate":
+                                case "DeviceDriverFlightId":
+                                    _logger.Debug($"Value: '{keyValue.ValueName}' --> {keyValue.ValueData}");
                                     break;
                                 default:
                                     _logger.Warn(
