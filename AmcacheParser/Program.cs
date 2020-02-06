@@ -263,7 +263,7 @@ namespace AmcacheParser
                     {
                         sw.AutoFlush = true;
 
-                        var csv = new CsvWriter(sw);
+                        var csv = new CsvWriter(sw,CultureInfo.InvariantCulture);
 
                         var o = new TypeConverterOptions
                         {
@@ -330,7 +330,7 @@ namespace AmcacheParser
                         {
                             sw.AutoFlush = true;
 
-                            var csv = new CsvWriter(sw);
+                            var csv = new CsvWriter(sw,CultureInfo.InvariantCulture);
 
                             var o = new TypeConverterOptions
                             {
@@ -399,7 +399,7 @@ namespace AmcacheParser
 
                         using (var sw = new StreamWriter(outFile1))
                         {
-                            var csv = new CsvWriter(sw);
+                            var csv = new CsvWriter(sw,CultureInfo.InvariantCulture);
 
                             var o = new TypeConverterOptions
                             {
@@ -473,7 +473,7 @@ namespace AmcacheParser
 
                     using (var sw = new StreamWriter(outFile1))
                     {
-                        var csv = new CsvWriter(sw);
+                        var csv = new CsvWriter(sw,CultureInfo.InvariantCulture);
 
                         var o = new TypeConverterOptions
                         {
@@ -514,7 +514,7 @@ namespace AmcacheParser
 
                     using (var sw = new StreamWriter(outFile1))
                     {
-                        var csv = new CsvWriter(sw);
+                        var csv = new CsvWriter(sw,CultureInfo.InvariantCulture);
 
 
                         var o = new TypeConverterOptions
@@ -577,7 +577,7 @@ namespace AmcacheParser
 
                     using (var sw = new StreamWriter(outFile1))
                     {
-                        var csv = new CsvWriter(sw);
+                        var csv = new CsvWriter(sw,CultureInfo.InvariantCulture);
 
 
                         var o = new TypeConverterOptions
@@ -634,7 +634,7 @@ namespace AmcacheParser
 
                     using (var sw = new StreamWriter(outFile1))
                     {
-                        var csv = new CsvWriter(sw);
+                        var csv = new CsvWriter(sw,CultureInfo.InvariantCulture);
 
                         var o = new TypeConverterOptions
                         {
@@ -689,7 +689,7 @@ namespace AmcacheParser
 
                     using (var sw = new StreamWriter(outFile1))
                     {
-                        var csv = new CsvWriter(sw);
+                        var csv = new CsvWriter(sw,CultureInfo.InvariantCulture);
 
                         var o = new TypeConverterOptions
                         {
@@ -910,7 +910,7 @@ namespace AmcacheParser
                 {
                     sw.AutoFlush = true;
 
-                    var csv = new CsvWriter(sw);
+                    var csv = new CsvWriter(sw,CultureInfo.InvariantCulture);
 
                     var o = new TypeConverterOptions
                     {
@@ -990,7 +990,7 @@ namespace AmcacheParser
                     {
                         sw.AutoFlush = true;
 
-                        var csv = new CsvWriter(sw);
+                        var csv = new CsvWriter(sw,CultureInfo.InvariantCulture);
 
                         var o = new TypeConverterOptions
                         {
@@ -1038,7 +1038,7 @@ namespace AmcacheParser
 
                     using (var sw = new StreamWriter(outFile))
                     {
-                        var csv = new CsvWriter(sw);
+                        var csv = new CsvWriter(sw,CultureInfo.InvariantCulture);
 
                         var o = new TypeConverterOptions
                         {

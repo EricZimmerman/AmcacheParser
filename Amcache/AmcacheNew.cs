@@ -462,6 +462,8 @@ namespace Amcache
                                 case "DriverVerVersion":
                                 case "DriverPackageStrongName":
                                 case "DriverVerDate":
+                                case "AppxPackageRelativeId":
+                                case "AppxPackageFullName":
                                 case "ContainerId":
                                 case "HiddenArp":
                                 case "Inf":
