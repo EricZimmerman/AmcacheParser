@@ -69,7 +69,7 @@ namespace Amcache
 
                     var logFiles = Directory.GetFiles(dirname, $"{hiveBase}.LOG?");
 
-                    if (logFiles.Length == 0)
+                    if (logFiles.Length == 0 || noLog)
                     {
                         var log = LogManager.GetCurrentClassLogger();
 
