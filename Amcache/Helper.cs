@@ -113,7 +113,7 @@ namespace Amcache
 
                 LogManager.EnableLogging();
             }
-            catch (Exception ex )
+            catch (Exception )
             {
                 LogManager.EnableLogging();
             }

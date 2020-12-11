@@ -288,6 +288,10 @@ namespace Amcache
                                 case "UpperFilters":
                                 case "LowerFilters":
                                 case "BinFileVersion":
+                                case "SentDetailedInv":
+                                case "ProductName":
+                                case "Provider":
+                                case "Inf":
                                 case "(default)":
 
 
@@ -418,7 +422,7 @@ namespace Amcache
                                 case "ProgramId":
                                     programId = subKeyValue.ValueData;
 
-                                    var program = ProgramsEntries.SingleOrDefault(t => t.ProgramId == programId);
+                                    var program = ProgramsEntries.FirstOrDefault(t => t.ProgramId == programId);
                                     if (program != null)
                                     {
                                         hasLinkedProgram = true;
@@ -441,7 +445,7 @@ namespace Amcache
                                             size = long.Parse(subKeyValue.ValueData);
                                         }
                                     }
-                                    catch (Exception e)
+                                    catch (Exception )
                                     {
                                     }
 
@@ -467,7 +471,9 @@ namespace Amcache
                                 case "ContainerId":
                                 case "HiddenArp":
                                 case "Inf":
+                                case "LowerFilters":
                                 case "ProblemCode":
+                                case "OriginalFileName":
 
                                 case "Provider":
                                 case "Class":
@@ -513,7 +519,7 @@ namespace Amcache
 
                     if (hasLinkedProgram)
                     {
-                        var program = ProgramsEntries.SingleOrDefault(t => t.ProgramId == fe.ProgramId);
+                        var program = ProgramsEntries.FirstOrDefault(t => t.ProgramId == fe.ProgramId);
                         if (program != null)
                         {
                             fe.ApplicationName = program.Name;
@@ -1011,9 +1017,13 @@ namespace Amcache
                                 case "Version":
                                     Version = keyValue.ValueData;
                                     break;
-                                    case "IsActive":
-
-                                        break;
+                                
+                                
+                                case "LowerFilters":
+                                case "FlightIds":
+                                case "RecoveryIds":
+                                case "IsActive":
+                                    break;
                                 default:
                                     _logger.Warn(
                                         $"Unknown value name when processing DriverPackage at path '{packKey.KeyPath}': {keyValue.ValueName}");
