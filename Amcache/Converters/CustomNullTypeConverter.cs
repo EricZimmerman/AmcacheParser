@@ -32,7 +32,7 @@ namespace Amcache.Converters
                 return string.Empty;
             }
 
-            var converter = row.Configuration.TypeConverterCache.GetConverter<T>();
+            var converter = row.Context.TypeConverterCache.GetConverter<T>();
             return converter.ConvertToString(value, row, memberMapData);
         }
     }

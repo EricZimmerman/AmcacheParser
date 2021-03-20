@@ -23,12 +23,13 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <DebugType>pdbonly</DebugType>
+    <DebugType>embedded</DebugType>
     <Optimize>true</Optimize>
     <OutputPath>bin\Release\</OutputPath>
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <DebugSymbols>true</DebugSymbols>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="RawCopy_ERZ_2_2_32, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
@@ -67,16 +68,16 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="CsvHelper">
-      <Version>17.0.1</Version>
+      <Version>26.0.1</Version>
     </PackageReference>
     <PackageReference Include="NFluent">
-      <Version>2.7.0</Version>
+      <Version>2.7.1</Version>
     </PackageReference>
     <PackageReference Include="NLog">
-      <Version>4.7.6</Version>
+      <Version>4.7.8</Version>
     </PackageReference>
     <PackageReference Include="Registry">
-      <Version>1.1.1.2</Version>
+      <Version>1.2.0.2</Version>
     </PackageReference>
   </ItemGroup>
   <ItemGroup />
