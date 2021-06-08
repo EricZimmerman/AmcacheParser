@@ -13,6 +13,7 @@
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
+    <PlatformTarget>AnyCPU</PlatformTarget>
   </PropertyGroup>
   <PropertyGroup>
     <ApplicationIcon>Custom-Icon-Design-Flatastic-2-Process-info.ico</ApplicationIcon>
@@ -39,7 +40,7 @@
     <PackageReference Include="Costura.Fody" Version="5.2.0">
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
-    <PackageReference Include="CsvHelper" Version="27.0.4" />
+    <PackageReference Include="CsvHelper" Version="27.1.0" />
     <PackageReference Include="Exceptionless" Version="4.6.2" />
     <PackageReference Include="FluentCommandLineParser" Version="1.5.0.20-commands" />
     <PackageReference Include="Fody" Version="6.5.1">

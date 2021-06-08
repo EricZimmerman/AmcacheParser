@@ -6,11 +6,11 @@
     <Product>Amcache</Product>
     <Description>Parses Amcache hives</Description>
     <Copyright>Copyright ©  2021</Copyright>
-    <AssemblyVersion>1.0.0.4</AssemblyVersion>
-    <FileVersion>1.0.0.4</FileVersion>
+    <AssemblyVersion>1.0.0.5</AssemblyVersion>
+    <FileVersion>1.0.0.5</FileVersion>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <Version>1.0.0.4</Version>
+    <Version>1.0.0.5</Version>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -31,7 +31,7 @@
     <Reference Include="System.Transactions" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="CsvHelper" Version="27.0.4" />
+    <PackageReference Include="CsvHelper" Version="27.1.0" />
     <PackageReference Include="NFluent" Version="2.7.2" />
     <PackageReference Include="NLog" Version="4.7.10" />
     <PackageReference Include="Registry" Version="1.2.1" />
