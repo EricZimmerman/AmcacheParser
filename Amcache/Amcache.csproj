@@ -6,19 +6,16 @@
     <Product>Amcache</Product>
     <Description>Parses Amcache hives</Description>
     <Copyright>Copyright ©  2021</Copyright>
-    <AssemblyVersion>1.0.0.5</AssemblyVersion>
-    <FileVersion>1.0.0.5</FileVersion>
+    <AssemblyVersion>1.0.0.6</AssemblyVersion>
+    <FileVersion>1.0.0.6</FileVersion>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <Version>1.0.0.5</Version>
+    <Version>1.0.0.6</Version>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Costura.Fody" Version="5.2.0">
-      <PrivateAssets>all</PrivateAssets>
-    </PackageReference>
     <PackageReference Include="RawCopy_ERZ" Version="1.0.0" />
     <PackageReference Include="System.IO.Compression" Version="4.*" />
     <PackageReference Include="System.Data.DataSetExtensions" Version="4.*" />
