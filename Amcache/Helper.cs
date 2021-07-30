@@ -106,12 +106,12 @@ namespace Amcache
                     }
                 }
 
-
+                LogManager.EnableLogging();
                 reg.ParseHive();
 
                 fileKey = reg.GetKey(@"Root\InventoryApplicationFile");
 
-                LogManager.EnableLogging();
+                
             }
             catch (Exception )
             {

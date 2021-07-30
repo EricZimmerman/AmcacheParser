@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "newProfile1": {
+      "commandName": "Project",
+      "commandLineArgs": "-f C:\\temp\\Amcache_Files\\Amcache.hve --csv C:\\temp\\ --debug"
+    }
+  }
+}
