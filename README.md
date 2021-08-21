@@ -35,7 +35,7 @@ See here for more info: http://binaryforay.blogspot.com/2015/07/amcacheparser-re
 
 This program is different from other Amcache parsers in that it does not dump everything available. Rather, it looks at both File entries and Program entries.
 
-Program entries are found under 'Root\Programs' and File entries are found under 'Root\File'
+Program entries are found under `Root\Programs` and File entries are found under `Root\File`.
 
 AmcacheParser gathers information about all the Program entries, then looks at all the File entries. In each file entry is a pointer to a Program ID (value 100). If this Program ID exists in Program entries, the File entry is associated with the Program entry.
 
@@ -43,7 +43,7 @@ At the end of this process you are left with things that didn't come from some k
               
 Using the minimum options, AmcacheParser will only export Unassociated file entries.
 
-If you use the -i option, AmcacheParser will export a Programs entry list and its associated File entry list.
+If you use the `-i` option, AmcacheParser will export a Programs entry list and its associated File entry list.
 
 With whitelisting and blacklisting you can further reduce the output by excluding certain File entries (whitelisting) or including only File entries whose SHA-1 is found in a blacklist file.
 
