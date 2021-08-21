@@ -1,8 +1,6 @@
 # AmcacheParser
 
-See here for more info:
-
-http://binaryforay.blogspot.com/2015/07/amcacheparser-reducing-noise-finding.html
+## Command Line Interface
     
     AmcacheParser version 1.4.0.0
     
@@ -31,6 +29,10 @@ http://binaryforay.blogspot.com/2015/07/amcacheparser-reducing-noise-finding.htm
     
               Short options (single letter) are prefixed with a single dash. Long commands are prefixed with two dashes
                             
+## Documentation
+
+See here for more info: http://binaryforay.blogspot.com/2015/07/amcacheparser-reducing-noise-finding.html
+
 This program is different from other Amcache parsers in that it does not dump everything available. Rather, it looks at both File entries and Program entries.
 
 Program entries are found under 'Root\Programs' and File entries are found under 'Root\File'
