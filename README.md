@@ -31,8 +31,6 @@
                             
 ## Documentation
 
-See here for more info: http://binaryforay.blogspot.com/2015/07/amcacheparser-reducing-noise-finding.html
-
 This program is different from other Amcache parsers in that it does not dump everything available. Rather, it looks at both File entries and Program entries.
 
 Program entries are found under `Root\Programs` and File entries are found under `Root\File`.
