@@ -1,6 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFrameworks>net462;net5.0</TargetFrameworks>
+    <TargetFrameworks>net462;net5.0;net6.0</TargetFrameworks>
     <AssemblyTitle>Amcache</AssemblyTitle>
     <Company>Eric Zimmerman</Company>
     <Product>Amcache</Product>
