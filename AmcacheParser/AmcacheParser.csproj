@@ -22,8 +22,8 @@
     <PlatformTarget>AnyCPU</PlatformTarget>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="System.Data.DataSetExtensions" Version="4.*" />
-    <PackageReference Include="Microsoft.CSharp" Version="4.*" />
+    <PackageReference Include="System.Data.DataSetExtensions" Version="4.5.0" />
+    <PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="Microsoft.VisualBasic" />
@@ -40,19 +40,19 @@
     <ProjectReference Include="..\Amcache\Amcache.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Costura.Fody" Version="5.6.0">
+    <PackageReference Include="Costura.Fody" Version="5.7.0">
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
-    <PackageReference Include="CsvHelper" Version="27.1.1" />
+    <PackageReference Include="CsvHelper" Version="27.2.1" />
     <PackageReference Include="Exceptionless" Version="4.6.2" />
     <PackageReference Include="FluentCommandLineParser" Version="1.5.0.20-commands" />
-    <PackageReference Include="Fody" Version="6.5.3">
+    <PackageReference Include="Fody" Version="6.6.0">
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
-    <PackageReference Include="NLog" Version="4.7.11" />
-    <PackageReference Include="ServiceStack.Text" Version="5.12.0" />
+    <PackageReference Include="NLog" Version="4.7.13" />
+    <PackageReference Include="ServiceStack.Text" Version="5.13.2" />
     <PackageReference Include="System.Buffers" Version="4.5.1" />
     <PackageReference Include="System.Numerics.Vectors" Version="4.6.0-preview3.19128.7" />
-    <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="6.0.0-preview.3.21201.4" />
+    <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="6.0.0" />
   </ItemGroup>
 </Project>
