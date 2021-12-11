@@ -117,45 +117,9 @@ namespace AmcacheParser
                 
         };
             
-           
-            
             rootCommand.Description = header + "\r\n\r\n" +footer;
-            //
-            // HelpDelegate[] myCustomHelpLayout = new HelpDelegate[]
-            // { 
-            //     // I do not want synopsis
-            //      HelpBuilder.SynopsisSection(),
-            //
-            //     HelpBuilder.CommandUsageSection(),
-            //     HelpBuilder.CommandArgumentsSection(),
-            //     HelpBuilder.OptionsSection(),
-            //     HelpBuilder.SubcommandsSection(),
-            //     HelpBuilder.AdditionalArgumentsSection(),
-            //     
-            // };
-            //
-       
 
             rootCommand.Handler = CommandHandler.Create<string,bool,string,string,string, string,string,bool,bool,bool,bool>(DoWork);
-
-            // var parser = new CommandLineBuilder(rootCommand)
-            //     .UseHelp(myCustomHelpLayout)
-            //     .AddMiddleware(async (context, next) => 
-            //     {
-            //         if (context.ParseResult.Errors.Any())
-            //         {
-            //             await next(context);
-            //             context.Console.Out.Write("bbbbbbaaaaaaaaa");
-            //         } 
-            //         else
-            //         {
-            //             await next(context);
-            //         }
-            //     })
-            //     .UseDefaults()
-            //     .Build();
-            //
-            // await parser.InvokeAsync(args);
             
             await rootCommand.InvokeAsync(args);
            
@@ -163,14 +127,6 @@ namespace AmcacheParser
 
         public static void DoWork(string f,bool i,string w,string b, string csv,string csvf,string dt,bool mp,bool nl,bool debug,bool trace)
         {
-            var footer = @"Examples: AmcacheParser.exe -f ""C:\Temp\amcache\AmcacheWin10.hve"" --csv C:\temp" +
-                         "\r\n\t " +
-                         @" AmcacheParser.exe -f ""C:\Temp\amcache\AmcacheWin10.hve"" -i on --csv C:\temp --csvf foo.csv" + "\r\n\t " +
-                         @" AmcacheParser.exe -f ""C:\Temp\amcache\AmcacheWin10.hve"" -w ""c:\temp\whitelist.txt"" --csv C:\temp" +
-                         "\r\n\t" +
-                         "\r\n\t" +
-                         "  Short options (single letter) are prefixed with a single dash. Long commands are prefixed with two dashes\r\n";
-
             if (!File.Exists(f))
             {
                 _logger.Warn($"'{f}' not found. Exiting");
@@ -227,7 +183,7 @@ namespace AmcacheParser
 
                     var useBlacklist2 = false;
 
-                    if (b.Length > 0)
+                    if (b?.Length > 0)
                     {
                         if (File.Exists(b))
                         {
@@ -243,7 +199,7 @@ namespace AmcacheParser
                             _logger.Warn($"'{b}' does not exist");
                         }
                     }
-                    else if (w.Length > 0)
+                    else if (w?.Length > 0)
                     {
                         if (File.Exists(w))
                         {
@@ -829,7 +785,7 @@ namespace AmcacheParser
                         _logger.Info("");
 
                         var list = "whitelist";
-                        if (b.Length > 0)
+                        if (b?.Length > 0)
                         {
                             list = "blacklist";
                         }
@@ -872,7 +828,7 @@ namespace AmcacheParser
 
                 var useBlacklist = false;
 
-                if (b.Length > 0)
+                if (b?.Length > 0)
                 {
                     if (File.Exists(b))
                     {
@@ -888,7 +844,7 @@ namespace AmcacheParser
                         _logger.Warn($"'{b}' does not exist");
                     }
                 }
-                else if (w.Length > 0)
+                else if (w?.Length > 0)
                 {
                     if (File.Exists(w))
                     {
@@ -1173,7 +1129,7 @@ namespace AmcacheParser
                     _logger.Info("");
 
                     var list = "whitelist";
-                    if (b.Length > 0)
+                    if (b?.Length > 0)
                     {
                         list = "blacklist";
                     }

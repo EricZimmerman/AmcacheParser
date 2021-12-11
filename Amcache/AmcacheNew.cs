@@ -293,8 +293,11 @@ namespace Amcache
                                 case "Provider":
                                 case "Inf":
                                 case "(default)":
-
-
+                                case "MsiInstallDate":
+                                case "UserSid":
+                                    _logger.Debug(
+                                        $"Non-tracked data when processing InventoryApplication at path {registryKey.KeyPath}: {registryKeyValue.ValueName}==>{registryKeyValue.ValueData}");
+                                    
                                     break;
 
                                 case "Manufacturer":
@@ -477,6 +480,8 @@ namespace Amcache
 
                                 case "Provider":
                                 case "Class":
+                                    _logger.Debug(
+                                        $"Non-tracked data when processing FileEntry at path '{subKey.KeyPath}': {subKeyValue.ValueName}==>{subKeyValue.ValueData}");
                                     break;
                                 case "Description":
                                     description = subKeyValue.ValueData;
@@ -639,6 +644,8 @@ namespace Amcache
                                 case "LowerClassFilters":
                                 case "ManifestPath":
                                 case "UpperClassFilters":
+                                    _logger.Debug(
+                                        $"Non-tracked data when processing DeviceContainer at path '{deviceSubKey.KeyPath}': {keyValue.ValueName}==>{keyValue.ValueData}");
                                     break;
 
                                 default:
@@ -790,7 +797,8 @@ namespace Amcache
                                 case "InstallDate":
                                 case "FirstInstallDate":
                                 case "DeviceDriverFlightId":
-                                    _logger.Debug($"Value: '{keyValue.ValueName}' --> {keyValue.ValueData}");
+                                    _logger.Debug(
+                                        $"Non-tracked data when processing DevicePnp at path '{pnpsKey.KeyPath}': {keyValue.ValueName}==>{keyValue.ValueData}");
                                     break;
                                 default:
                                     _logger.Warn(
@@ -923,6 +931,8 @@ namespace Amcache
                                 case "(default)":
                                 case "COMPID":
                                 case "HWID":
+                                    _logger.Debug(
+                                        $"Non-tracked data when processing DriverBinary at path '{binKey.KeyPath}': {keyValue.ValueName}==>{keyValue.ValueData}");
                                     break;
                                 default:
                                     _logger.Warn(
@@ -1023,6 +1033,9 @@ namespace Amcache
                                 case "FlightIds":
                                 case "RecoveryIds":
                                 case "IsActive":
+                                case "Language":
+                                    _logger.Debug(
+                                        $"Non-tracked data when processing DriverPackage at path '{packKey.KeyPath}': {keyValue.ValueName}==>{keyValue.ValueData}");
                                     break;
                                 default:
                                     _logger.Warn(

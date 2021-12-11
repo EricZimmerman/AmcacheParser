@@ -27,6 +27,6 @@
     <PackageReference Include="CsvHelper" Version="27.2.1" />
     <PackageReference Include="NFluent" Version="2.7.2" />
     <PackageReference Include="NLog" Version="4.7.13" />
-    <PackageReference Include="Registry" Version="1.2.2" />
+    <PackageReference Include="Registry" Version="1.2.2.1" />
   </ItemGroup>
 </Project>
