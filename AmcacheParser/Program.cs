@@ -119,13 +119,13 @@ namespace AmcacheParser
             
             rootCommand.Description = header + "\r\n\r\n" +footer;
 
-            rootCommand.Handler = CommandHandler.Create<string,bool,string,string,string, string,string,bool,bool,bool,bool>(DoWork);
+            rootCommand.Handler = System.CommandLine.NamingConventionBinder.CommandHandler.Create<string,bool,string,string,string, string,string,bool,bool,bool,bool>(DoWork);
             
             await rootCommand.InvokeAsync(args);
            
         }
 
-        public static void DoWork(string f,bool i,string w,string b, string csv,string csvf,string dt,bool mp,bool nl,bool debug,bool trace)
+        private static void DoWork(string f,bool i,string w,string b, string csv,string csvf,string dt,bool mp,bool nl,bool debug,bool trace)
         {
             if (!File.Exists(f))
             {
