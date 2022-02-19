@@ -39,6 +39,6 @@
     </PackageReference>
     <PackageReference Include="Serilog" Version="2.10.0" />
     <PackageReference Include="Serilog.Sinks.Console" Version="4.0.1" />
-    <PackageReference Include="ServiceStack.Text" Version="5.13.2" />
+    <PackageReference Include="ServiceStack.Text" Version="6.0.2" />
   </ItemGroup>
 </Project>

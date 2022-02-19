@@ -217,6 +217,8 @@ internal class Program
         
         var ts1 = DateTime.Now.ToString("yyyyMMddHHmmss");
 
+        f = Path.GetFullPath(f);
+
         try
         {
             if (Helper.IsNewFormat(f, nl))
