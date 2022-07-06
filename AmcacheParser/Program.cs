@@ -33,7 +33,7 @@ internal class Program
 
     private static readonly string  Footer = @"Examples: AmcacheParser.exe -f ""C:\Temp\amcache\AmcacheWin10.hve"" --csv C:\temp" +
                                              "\r\n\t " +
-                                             @"   AmcacheParser.exe -f ""C:\Temp\amcache\AmcacheWin10.hve"" -i on --csv C:\temp --csvf foo.csv" + "\r\n\t " +
+                                             @"   AmcacheParser.exe -f ""C:\Temp\amcache\AmcacheWin10.hve"" -i --csv C:\temp --csvf foo.csv" + "\r\n\t " +
                                              @"   AmcacheParser.exe -f ""C:\Temp\amcache\AmcacheWin10.hve"" -w ""c:\temp\whitelist.txt"" --csv C:\temp" +
                                              "\r\n\t" +
                                              "\r\n\t" +
