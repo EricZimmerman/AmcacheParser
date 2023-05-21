@@ -858,7 +858,7 @@ public class AmcacheNew
                                 driverCompany = keyValue.ValueData;
                                 break;
                             case "DriverId":
-                                driverId = keyValue.ValueData;
+                                driverId = keyValue.ValueData.Substring(4);
                                 break;
                             case "DriverInBox":
                                 driverInBox = keyValue.ValueData == "1";
