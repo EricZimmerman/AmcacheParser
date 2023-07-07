@@ -10,6 +10,7 @@
     <Copyright>Eric Zimmerman</Copyright>
     <Version>1.5.1.0</Version>
     <LangVersion>10</LangVersion>
+    <IsPackable>false</IsPackable>
   </PropertyGroup>
 
   <PropertyGroup>
