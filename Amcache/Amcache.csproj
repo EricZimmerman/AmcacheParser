@@ -3,10 +3,12 @@
     <TargetFrameworks>netstandard2.0;net6.0</TargetFrameworks>
     <AssemblyTitle>Amcache</AssemblyTitle>
     <Company>Eric Zimmerman</Company>
+    <Authors>Eric Zimmerman</Authors>
     <Product>Amcache</Product>
     <Description>Parses Amcache hives</Description>
     <Copyright>Eric Zimmerman</Copyright>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageProjectUrl>https://github.com/EricZimmerman/AmcacheParser</PackageProjectUrl>
     
     <Version>1.2.0</Version>
     <LangVersion>10</LangVersion>
