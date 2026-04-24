@@ -164,6 +164,7 @@ public class AmcacheNew
                 var driverVerVersion = string.Empty;
 
 
+
                 try
                 {
                     foreach (var registryKeyValue in registryKey.Values)
@@ -361,7 +362,7 @@ public class AmcacheNew
                 ulong usn = 0;
                 var version = string.Empty;
                 var description = string.Empty;
-
+                var originalFileName = string.Empty;
                 var hasLinkedProgram = false;
 
                 try
@@ -471,12 +472,14 @@ public class AmcacheNew
                             case "Inf":
                             case "LowerFilters":
                             case "ProblemCode":
-                            case "OriginalFileName":
-
+                            
                             case "Provider":
                             case "Class":
                                 Log.Debug(
                                     "Non-tracked data when processing FileEntry at path {KeyPath}: {ValueName}==>{ValueData}",subKey.KeyPath,subKeyValue.ValueName,subKeyValue.ValueData);
+                                break;
+                            case "OriginalFileName":
+                                originalFileName = subKeyValue.ValueData;
                                 break;
                             case "Description":
                                 description = subKeyValue.ValueData;
@@ -515,7 +518,7 @@ public class AmcacheNew
                     isPeFile,
                     language, linkDate, longPathHash, lowerCaseLongPath, name, productName, productVersion,
                     programId,
-                    publisher, size, version, subKey.LastWriteTime.Value, binProductVersion, usn, description);
+                    publisher, size, version, subKey.LastWriteTime.Value, binProductVersion, usn, description,originalFileName);
 
                 if (hasLinkedProgram)
                 {

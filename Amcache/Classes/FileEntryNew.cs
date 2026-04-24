@@ -9,7 +9,7 @@ public class FileEntryNew
     public FileEntryNew(string binaryType, string fileVer, string prodVer, string sha1, bool isOsComp, bool isPe,
         int lang, DateTimeOffset? linkDate, string pathHash, string longPath, string name, string productName,
         string prodVersion, string programId, string publisher, long size, string version, DateTimeOffset lastwrite,
-        string binProductVersion, ulong usn, string description)
+        string binProductVersion, ulong usn, string description,string originalFileName)
     {
         BinaryType = binaryType;
         BinFileVersion = fileVer;
@@ -44,6 +44,7 @@ public class FileEntryNew
 
         Usn = usn;
         Description = description;
+        OriginalFileName = originalFileName;
 
         try
         {
@@ -85,6 +86,7 @@ public class FileEntryNew
 
     public string FileExtension { get; }
     public string Description { get; }
+    public string OriginalFileName { get; }
 
     public DateTimeOffset FileKeyLastWriteTimestamp { get; }
 }
