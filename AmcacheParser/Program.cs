@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.CommandLine;
+using System.CommandLine.Help;
+using System.CommandLine.Invocation;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
@@ -27,7 +29,7 @@ internal class Program
 {
     private static readonly string _preciseTimeFormat = "yyyy-MM-dd HH:mm:ss.fffffff";
 
-    private static readonly string Header = $"AmcacheParser version {Assembly.GetExecutingAssembly().GetName().Version}" +
+    private static readonly string Header = $"AmcacheParser version {Assembly.GetExecutingAssembly().GetName().Version.ToString(3)}" +
                                             "\r\n\r\nAuthor: Eric Zimmerman (saericzimmerman@gmail.com)" +
                                             "\r\nhttps://github.com/EricZimmerman/AmcacheParser";
 
@@ -48,77 +50,98 @@ internal class Program
     {
         ExceptionlessClient.Default.Startup("prIG996gFK1y6DaZEoXh3InSg8LwrHcQV4Dze2r8");
 
-        var fOption = new Option<string>(
-            "-f",
-
-            description: "Amcache.hve file to parse")
+        var fOpt = new Option<string>("-f")
         {
-            IsRequired = true
+            Description = "Amcache.hve file to parse"
+        };
+        
+        var csvOpt = new Option<string>(
+            "--csv")
+        {
+            Description = "Directory to save CSV formatted results to. Be sure to include the full path in double quotes"
+        
+        };
+        
+        var csvfOpt = new Option<string>(
+            "--csvf")
+        {
+            Description   = "File name to save CSV formatted results to. When present, overrides default name\r\n"
+        };
+        
+        var iOpt = new Option<bool>(
+            "-i")
+        {
+            Description = "Include file entries for Programs entries",
+            DefaultValueFactory = _ =>  false
+        
+        };
+        
+          
+        var wOpt = new Option<string>(
+            "-w")
+        {
+            Description = "Path to file containing SHA-1 hashes to *exclude* from the results. Blacklisting overrides whitelisting"
+        
+        };
+        
+        var bOpt = new Option<string>(
+            "-b")
+        {
+            Description = "Path to file containing SHA-1 hashes to *include* from the results. Blacklisting overrides whitelisting"
+        };
+        
+        var dtOpt = new Option<string>(
+            "--dt"){
+            Description =        "The custom date/time format to use when displaying time stamps. See https://goo.gl/CNVq0k for options. Default is: yyyy-MM-dd HH:mm:ss",
+            DefaultValueFactory = _ => "yyyy-MM-dd HH:mm:ss"
+        };
+        
+        var mpOpt = new Option<bool>("--mp")
+        {
+            Description = "When true, display higher precision for timestamps",
+            DefaultValueFactory = _ => false
+        };
+        
+        var nlOpt = new Option<bool>("--nl")
+        {
+            Description = "When true, ignore transaction log files for dirty hives. Default is FALSE",
+            DefaultValueFactory = _ => false
         };
 
-        var csvOption = new Option<string>(
-            "--csv",
-            "Directory to save CSV formatted results to. Be sure to include the full path in double quotes")
- {
-     IsRequired = true
- };
-
+        var debugOpt = new Option<bool>("--debug")
+        {
+            Description = "Show debug information during processing",
+            DefaultValueFactory = _ => false
+        };
+        var traceOpt = new Option<bool>("--trace")
+        {
+            Description = "Show trace information during processing",
+            DefaultValueFactory = _ => false
+        };
+        
         _rootCommand = new RootCommand
         {
-            fOption,
-            new Option<bool>(
-                "-i",
-                getDefaultValue:()=>false,
-                description: "Include file entries for Programs entries"),
-            
-            new Option<string>(
-                "-w",
-                
-                "Path to file containing SHA-1 hashes to *exclude* from the results. Blacklisting overrides whitelisting\r\n"),
-            
-            new Option<string>(
-                "-b",
-                
-                "Path to file containing SHA-1 hashes to *include* from the results. Blacklisting overrides whitelisting"),
-                
-            csvOption,
-                
-            new Option<string>(
-                "--csvf",
-                "File name to save CSV formatted results to. When present, overrides default name\r\n"),
-                
-            new Option<string>(
-                "--dt",
-                getDefaultValue:()=>"yyyy-MM-dd HH:mm:ss",
-                "The custom date/time format to use when displaying time stamps. See https://goo.gl/CNVq0k for options"),
-                
-            new Option<bool>(
-                "--mp",
-                getDefaultValue:()=>false,
-                "Display higher precision for time stamps"),
-            
-            new Option<bool>(
-                "--nl",
-                getDefaultValue:()=>false,
-                "When true, ignore transaction log files for dirty hives. Default is FALSE\r\n"),
-            
-            new Option<bool>(
-                "--debug",
-                getDefaultValue:()=>false,
-                "Show debug information during processing"),
-            
-            new Option<bool>(
-                "--trace",
-                getDefaultValue:()=>false,
-                "Show trace information during processing"),
-                
+            fOpt,
+            iOpt,
+            wOpt,
+            bOpt,
+            csvOpt,
+            csvfOpt,
+            dtOpt,
+            mpOpt,
+            nlOpt,
+            debugOpt,
+            traceOpt
         };
             
         _rootCommand.Description = Header + "\r\n\r\n" +Footer;
 
-        _rootCommand.Handler = System.CommandLine.NamingConventionBinder.CommandHandler.Create(DoWork);
+        _rootCommand.SetAction(result => DoWork(result.GetValue(fOpt), result.GetValue(iOpt), result.GetValue(wOpt),
+            result.GetValue(bOpt), result.GetValue(csvOpt), result.GetValue(csvfOpt), result.GetValue(dtOpt),
+            result.GetValue(mpOpt),result.GetValue(nlOpt),result.GetValue(debugOpt),result.GetValue(traceOpt)));
             
-        await _rootCommand.InvokeAsync(args);
+
+        var foo = _rootCommand.Parse(args).InvokeAsync();
         
         Log.CloseAndFlush();
            
@@ -188,6 +211,22 @@ internal class Program
             .MinimumLevel.ControlledBy(levelSwitch);
       
         Log.Logger = conf.CreateLogger();
+        
+        if (string.IsNullOrEmpty(f))
+        {
+            var aaa = new CustomHelpAction(new HelpAction());
+            aaa.Invoke(_rootCommand.Parse("-f is required. Exiting"));
+
+            return;
+        }
+        
+        if (string.IsNullOrEmpty(csv))
+        {
+            var aaa = new CustomHelpAction(new HelpAction());
+            aaa.Invoke(_rootCommand.Parse("--csv is required. Exiting"));
+
+            return;
+        }
         
         if (!File.Exists(f))
         {
@@ -1255,6 +1294,25 @@ internal class Program
             }
         }
     }
+    
+    private class CustomHelpAction : SynchronousCommandLineAction
+    {
+        private readonly HelpAction _defaultHelp;
+
+        public CustomHelpAction(HelpAction action)
+        {
+            _defaultHelp = action;
+        }
+
+        public override int Invoke(ParseResult parseResult)
+        {
+            var result = _defaultHelp.Invoke(parseResult);
+
+            Log.Warning("{Msg}", string.Join(" ",parseResult.Tokens));
+
+            return result;
+        }
+    }
 
     private static string UppercaseFirst(string s)
     {
@@ -1281,6 +1339,8 @@ internal class Program
         return principal.IsInRole(WindowsBuiltInRole.Administrator);
     }
 }
+
+
 
 internal class ApplicationArguments
 {

@@ -395,11 +395,20 @@ public class AmcacheNew
                             case "LinkDate":
                                 if (subKeyValue.ValueData.Length > 0)
                                 {
-                                    var d = new DateTimeOffset(
-                                        DateTime.Parse(subKeyValue.ValueData, DateTimeFormatInfo.InvariantInfo)
-                                            .Ticks,
-                                        TimeSpan.Zero);
-                                    linkDate = d;
+                                    try
+                                    {
+                                        var d = new DateTimeOffset(
+                                            DateTime.Parse(subKeyValue.ValueData, DateTimeFormatInfo.InvariantInfo)
+                                                .Ticks,
+                                            TimeSpan.Zero);
+                                        linkDate = d;
+                                    }
+                                    catch (Exception e)
+                                    {
+                                        Log.Debug("LinkDate appears to not be a valid timestamp! Setting to 0. Data found: {L}",subKeyValue.ValueData);
+                                        linkDate = DateTimeOffset.MinValue;
+                                    }
+                                    
                                 }
 
                                 break;
@@ -472,7 +481,7 @@ public class AmcacheNew
                             case "Inf":
                             case "LowerFilters":
                             case "ProblemCode":
-                            
+                            case "LocationPaths":
                             case "Provider":
                             case "Class":
                                 Log.Debug(
@@ -790,6 +799,7 @@ public class AmcacheNew
                             case "(default)":
                             case "DeviceExtDriversFlightIds":
                             case "InstallDate":
+                            case "LocationPaths":
                             case "FirstInstallDate":
                             case "DeviceDriverFlightId":
                                 Log.Debug("Non-tracked data when processing DevicePnp at path {KeyPath}: {ValueName}==>{ValueData}",pnpsKey.KeyPath,keyValue.ValueName,keyValue.ValueData);

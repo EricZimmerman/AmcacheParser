@@ -1,14 +1,14 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFrameworks>net462;net6.0;net9.0</TargetFrameworks>
+    <TargetFrameworks>net472;net9.0</TargetFrameworks>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     <AssemblyTitle>AmcacheParser</AssemblyTitle>
     <Company>Eric Zimmerman</Company>
     <Product>AmcacheParser</Product>
     <Description>Parses Amcache.hve files</Description>
     <Copyright>Eric Zimmerman</Copyright>
-    <Version>1.5.2</Version>
+    <Version>2026.5.1</Version>
     <LangVersion>10</LangVersion>
     <IsPackable>false</IsPackable>
   </PropertyGroup>
@@ -22,8 +22,7 @@
       <PrivateAssets>all</PrivateAssets>
      
     </PackageReference>
-	<PackageReference Include="System.CommandLine" Version="2.0.0-beta4.22272.1" />
-        <PackageReference Include="System.CommandLine.NamingConventionBinder" Version="2.0.0-beta4.22272.1" />
+	<PackageReference Include="System.CommandLine" Version="2.0.7" />
   </ItemGroup>
 
   <ItemGroup>
