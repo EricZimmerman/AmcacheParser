@@ -18,11 +18,11 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Costura.Fody" Version="6.0.0">
+    <PackageReference Include="Costura.Fody" Version="6.2.0">
       <PrivateAssets>all</PrivateAssets>
      
     </PackageReference>
-	<PackageReference Include="System.CommandLine" Version="2.0.7" />
+	<PackageReference Include="System.CommandLine" Version="2.0.8" />
   </ItemGroup>
 
   <ItemGroup>
