@@ -799,9 +799,9 @@ public class AmcacheNew
                             case "(default)":
                             case "DeviceExtDriversFlightIds":
                             case "InstallDate":
-                            case "LocationPaths":
                             case "FirstInstallDate":
                             case "DeviceDriverFlightId":
+                            case "LocationPaths":
                                 Log.Debug("Non-tracked data when processing DevicePnp at path {KeyPath}: {ValueName}==>{ValueData}",pnpsKey.KeyPath,keyValue.ValueName,keyValue.ValueData);
                                 break;
                             default:
