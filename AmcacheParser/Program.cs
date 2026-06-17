@@ -589,12 +589,12 @@ internal class Program
                     }
                 }
 
-                outbase1 = $"{ts1}_{hiveName1}_DriveBinaries.csv";
+                outbase1 = $"{ts1}_{hiveName1}_DriverBinaries.csv";
 
                 if (string.IsNullOrEmpty(csvf) == false)
                 {
                     outbase1 =
-                        $"{Path.GetFileNameWithoutExtension(csvf)}_DriveBinaries{Path.GetExtension(csvf)}";
+                        $"{Path.GetFileNameWithoutExtension(csvf)}_DriverBinaries{Path.GetExtension(csvf)}";
                 }
 
                 outFile1 = Path.Combine(csv, outbase1);
