@@ -1,0 +1,5 @@
+<Solution>
+  <Project Path="Amcache/Amcache.csproj" />
+  <Project Path="AmcacheParser.Test/AmcacheParser.Test.csproj" />
+  <Project Path="AmcacheParser/AmcacheParser.csproj" />
+</Solution>

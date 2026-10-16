@@ -5,19 +5,17 @@
     <Company>Eric Zimmerman</Company>
     <Authors>Eric Zimmerman</Authors>
     <Product>Amcache</Product>
-    <Description>Parses Amcache hives</Description>
+    <Description>Parses Amcache.hve (Windows 7 to 11) and the Inventory*.db SQLite databases that replace its Root keys from Windows 11 26H1 on</Description>
     <Copyright>Eric Zimmerman</Copyright>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageProjectUrl>https://github.com/EricZimmerman/AmcacheParser</PackageProjectUrl>
-    
-    <Version>2026.5.2</Version>
+    <RepositoryUrl>https://github.com/EricZimmerman/AmcacheParser</RepositoryUrl>
     <LangVersion>10</LangVersion>
 
-    <PackageTags>Amcache, Registry</PackageTags>
+    <PackageTags>Amcache, Registry, SQLite</PackageTags>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageIcon>icon.png</PackageIcon>
     <GenerateDocumentationFile>True</GenerateDocumentationFile>
-    <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
     <!-- If all members are not documented, you can disable the compiler warnings -->
     <NoWarn>$(NoWarn);CS1591</NoWarn>
   </PropertyGroup>
@@ -26,16 +24,16 @@
     <PackageReference Include="ERZHelpers" Version="2026.5.3" />
 
     <PackageReference Include="CsvHelper" Version="33.1.0" />
-    <PackageReference Include="NFluent" Version="3.1.0" />
-    <PackageReference Include="Serilog" Version="4.3.1" />
-    <PackageReference Include="Registry" Version="2026.5.0" />
-    <None Include="../README.md" Pack="true" PackagePath=""/>
-    <None Include="../icon.png" Pack="true" PackagePath=""/>
-    <PackageReference Include="DotNet.ReproducibleBuilds" Version="2.0.2">
+    <PackageReference Include="Microsoft.Data.Sqlite" Version="10.0.13" />
+    <PackageReference Include="Serilog" Version="4.4.0" />
+    <PackageReference Include="Registry" Version="2026.10.0" />
+    <None Include="../README.md" Pack="true" PackagePath="" />
+    <None Include="../icon.png" Pack="true" PackagePath="" />
+    <PackageReference Include="DotNet.ReproducibleBuilds" Version="2.0.5">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="MinVer" Version="7.0.0">
+    <PackageReference Include="MinVer" Version="8.0.0">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>

@@ -1,14 +1,15 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFrameworks>net472;net9.0</TargetFrameworks>
-    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+    <TargetFramework>net10.0</TargetFramework>
+    <!-- a single file publish includes the native SQLite library (Microsoft.Data.Sqlite) -->
+    <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
     <AssemblyTitle>AmcacheParser</AssemblyTitle>
     <Company>Eric Zimmerman</Company>
     <Product>AmcacheParser</Product>
-    <Description>Parses Amcache.hve files</Description>
+    <Description>Parses Amcache.hve and the Amcache SQLite databases</Description>
     <Copyright>Eric Zimmerman</Copyright>
-    <Version>2026.5.2</Version>
+    <Version>2026.10.0</Version>
     <LangVersion>10</LangVersion>
     <IsPackable>false</IsPackable>
   </PropertyGroup>
@@ -18,11 +19,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Costura.Fody" Version="6.2.0">
-      <PrivateAssets>all</PrivateAssets>
-     
-    </PackageReference>
-	<PackageReference Include="System.CommandLine" Version="2.0.8" />
+	<PackageReference Include="System.CommandLine" Version="2.0.13" />
   </ItemGroup>
 
   <ItemGroup>
@@ -33,13 +30,9 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="CsvHelper" Version="33.1.0" />
-    <PackageReference Include="Exceptionless" Version="6.1.0" />
-    
-    <PackageReference Include="Fody" Version="6.9.3">
-      <PrivateAssets>all</PrivateAssets>
-    </PackageReference>
-    <PackageReference Include="Serilog" Version="4.3.1" />
+    <PackageReference Include="Exceptionless" Version="6.2.0" />
+    <PackageReference Include="Serilog" Version="4.4.0" />
     <PackageReference Include="Serilog.Sinks.Console" Version="6.1.1" />
-    <PackageReference Include="ServiceStack.Text" Version="10.0.6" />
+    <PackageReference Include="ServiceStack.Text" Version="10.4.0" />
   </ItemGroup>
 </Project>

@@ -36,4 +36,16 @@ public class DriverPackage
     public string SubmissionId { get; }
     public string SYSFILE { get; }
     public string Version { get; }
+
+    /// <summary>DriverPackageStrongName as Windows recorded it</summary>
+    public string DriverPackageStrongName { get; set; } = string.Empty;
+
+    /// <summary>FlightIds as Windows recorded it</summary>
+    public string FlightIds { get; set; } = string.Empty;
+
+    /// <summary>RecoveryIds as Windows recorded it</summary>
+    public string RecoveryIds { get; set; } = string.Empty;
+
+    /// <summary>IsActive as Windows recorded it</summary>
+    public string IsActive { get; set; } = string.Empty;
 }

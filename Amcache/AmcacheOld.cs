@@ -50,7 +50,7 @@ public class AmcacheOld
         {
             reg = new RegistryHive(hive)
             {
-                RecoverDeleted = true
+                RecoverDeleted = recoverDeleted
             };
         }
         catch (IOException)
@@ -68,7 +68,7 @@ public class AmcacheOld
             var files = new List<string>();
             files.Add(hive);
 
-            var logFiles = Directory.GetFiles(dirname, $"{hiveBase}.LOG?");
+            var logFiles = Helper.LogFiles(dirname, hiveBase);
 
             foreach (var logFile in logFiles)
             {
@@ -81,10 +81,15 @@ public class AmcacheOld
 
             rawFiles.First().FileStream.Read(b, 0, (int) rawFiles.First().FileStream.Length);
 
-            reg = new RegistryHive(b,rawFiles.First().InputFilename);
+            reg = new RegistryHive(b, rawFiles.First().InputFilename)
+            {
+                RecoverDeleted = recoverDeleted
+            };
         }
 
-        if (reg.Header.PrimarySequenceNumber != reg.Header.SecondarySequenceNumber)
+        //dirty: the sequence numbers differ, or the header's checksum is wrong and there are logs to take it from
+        if (reg.Header.PrimarySequenceNumber != reg.Header.SecondarySequenceNumber ||
+            reg.Header.ValidateCheckSum() == false && Helper.LogFiles(dirname, hiveBase).Count > 0)
         {
                 
             if (string.IsNullOrEmpty(dirname))
@@ -92,9 +97,9 @@ public class AmcacheOld
                 dirname = ".";
             }
 
-            var logFiles = Directory.GetFiles(dirname, $"{hiveBase}.LOG?");
+            var logFiles = Helper.LogFiles(dirname, hiveBase);
 
-            if (logFiles.Length == 0)
+            if (logFiles.Count == 0)
             {
                 if (noLogs == false)
                 {
@@ -128,7 +133,7 @@ public class AmcacheOld
                     }
                     else
                     {
-                        reg.ProcessTransactionLogs(logFiles.ToList(),true);    
+                        reg.ProcessTransactionLogs(logFiles,true);    
                     }
                 }
                 else

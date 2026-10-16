@@ -67,4 +67,31 @@ public class DevicePnp
     public string Provider { get; }
     public string Service { get; }
     public string Stackid { get; }
+
+    /// <summary>InstallDate as Windows recorded it</summary>
+    public string InstallDate { get; set; } = string.Empty;
+
+    /// <summary>FirstInstallDate as Windows recorded it</summary>
+    public string FirstInstallDate { get; set; } = string.Empty;
+
+    /// <summary>ExtendedInfs as Windows recorded it</summary>
+    public string ExtendedInfs { get; set; } = string.Empty;
+
+    /// <summary>UpperClassFilters as Windows recorded it</summary>
+    public string UpperClassFilters { get; set; } = string.Empty;
+
+    /// <summary>LowerClassFilters as Windows recorded it</summary>
+    public string LowerClassFilters { get; set; } = string.Empty;
+
+    /// <summary>UpperFilters as Windows recorded it</summary>
+    public string UpperFilters { get; set; } = string.Empty;
+
+    /// <summary>LowerFilters as Windows recorded it</summary>
+    public string LowerFilters { get; set; } = string.Empty;
+
+    /// <summary>DeviceInterfaceClasses as Windows recorded it</summary>
+    public string DeviceInterfaceClasses { get; set; } = string.Empty;
+
+    /// <summary>LocationPaths as Windows recorded it</summary>
+    public string LocationPaths { get; set; } = string.Empty;
 }

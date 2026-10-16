@@ -73,4 +73,13 @@ public class ProgramsEntryNew
 
     public DateTimeOffset KeyLastWriteTimestamp { get; }
     public List<FileEntryNew> FileEntries { get; }
+
+    /// <summary>The key name (hive) or ItemKey (databases), the ProgramId</summary>
+    public string KeyName { get; set; } = string.Empty;
+
+    /// <summary>The SIDs of the users the program was installed for, separated by ;</summary>
+    public string UserSid { get; set; } = string.Empty;
+
+    /// <summary>The MSI install date</summary>
+    public DateTimeOffset? MsiInstallDate { get; set; }
 }

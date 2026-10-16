@@ -89,4 +89,16 @@ public class FileEntryNew
     public string OriginalFileName { get; }
 
     public DateTimeOffset FileKeyLastWriteTimestamp { get; }
+
+    /// <summary>The file's SHA-256, when Windows recorded one (databases from Windows 11 26H1 on)</summary>
+    public string Sha256 { get; set; } = string.Empty;
+
+    /// <summary>The key name (hive) or ItemKey (databases): the first 16 characters of the name, |, a hash of the path</summary>
+    public string KeyName { get; set; } = string.Empty;
+
+    /// <summary>The package of a packaged (Store) app's file</summary>
+    public string AppxPackageFullName { get; set; } = string.Empty;
+
+    /// <summary>The application id in the package</summary>
+    public string AppxPackageRelativeId { get; set; } = string.Empty;
 }

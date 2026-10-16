@@ -11,6 +11,36 @@ namespace Amcache;
 
 public static class Helper
 {
+    /// <summary>
+    ///     The hive's transaction logs next to it that aren't empty: .LOG (Windows 8 and earlier), .LOG1 and .LOG2, in
+    ///     any case (the file system may be case sensitive)
+    /// </summary>
+    public static List<string> LogFiles(string directory, string hiveName)
+    {
+        var logs = new List<string>();
+        if (string.IsNullOrEmpty(directory))
+        {
+            directory = ".";
+        }
+
+        foreach (var file in Directory.GetFiles(directory))
+        {
+            var name = Path.GetFileName(file);
+            if (name.Length > hiveName.Length + 5 || name.StartsWith(hiveName + ".LOG", StringComparison.OrdinalIgnoreCase) == false)
+            {
+                continue;
+            }
+
+            var suffix = name.Substring(hiveName.Length + 4);
+            if ((suffix == "" || suffix == "1" || suffix == "2") && new FileInfo(file).Length > 0)
+            {
+                logs.Add(file);
+            }
+        }
+
+        return logs.OrderBy(t => t, StringComparer.OrdinalIgnoreCase).ToList();
+    }
+
     public static bool IsNewFormat(string file, bool noLog)
     {
         RegistryKey fileKey = null;
@@ -42,7 +72,7 @@ public static class Helper
                 var files = new List<string>();
                 files.Add(file);
 
-                var logFiles = Directory.GetFiles(dirname, $"{hiveBase}.LOG?");
+                var logFiles = Helper.LogFiles(dirname, hiveBase);
 
                 foreach (var logFile in logFiles)
                 {
@@ -61,16 +91,18 @@ public static class Helper
             
             //LogManager.DisableLogging();
 
-            if (reg.Header.PrimarySequenceNumber != reg.Header.SecondarySequenceNumber)
+            //dirty: the sequence numbers differ, or the header's checksum is wrong and there are logs to take it from
+        if (reg.Header.PrimarySequenceNumber != reg.Header.SecondarySequenceNumber ||
+            reg.Header.ValidateCheckSum() == false && Helper.LogFiles(dirname, hiveBase).Count > 0)
             {
                 if (string.IsNullOrEmpty(dirname))
                 {
                     dirname = ".";
                 }
 
-                var logFiles = Directory.GetFiles(dirname, $"{hiveBase}.LOG?");
+                var logFiles = Helper.LogFiles(dirname, hiveBase);
 
-                if (logFiles.Length == 0 || noLog)
+                if (logFiles.Count == 0 || noLog)
                 {
                     //var log = LogManager.GetCurrentClassLogger();
 
@@ -101,7 +133,7 @@ public static class Helper
                     }
                     else
                     {
-                        reg.ProcessTransactionLogs(logFiles.ToList(),true);    
+                        reg.ProcessTransactionLogs(logFiles,true);    
                     }
                 }
             }
