@@ -21,7 +21,7 @@
   </PropertyGroup>
   
   <ItemGroup>
-    <PackageReference Include="ERZHelpers" Version="2026.5.3" />
+    <PackageReference Include="ERZHelpers" Version="2026.10.0" />
 
     <PackageReference Include="CsvHelper" Version="33.1.0" />
     <PackageReference Include="Microsoft.Data.Sqlite" Version="10.0.13" />
