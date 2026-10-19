@@ -33,6 +33,8 @@
       -?, -h, --help  Show help and usage information
       --version       Show version information
 
+See [LINUX.md](LINUX.md) for Linux and macOS.
+
 ## Documentation
 
 This program is different from other Amcache parsers in that it does not dump everything available. Rather, it looks at both File entries and Program entries.
