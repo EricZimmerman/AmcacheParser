@@ -13,7 +13,7 @@ namespace Amcache;
 
 /// <summary>
 ///     The Windows 10 and later format: the Root\Inventory* keys of Amcache.hve, or (from Windows 11 26H1/26H2 on) the
-///     Inventory*.db SQLite databases next to it (see <see cref="FromDatabases" />). Both are read with the same logic:
+///     Inventory*.db SQLite databases next to it (see <see cref="FromDatabases(string)" />). Both are read with the same logic:
 ///     a database column is the registry value of the same name, and a row (by ItemKey) is a key
 /// </summary>
 public partial class AmcacheNew

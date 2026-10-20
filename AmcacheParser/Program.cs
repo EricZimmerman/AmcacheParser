@@ -111,6 +111,11 @@ internal class Program
             DefaultValueFactory = _ => false
         };
 
+        var tempOpt = new Option<string>("--temp")
+        {
+            Description = TempFolder.Help
+        };
+
         var debugOpt = new Option<bool>("--debug")
         {
             Description = "Show debug information during processing",
@@ -133,6 +138,7 @@ internal class Program
             dtOpt,
             mpOpt,
             nlOpt,
+            tempOpt,
             debugOpt,
             traceOpt
         };
@@ -141,7 +147,7 @@ internal class Program
 
         _rootCommand.SetAction(result => DoWork(result.GetValue(fOpt), result.GetValue(iOpt), result.GetValue(wOpt),
             result.GetValue(bOpt), result.GetValue(csvOpt), result.GetValue(csvfOpt), result.GetValue(dtOpt),
-            result.GetValue(mpOpt),result.GetValue(nlOpt),result.GetValue(debugOpt),result.GetValue(traceOpt)));
+            result.GetValue(mpOpt),result.GetValue(nlOpt),result.GetValue(tempOpt),result.GetValue(debugOpt),result.GetValue(traceOpt)));
             
 
         var exitCode = await _rootCommand.Parse(args).InvokeAsync();
@@ -182,7 +188,7 @@ internal class Program
     }
 
     /// <returns>0, or 1 for bad arguments, a hive or database that could not be read, or no data</returns>
-    private static int DoWork(string f,bool i,string w,string b, string csv,string csvf,string dt,bool mp,bool nl,bool debug,bool trace)
+    private static int DoWork(string f,bool i,string w,string b, string csv,string csvf,string dt,bool mp,bool nl,string temp,bool debug,bool trace)
     {
         var levelSwitch = new LoggingLevelSwitch();
 
@@ -285,6 +291,20 @@ internal class Program
         Log.Information("Amcache data found: {Found}",found.Count == 0 ? "none" : string.Join(" and ", found));
         Console.WriteLine();
 
+        //the databases are read from copies, made in --temp or Temp next to AmcacheParser (never the user's %TEMP%)
+        string tempFolder = null;
+        var tempCreated = false;
+        if (hasDatabases)
+        {
+            tempFolder = TempFolder.Prepare(temp, out tempCreated, out var tempError);
+            if (tempFolder == null)
+            {
+                Log.Error("The folder for the temporary copies of the databases can't be written to ({Error}). Give one with --temp. Exiting", tempError);
+                Console.WriteLine();
+                return 1;
+            }
+        }
+
         try
         {
             if (hiveGiven == false || hasDatabases || Helper.IsNewFormat(f, nl))
@@ -372,7 +392,15 @@ internal class Program
                     Console.WriteLine();
                     Log.Information("Processing the Amcache databases in {Directory}",databaseDirectory);
 
-                    var amDb = AmcacheNew.FromDatabases(databaseDirectory);
+                    AmcacheNew amDb;
+                    try
+                    {
+                        amDb = AmcacheNew.FromDatabases(databaseDirectory, tempFolder);
+                    }
+                    finally
+                    {
+                        TempFolder.RemoveIfEmpty(tempFolder, tempCreated);
+                    }
 
                     if (WriteNewFormat(amDb, databaseDirectory, hiveName1 + "_Databases", "_Databases", ts1, csv, csvf, dt, i, whitelistHashes1, useBlacklist2, b) == false)
                     {

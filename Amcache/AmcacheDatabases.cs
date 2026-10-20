@@ -23,11 +23,18 @@ public partial class AmcacheNew
 
     /// <summary>
     ///     Reads the Amcache databases in a folder (C:\Windows\AppCompat\Programs, next to Amcache.hve). Each database is
-    ///     copied (with its -wal and -journal) to a temporary folder and only the copy is opened, so nothing is written
-    ///     next to the evidence. A row is read as the hive key of the same name (ItemKey) with its columns as values, and
-    ///     LastModified as the key's last write time
+    ///     copied (with its -wal and -journal) to a new folder in the system's temporary folder and only the copy is
+    ///     opened, so nothing is written next to the evidence. A row is read as the hive key of the same name (ItemKey)
+    ///     with its columns as values, and LastModified as the key's last write time
     /// </summary>
-    public static AmcacheNew FromDatabases(string directory)
+    public static AmcacheNew FromDatabases(string directory) => FromDatabases(directory, null);
+
+    /// <summary>
+    ///     As <see cref="FromDatabases(string)" />, with the copies of the databases made in new folders in
+    ///     <paramref name="tempDirectory" /> (which must exist; null: the system's temporary folder), each deleted when
+    ///     the database has been read
+    /// </summary>
+    public static AmcacheNew FromDatabases(string directory, string tempDirectory)
     {
         var am = new AmcacheNew();
         var reporter = new DatabaseReporter();
@@ -41,7 +48,7 @@ public partial class AmcacheNew
                 return new List<InventoryItem>();
             }
 
-            var table = ReadDatabase(path, am.OtherTables, true);
+            var table = ReadDatabase(path, am.OtherTables, true, tempDirectory);
             return table == null ? new List<InventoryItem>() : ToItems(table, name);
         }
 
@@ -62,7 +69,7 @@ public partial class AmcacheNew
                 continue;
             }
 
-            var table = ReadDatabase(path, am.OtherTables, false);
+            var table = ReadDatabase(path, am.OtherTables, false, tempDirectory);
             if (table != null)
             {
                 am.OtherTables.Add(table);
@@ -78,7 +85,7 @@ public partial class AmcacheNew
     ///     A database's table (the one that isn't Metadata_N), newest row per ItemKey. Its Metadata_N rows go to the
     ///     shared Metadata table in <paramref name="otherTables" />
     /// </summary>
-    private static DatabaseTable ReadDatabase(string path, List<DatabaseTable> otherTables, bool typed)
+    private static DatabaseTable ReadDatabase(string path, List<DatabaseTable> otherTables, bool typed, string tempDirectory)
     {
         var fileName = Path.GetFileName(path);
 
@@ -90,7 +97,7 @@ public partial class AmcacheNew
 
         try
         {
-            using var db = SqliteCopy.Open(path);
+            using var db = SqliteCopy.Open(path, tempDirectory);
 
             var check = db.QuickCheck();
             if (check != "ok")
@@ -331,7 +338,7 @@ public partial class AmcacheNew
         }
     }
 
-    /// <summary>A database copied (with its -wal and -journal) to a temporary folder, deleted when disposed</summary>
+    /// <summary>A database copied (with its -wal and -journal) to a new folder in a temporary folder, deleted when disposed</summary>
     private sealed class SqliteCopy : IDisposable
     {
         private readonly SqliteConnection _connection;
@@ -343,9 +350,9 @@ public partial class AmcacheNew
             _connection = connection;
         }
 
-        public static SqliteCopy Open(string path)
+        public static SqliteCopy Open(string path, string tempDirectory)
         {
-            var folder = Path.Combine(Path.GetTempPath(), "AmcacheParser-" + Guid.NewGuid().ToString("N"));
+            var folder = Path.Combine(tempDirectory ?? Path.GetTempPath(), "AmcacheParser-" + Guid.NewGuid().ToString("N"));
             Directory.CreateDirectory(folder);
 
             try

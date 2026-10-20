@@ -22,6 +22,13 @@ public class CliTests : TestData
             UseShellExecute = false,
             WorkingDirectory = Dir
         };
+        //the user's temp folder: an empty one, which must stay empty (the copies go to --temp or Temp next to AmcacheParser)
+        Directory.CreateDirectory(SystemTemp);
+        foreach (var name in new[] { "TEMP", "TMP", "TMPDIR" })
+        {
+            start.Environment[name] = SystemTemp;
+        }
+
         start.ArgumentList.Add(Path.Combine(TestContext.CurrentContext.TestDirectory, "AmcacheParser.dll"));
         foreach (var arg in args)
         {
@@ -34,10 +41,77 @@ public class CliTests : TestData
         process.StandardInput.Close();
 
         process.WaitForExit(300_000).Should().BeTrue("AmcacheParser should finish");
+        Directory.GetFileSystemEntries(SystemTemp).Should().BeEmpty("nothing goes to the user's temp folder");
+        if (Directory.Exists(TempNextToProgram))
+        {
+            Directory.GetDirectories(TempNextToProgram, "AmcacheParser-*").Should().BeEmpty("the copies are deleted");
+        }
         return (process.ExitCode, stdout.Result + stderr.Result);
     }
 
     private string Out => Path.Combine(Dir, "out");
+
+    private string SystemTemp => Path.Combine(Dir, "systemp");
+
+    private static string TempNextToProgram => Path.Combine(TestContext.CurrentContext.TestDirectory, "Temp");
+
+    private string ProgramsFolder()
+    {
+        Database("InventoryApplicationFile", new[] { FileRow("a.exe|1", @"c:\a.exe") }, "Programs");
+        return Path.Combine(Dir, "Programs");
+    }
+
+    [Test]
+    public void CopiesGoToTempNextToTheProgram()
+    {
+        var existed = Directory.Exists(TempNextToProgram);
+
+        var (code, output) = Run("-f", ProgramsFolder(), "--csv", Out);
+
+        code.Should().Be(0, output);
+        //the copies' folders are deleted, and Temp too when this run made it and it is empty
+        if (Directory.Exists(TempNextToProgram))
+        {
+            existed.Should().BeTrue("Temp is removed when the run created it and it is empty");
+            Directory.GetDirectories(TempNextToProgram, "AmcacheParser-*").Should().BeEmpty();
+        }
+    }
+
+    [Test]
+    public void CopiesGoToTheTempGiven()
+    {
+        var programs = ProgramsFolder();
+        var temp = Directory.CreateDirectory(Path.Combine(Dir, "my temp")).FullName;
+
+        var (code, output) = Run("-f", programs, "--csv", Out, "--temp", temp);
+
+        code.Should().Be(0, output);
+        Directory.Exists(temp).Should().BeTrue("a folder that was there is kept");
+        Directory.GetFileSystemEntries(temp).Should().BeEmpty("the copies are deleted when done");
+
+        //one that wasn't there is created, and removed again
+        var newTemp = Path.Combine(Dir, "new temp");
+        Run("-f", programs, "--csv", Out, "--temp", newTemp).ExitCode.Should().Be(0);
+        Directory.Exists(newTemp).Should().BeFalse();
+    }
+
+    [Test]
+    public void TempThatCantBeWrittenStops()
+    {
+        var programs = ProgramsFolder();
+        //a folder under a file can't be created
+        var file = Path.Combine(Dir, "a file");
+        File.WriteAllText(file, "x");
+
+        var (code, output) = Run("-f", programs, "--csv", Out, "--temp", Path.Combine(file, "temp"));
+
+        code.Should().Be(1, output);
+        output.Should().Contain("Give one with --temp");
+        Directory.Exists(Out).Should().BeFalse("nothing was processed");
+
+        //a hive alone needs no copies, so no temp folder
+        Run("-f", MuseumHive("Win10/APTSimulatorVM"), "--csv", Out, "--temp", Path.Combine(file, "temp")).ExitCode.Should().Be(0);
+    }
 
     private string[] Header(string file) => File.ReadLines(Path.Combine(Out, file)).First().Split(',');
 
