@@ -290,6 +290,7 @@ public class AmcacheOld
             }
             catch (Exception ex)
             {
+                EntriesNotParsed += 1;
                 Log.Error(ex,"Error parsing ProgramsEntry at {KeyPath}. Error: {Message}",registryKey.KeyPath,ex.Message);
                 Log.Error("Please send the following text to {Email}","saericzimmerman@gmail.com");
                 Log.Error("Key data: {RegistryKey}",registryKey);
@@ -460,6 +461,7 @@ public class AmcacheOld
                 }
                 catch (Exception ex)
                 {
+                    EntriesNotParsed += 1;
                     Log.Error(ex,"Error parsing FileEntry at {KeyPath}. Error: {Message}",subKey.KeyPath,ex.Message);
                     Log.Error("Please send the following text to {Email}","saericzimmerman@gmail.com");
                     Log.Error("Key data: {SubKey}",subKey);
@@ -472,4 +474,7 @@ public class AmcacheOld
     public List<ProgramsEntryOld> ProgramsEntries { get; }
 
     public int TotalFileEntries { get; }
+
+    /// <summary>Keys that could not be parsed and were left out</summary>
+    public int EntriesNotParsed { get; private set; }
 }

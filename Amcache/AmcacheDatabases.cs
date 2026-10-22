@@ -38,6 +38,7 @@ public partial class AmcacheNew
     {
         var am = new AmcacheNew();
         var reporter = new DatabaseReporter();
+        var notRead = 0;
 
         List<InventoryItem> Items(string name)
         {
@@ -48,7 +49,7 @@ public partial class AmcacheNew
                 return new List<InventoryItem>();
             }
 
-            var table = ReadDatabase(path, am.OtherTables, true, tempDirectory);
+            var table = ReadDatabase(path, am.OtherTables, true, tempDirectory, ref notRead);
             return table == null ? new List<InventoryItem>() : ToItems(table, name);
         }
 
@@ -69,7 +70,7 @@ public partial class AmcacheNew
                 continue;
             }
 
-            var table = ReadDatabase(path, am.OtherTables, false, tempDirectory);
+            var table = ReadDatabase(path, am.OtherTables, false, tempDirectory, ref notRead);
             if (table != null)
             {
                 am.OtherTables.Add(table);
@@ -78,6 +79,9 @@ public partial class AmcacheNew
 
         reporter.Flush();
 
+        am.EntriesNotParsed = reporter.Errors;
+        am.DatabasesNotRead = notRead;
+
         return am;
     }
 
@@ -85,7 +89,7 @@ public partial class AmcacheNew
     ///     A database's table (the one that isn't Metadata_N), newest row per ItemKey. Its Metadata_N rows go to the
     ///     shared Metadata table in <paramref name="otherTables" />
     /// </summary>
-    private static DatabaseTable ReadDatabase(string path, List<DatabaseTable> otherTables, bool typed, string tempDirectory)
+    private static DatabaseTable ReadDatabase(string path, List<DatabaseTable> otherTables, bool typed, string tempDirectory, ref int notRead)
     {
         var fileName = Path.GetFileName(path);
 
@@ -139,6 +143,7 @@ public partial class AmcacheNew
         catch (Exception ex)
         {
             Log.Error("{Database} could not be read: {Message}", fileName, ex.Message);
+            notRead += 1;
             return null;
         }
     }
@@ -290,6 +295,8 @@ public partial class AmcacheNew
         private readonly Dictionary<string, SortedSet<string>> _unknown = new();
         private readonly Dictionary<string, int> _errors = new();
 
+        public int Errors { get; private set; }
+
         public void NotTracked(string category, InventoryItem item, InventoryValue value) =>
             Add(_notTracked, category, value.ValueName);
 
@@ -300,6 +307,7 @@ public partial class AmcacheNew
         {
             _errors.TryGetValue(category, out var count);
             _errors[category] = count + 1;
+            Errors += 1;
 
             if (count < MaxErrors)
             {

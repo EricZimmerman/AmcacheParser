@@ -19,7 +19,7 @@ Input may be corrupt or hostile.
 - A date that doesn't parse (Discord writes `53/16/2024`; some MSI dates hold two dates) is left empty and counted (`InvalidDates`), instead of losing the entry.
 - Times are UTC in the `--dt` format, including the FILETIMEs in the Metadata CSV (`lastFullSync`, `LastScanTime`, ...).
 - Transaction logs: `Helper.LogFiles` (`.LOG`, `.LOG1`, `.LOG2`, any case, not empty). Dirty: sequence numbers differ, or the header checksum is wrong and there are logs.
-- Exit codes: 0, or 1 for bad arguments, a hive or database that could not be read, or no data.
+- Exit codes: 0, or 1 for bad arguments, a hive or database that could not be read (`DatabasesNotRead`), entries (keys or rows) that could not be parsed (`EntriesNotParsed`, deleted keys not counted), a failed export, or no data.
 
 ## Commands
 

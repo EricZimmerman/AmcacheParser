@@ -207,6 +207,8 @@ public partial class AmcacheNew
         {
             AddDriverPackages(packageKey.SubKeys.Select(FromKey), reporter);
         }
+
+        EntriesNotParsed = reporter.Errors;
     }
 
     public List<FileEntryNew> UnassociatedFileEntries { get; }
@@ -225,6 +227,12 @@ public partial class AmcacheNew
 
     /// <summary>Dates that could not be read (two dates in one value, or none at all) and were left empty</summary>
     public int InvalidDates { get; private set; }
+
+    /// <summary>Entries (keys or rows) that could not be parsed and were left out (deleted keys in a hive not counted)</summary>
+    public int EntriesNotParsed { get; private set; }
+
+    /// <summary>Databases only: the databases that could not be read at all (an empty one is not counted)</summary>
+    public int DatabasesNotRead { get; private set; }
 
     /// <summary>
     ///     Databases only: the tables (and the Metadata tables) that have no class here, as they are. Empty for a hive
@@ -1189,11 +1197,16 @@ public partial class AmcacheNew
         void NotTracked(string category, InventoryItem item, InventoryValue value);
         void Unknown(string category, InventoryItem item, InventoryValue value, bool onlyWhenNotDeleted);
         void Error(string category, InventoryItem item, Exception ex);
+
+        /// <summary>The errors reported (deleted keys in a hive not counted)</summary>
+        int Errors { get; }
     }
 
     /// <summary>As the hive was always reported: per key</summary>
     private sealed class HiveReporter : IReporter
     {
+        public int Errors { get; private set; }
+
         public void NotTracked(string category, InventoryItem item, InventoryValue value)
         {
             if (category == "InventoryApplication")
@@ -1227,6 +1240,8 @@ public partial class AmcacheNew
             {
                 return;
             }
+
+            Errors += 1;
 
             Log.Error(ex,"Error parsing {Category} at {KeyPath}. Error: {Message}",category,item.KeyPath,ex.Message);
             Log.Error("Please send the following text to {Email}","saericzimmerman@gmail.com");

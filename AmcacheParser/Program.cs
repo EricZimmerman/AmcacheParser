@@ -383,7 +383,12 @@ internal class Program
                             {
                                 return 1;
                             }
+
+                            failed |= amOld.EntriesNotParsed > 0;
                         }
+
+                        //entries that could not be parsed were left out
+                        failed |= amNew.EntriesNotParsed > 0;
                     }
                 }
 
@@ -408,6 +413,9 @@ internal class Program
                     }
 
                     WriteDatabaseTables(amDb.OtherTables, hiveName1 + "_Databases", "_Databases", ts1, csv, csvf, dt);
+
+                    //a database that could not be read, or rows that could not be parsed
+                    failed |= amDb.DatabasesNotRead > 0 || amDb.EntriesNotParsed > 0;
                 }
                 else if (hiveGiven == false)
                 {
@@ -494,6 +502,12 @@ internal class Program
             Console.WriteLine();
             Log.Information("Total parsing time: {TotalSeconds:N3} seconds",_sw.Elapsed.TotalSeconds);
             Console.WriteLine();
+
+            //keys that could not be parsed were left out
+            if (am.EntriesNotParsed > 0)
+            {
+                return 1;
+            }
         }
         catch (Exception ex)
         {

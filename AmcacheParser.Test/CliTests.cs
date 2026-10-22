@@ -207,5 +207,8 @@ public class CliTests : TestData
         Run("--csv", Out).ExitCode.Should().Be(1, "-f is required");
         Run("-f", MuseumHive("Win10/APTSimulatorVM", false, "dirty"), "--csv", Out).ExitCode.Should().Be(1, "the hive is dirty and has no logs");
         Run("-f", Directory.CreateDirectory(Path.Combine(Dir, "empty")).FullName, "--csv", Out).ExitCode.Should().Be(1, "no hive and no databases");
+        var notADatabase = Directory.CreateDirectory(Path.Combine(Dir, "notadb")).FullName;
+        File.WriteAllText(Path.Combine(notADatabase, "InventoryApplication.db"), "not a database at all, but long enough to look like one");
+        Run("-f", notADatabase, "--csv", Out).ExitCode.Should().Be(1, "a database could not be read");
     }
 }
