@@ -6,7 +6,7 @@
     <Company>Eric Zimmerman</Company>
     <Product>AmcacheParser</Product>
     <Description>Parses Amcache.hve and the Amcache SQLite databases</Description>
-    <Copyright>Eric Zimmerman</Copyright>
+    <Copyright>Eric R. Zimmerman 2027</Copyright>
     <Version>2026.10.0</Version>
     <LangVersion>10</LangVersion>
     <IsPackable>false</IsPackable>
