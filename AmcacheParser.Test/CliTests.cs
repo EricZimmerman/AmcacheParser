@@ -206,9 +206,47 @@ public class CliTests : TestData
         Run("-f", MuseumHive("Win10/APTSimulatorVM")).ExitCode.Should().Be(1, "--csv is required");
         Run("--csv", Out).ExitCode.Should().Be(1, "-f is required");
         Run("-f", MuseumHive("Win10/APTSimulatorVM", false, "dirty"), "--csv", Out).ExitCode.Should().Be(1, "the hive is dirty and has no logs");
-        Run("-f", Directory.CreateDirectory(Path.Combine(Dir, "empty")).FullName, "--csv", Out).ExitCode.Should().Be(1, "no hive and no databases");
+        //1 is for the tool failing; damaged files are listed, but exit with 0
+        Run("-f", Directory.CreateDirectory(Path.Combine(Dir, "empty")).FullName, "--csv", Out).ExitCode.Should().Be(0, "no hive and no databases: nothing to do");
         var notADatabase = Directory.CreateDirectory(Path.Combine(Dir, "notadb")).FullName;
         File.WriteAllText(Path.Combine(notADatabase, "InventoryApplication.db"), "not a database at all, but long enough to look like one");
-        Run("-f", notADatabase, "--csv", Out).ExitCode.Should().Be(1, "a database could not be read");
+        var (code, output) = Run("-f", notADatabase, "--csv", Out);
+        code.Should().Be(0, "a damaged database is not the tool's fault");
+        output.Should().Contain("InventoryApplication.db could not be read");
+
+        var random = Path.Combine(Dir, "random.hve");
+        File.WriteAllBytes(random, Enumerable.Range(0, 8192).Select(t => (byte)(t * 7919 % 251)).ToArray());
+        Run("-f", random, "--csv", Out).ExitCode.Should().Be(0, "a damaged hive is not the tool's fault");
+    }
+
+    [Test]
+    public void OutputThatCantBeWrittenIsAnError()
+    {
+        //--csv is a file, so the folder can't be created
+        var file = Path.Combine(Dir, "a file");
+        File.WriteAllText(file, "x");
+
+        var (code, output) = Run("-f", MuseumHive("Win10/APTSimulatorVM"), "--csv", file);
+        code.Should().Be(1, output);
+
+        (code, output) = Run("-f", ProgramsFolder(), "--csv", file);
+        code.Should().Be(1, output);
+    }
+
+    [Test]
+    public void DatabaseThatCantBeOpenedIsAnError()
+    {
+        if (OperatingSystem.IsWindows() == false)
+        {
+            Assert.Ignore("Locking a file for everyone else is Windows only");
+        }
+
+        var programs = ProgramsFolder();
+        using (new FileStream(Path.Combine(programs, "InventoryApplicationFile.db"), FileMode.Open, FileAccess.Read, FileShare.None))
+        {
+            var (code, output) = Run("-f", programs, "--csv", Out);
+            code.Should().Be(1, output);
+            output.Should().Contain("InventoryApplicationFile.db could not be read");
+        }
     }
 }

@@ -360,7 +360,8 @@ internal class Program
                     {
                         //the databases can still be read
                         Log.Error("{F} could not be read: {Message}",f,ex.Message);
-                        failed = true;
+                        //a damaged hive is not the tool's fault (0); one it could not access is (1)
+                        failed |= CouldNotProcess(ex);
                     }
 
                     if (amNew != null)
@@ -383,12 +384,9 @@ internal class Program
                             {
                                 return 1;
                             }
-
-                            failed |= amOld.EntriesNotParsed > 0;
                         }
 
-                        //entries that could not be parsed were left out
-                        failed |= amNew.EntriesNotParsed > 0;
+                        //entries that could not be parsed were left out and listed (a damaged hive: exit code 0)
                     }
                 }
 
@@ -414,13 +412,14 @@ internal class Program
 
                     WriteDatabaseTables(amDb.OtherTables, hiveName1 + "_Databases", "_Databases", ts1, csv, csvf, dt);
 
-                    //a database that could not be read, or rows that could not be parsed
-                    failed |= amDb.DatabasesNotRead > 0 || amDb.EntriesNotParsed > 0;
+                    //a database that could not be opened or copied (access, IO); damaged ones and rows that could not be
+                    //parsed are listed, but are not the tool's fault (exit code 0)
+                    failed |= amDb.DatabasesNotAccessed > 0;
                 }
                 else if (hiveGiven == false)
                 {
+                    //nothing to do (exit code 0)
                     Log.Warning("No Amcache databases (Inventory*.db) found in {Directory}",databaseDirectory);
-                    failed = true;
                 }
 
                 _sw.Stop();
@@ -449,7 +448,7 @@ internal class Program
             {
                 Log.Warning("Hive did not contain program entries nor file entries. Exiting");
                 Console.WriteLine();
-                return 1;
+                return 0;
             }
 
             _sw.Stop();
@@ -503,11 +502,7 @@ internal class Program
             Log.Information("Total parsing time: {TotalSeconds:N3} seconds",_sw.Elapsed.TotalSeconds);
             Console.WriteLine();
 
-            //keys that could not be parsed were left out
-            if (am.EntriesNotParsed > 0)
-            {
-                return 1;
-            }
+            //keys that could not be parsed were left out and listed (a damaged hive: exit code 0)
         }
         catch (Exception ex)
         {
@@ -531,10 +526,30 @@ internal class Program
 
             }
 
-            return 1;
+            //a damaged hive is not the tool's fault (0); access, IO, output or a dirty hive without its logs is (1)
+            return CouldNotProcess(ex) ? 1 : 0;
         }
 
         return 0;
+    }
+
+    /// <summary>
+    ///     Exit code 1: the file could not be accessed or read (in use, access denied, IO errors, also when writing the
+    ///     output), or the hive is dirty and its logs are not there. Anything else is a damaged file (exit code 0)
+    /// </summary>
+    private static bool CouldNotProcess(Exception ex)
+    {
+        for (var e = ex; e != null; e = e.InnerException)
+        {
+            //EndOfStreamException is an IOException, but means a truncated file
+            if (e is IOException and not EndOfStreamException or UnauthorizedAccessException || e.Message.Contains("Administrator privileges not found") ||
+                e.Message.Contains("transaction logs were not found"))
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
     
     /// <summary>

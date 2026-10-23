@@ -235,6 +235,12 @@ public partial class AmcacheNew
     public int DatabasesNotRead { get; private set; }
 
     /// <summary>
+    ///     Databases only: of <see cref="DatabasesNotRead" />, the ones that could not be opened or copied (access denied,
+    ///     locked, IO errors), as opposed to damaged ones
+    /// </summary>
+    public int DatabasesNotAccessed { get; private set; }
+
+    /// <summary>
     ///     Databases only: the tables (and the Metadata tables) that have no class here, as they are. Empty for a hive
     /// </summary>
     public List<DatabaseTable> OtherTables { get; }

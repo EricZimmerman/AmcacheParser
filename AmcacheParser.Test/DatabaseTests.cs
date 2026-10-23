@@ -181,7 +181,8 @@ public class DatabaseTests : TestData
 
         am.ProgramsEntries.Should().BeEmpty();
         am.UnassociatedFileEntries.Should().ContainSingle();
-        am.DatabasesNotRead.Should().Be(1, "the exit code is 1 then");
+        am.DatabasesNotRead.Should().Be(1);
+        am.DatabasesNotAccessed.Should().Be(0, "it is damaged: exit code 0");
     }
 
     [Test]

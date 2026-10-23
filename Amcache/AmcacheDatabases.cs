@@ -39,6 +39,7 @@ public partial class AmcacheNew
         var am = new AmcacheNew();
         var reporter = new DatabaseReporter();
         var notRead = 0;
+        var notAccessed = 0;
 
         List<InventoryItem> Items(string name)
         {
@@ -49,7 +50,7 @@ public partial class AmcacheNew
                 return new List<InventoryItem>();
             }
 
-            var table = ReadDatabase(path, am.OtherTables, true, tempDirectory, ref notRead);
+            var table = ReadDatabase(path, am.OtherTables, true, tempDirectory, ref notRead, ref notAccessed);
             return table == null ? new List<InventoryItem>() : ToItems(table, name);
         }
 
@@ -70,7 +71,7 @@ public partial class AmcacheNew
                 continue;
             }
 
-            var table = ReadDatabase(path, am.OtherTables, false, tempDirectory, ref notRead);
+            var table = ReadDatabase(path, am.OtherTables, false, tempDirectory, ref notRead, ref notAccessed);
             if (table != null)
             {
                 am.OtherTables.Add(table);
@@ -81,6 +82,7 @@ public partial class AmcacheNew
 
         am.EntriesNotParsed = reporter.Errors;
         am.DatabasesNotRead = notRead;
+        am.DatabasesNotAccessed = notAccessed;
 
         return am;
     }
@@ -89,7 +91,7 @@ public partial class AmcacheNew
     ///     A database's table (the one that isn't Metadata_N), newest row per ItemKey. Its Metadata_N rows go to the
     ///     shared Metadata table in <paramref name="otherTables" />
     /// </summary>
-    private static DatabaseTable ReadDatabase(string path, List<DatabaseTable> otherTables, bool typed, string tempDirectory, ref int notRead)
+    private static DatabaseTable ReadDatabase(string path, List<DatabaseTable> otherTables, bool typed, string tempDirectory, ref int notRead, ref int notAccessed)
     {
         var fileName = Path.GetFileName(path);
 
@@ -144,6 +146,11 @@ public partial class AmcacheNew
         {
             Log.Error("{Database} could not be read: {Message}", fileName, ex.Message);
             notRead += 1;
+            if (ex is IOException or UnauthorizedAccessException)
+            {
+                notAccessed += 1;
+            }
+
             return null;
         }
     }
