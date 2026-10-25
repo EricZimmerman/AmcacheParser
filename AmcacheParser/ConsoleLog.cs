@@ -7,7 +7,8 @@ namespace AmcacheParser;
 /// <summary>--co (Issues #259): the console messages are also saved to &lt;yyyyMMddHHmmss&gt;_AmcacheParser_&lt;version&gt;_ConsoleLog.txt in the --csv directory</summary>
 internal static class ConsoleLog
 {
-    public const string Template = "[{Timestamp:HH:mm:ss.fff} {Level:u3}] {Message:lj}{NewLine}{Exception}";
+    //{Message:l}, not :lj: with j, enum values were in quotes (the console shows them without)
+    public const string Template = "[{Timestamp:HH:mm:ss.fff} {Level:u3}] {Message:l}{NewLine}{Exception}";
 
     /// <summary>The log file in the first output directory given (the time is UTC)</summary>
     /// <returns>null when no output directory was given or the path is not valid (the tool reports that itself)</returns>
