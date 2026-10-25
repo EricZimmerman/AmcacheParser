@@ -120,7 +120,7 @@ files for generating whitelists or blacklists.
   `MsiInstallDate` for programs.
 - .NET 10 only, with the native SQLite library next to it for Windows x64, Linux x64 and macOS on Apple silicon.
 - Exit code 1 when the tool fails (it was always 0). Error reports include source file and line numbers.
-- `--co` saves all console messages to `<yyyyMMddHHmmss>_AmcacheParser_<version>_ConsoleLog.txt` in the `--csv` directory (time in UTC; Issues #259) (2026.10.1).
+- `--co` saves all console messages to `<yyyyMMddHHmmss>_AmcacheParser_<version>_ConsoleLog.txt` in the `--csv` directory (time in UTC; Issues #259). `--debug` and `--trace` show the time of each message again (they showed the `--dt` date) (2026.10.1).
 
 The full list is in the [ChangeLog](https://ericzimmerman.github.io/changelog/).
 
