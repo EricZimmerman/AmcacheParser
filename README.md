@@ -42,7 +42,7 @@ Options:
   --temp <temp>   Folder for the temporary copies of the SQLite databases, which are opened instead of the evidence and deleted when done. Default: a Temp folder next to AmcacheParser. A folder that isn't there is created, and removed again when done. If that folder can't be written to, AmcacheParser stops: give a writable folder with --temp
   --debug         Show debug information during processing
   --trace         Show trace information during processing
-  --co            Save all console messages to <timestamp>_AmcacheParser_<version>_ConsoleLog.txt in the --csv directory
+  --co            When true, save all console messages to <timestamp>_AmcacheParser_<version>_ConsoleLog.txt in the --csv directory. Use --co false to turn it off
   -?, -h, --help  Show help and usage information
   --version       Show version information
 ```
@@ -73,7 +73,7 @@ There are three kinds of Amcache data, and AmcacheParser reads each it finds (th
   names), with every column the databases have. Every other database (InventoryInstaller, InventoryMiscellaneous, Mare,
   ...) gets a CSV with its columns as they are, and the `Metadata` tables of all of them one more.
 
-The CSVs are named `<timestamp>_<hive name>_<kind>.csv`: `UnassociatedFileEntries` always, `ProgramEntries` and
+The CSVs are named `<timestamp>_<hive name>_<kind>.csv` (the UTC time the run started, the same as the console log's): `UnassociatedFileEntries` always, `ProgramEntries` and
 `AssociatedFileEntries` with `-i`, and for the new format and the databases also `ShortCuts`, `DriverBinaries`,
 `DeviceContainers`, `DriverPackages` and `DevicePnps`. Times are UTC in the `--dt` format. A date that doesn't parse (an
 invalid program or driver date) is left empty instead of losing the entry.
@@ -120,7 +120,7 @@ files for generating whitelists or blacklists.
   `MsiInstallDate` for programs.
 - .NET 10 only, with the native SQLite library next to it for Windows x64, Linux x64 and macOS on Apple silicon.
 - Exit code 1 when the tool fails (it was always 0). Error reports include source file and line numbers.
-- `--co` saves all console messages to `<yyyyMMddHHmmss>_AmcacheParser_<version>_ConsoleLog.txt` in the `--csv` directory (time in UTC; Issues #259). `--debug` and `--trace` show the time of each message again (they showed the `--dt` date) (2026.10.1).
+- `--co` (on by default; `--co false` turns it off) saves all console messages to `<yyyyMMddHHmmss>_AmcacheParser_<version>_ConsoleLog.txt` in the `--csv` directory (time in UTC; Issues #259). CSV names use the UTC time, like the console log and the other tools (they used local time). `--debug` and `--trace` show the time of each message again (they showed the `--dt` date) (2026.10.1).
 
 The full list is in the [ChangeLog](https://ericzimmerman.github.io/changelog/).
 

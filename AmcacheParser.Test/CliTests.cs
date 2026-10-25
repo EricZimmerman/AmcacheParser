@@ -103,7 +103,7 @@ public class CliTests : TestData
         var file = Path.Combine(Dir, "a file");
         File.WriteAllText(file, "x");
 
-        var (code, output) = Run("-f", programs, "--csv", Out, "--temp", Path.Combine(file, "temp"));
+        var (code, output) = Run("-f", programs, "--csv", Out, "--temp", Path.Combine(file, "temp"), "--co", "false");
 
         code.Should().Be(1, output);
         output.Should().Contain("Give one with --temp");
@@ -118,7 +118,7 @@ public class CliTests : TestData
     [Test]
     public void NewFormatHive()
     {
-        var (code, output) = Run("-f", MuseumHive("Win10/APTSimulatorVM"), "--csv", Out, "--csvf", "a.csv", "-i");
+        var (code, output) = Run("-f", MuseumHive("Win10/APTSimulatorVM"), "--csv", Out, "--csvf", "a.csv", "-i", "--co", "false");
 
         code.Should().Be(0, output);
         output.Should().Contain("Amcache data found: registry hive (Amcache.hve)").And.Contain("is in new format (registry hive");
@@ -202,17 +202,21 @@ public class CliTests : TestData
     [Test]
     public void ConsoleLog()
     {
-        //Issues #259: --co saves the console messages to <yyyyMMddHHmmss>_AmcacheParser_<version>_ConsoleLog.txt in the --csv directory
+        //Issues #259: --co (on by default) saves the console messages to <yyyyMMddHHmmss>_AmcacheParser_<version>_ConsoleLog.txt in the --csv directory
         var hive = MuseumHive("Win10/APTSimulatorVM");
-        var (code, output) = Run("-f", hive, "--csv", Out, "--csvf", "a.csv");
+        var (code, output) = Run("-f", hive, "--csv", Out, "--csvf", "a.csv", "--co", "false");
         code.Should().Be(0, output);
-        Directory.GetFiles(Out, "*_ConsoleLog.txt").Should().BeEmpty("--co is off by default");
+        Directory.GetFiles(Out, "*_ConsoleLog.txt").Should().BeEmpty("--co false turns it off");
         output.Should().NotContain("Console log:");
 
-        (code, output) = Run("-f", hive, "--csv", Out, "--csvf", "a.csv", "--co");
+        Directory.Delete(Out, true);
+        (code, output) = Run("-f", hive, "--csv", Out);
         code.Should().Be(0, output);
-        var log = Directory.GetFiles(Out, "*_ConsoleLog.txt").Should().ContainSingle().Subject;
+        var log = Directory.GetFiles(Out, "*_ConsoleLog.txt").Should().ContainSingle("--co is on by default").Subject;
         Path.GetFileName(log).Should().MatchRegex(@"^\d{14}_AmcacheParser_\d+\.\d+\.\d+_ConsoleLog\.txt$");
+        //the CSV names have the same (UTC) time as the log
+        var ts = Path.GetFileName(log)[..14];
+        Directory.GetFiles(Out, "*.csv").Should().NotBeEmpty().And.OnlyContain(t => Path.GetFileName(t).StartsWith(ts + "_"));
         output.Should().Contain("Console log: " + log);
         var text = File.ReadAllText(log);
         text.Should().MatchRegex(@"\[\d\d:\d\d:\d\d\.\d{3} INF\] AmcacheParser version ");
