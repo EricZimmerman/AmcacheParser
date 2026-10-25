@@ -126,7 +126,12 @@ internal class Program
             Description = "Show trace information during processing",
             DefaultValueFactory = _ => false
         };
-        
+        var coOpt = new Option<bool>("--co")
+        {
+            Description = "Save all console messages to <timestamp>_AmcacheParser_<version>_ConsoleLog.txt in the --csv directory",
+            DefaultValueFactory = _ => false
+        };
+
         _rootCommand = new RootCommand
         {
             fOpt,
@@ -140,14 +145,15 @@ internal class Program
             nlOpt,
             tempOpt,
             debugOpt,
-            traceOpt
+            traceOpt,
+            coOpt
         };
             
         _rootCommand.Description = Header + "\r\n\r\n" +Footer;
 
         _rootCommand.SetAction(result => DoWork(result.GetValue(fOpt), result.GetValue(iOpt), result.GetValue(wOpt),
             result.GetValue(bOpt), result.GetValue(csvOpt), result.GetValue(csvfOpt), result.GetValue(dtOpt),
-            result.GetValue(mpOpt),result.GetValue(nlOpt),result.GetValue(tempOpt),result.GetValue(debugOpt),result.GetValue(traceOpt)));
+            result.GetValue(mpOpt),result.GetValue(nlOpt),result.GetValue(tempOpt),result.GetValue(debugOpt),result.GetValue(traceOpt),result.GetValue(coOpt)));
             
 
         var exitCode = await _rootCommand.Parse(args).InvokeAsync();
@@ -175,7 +181,8 @@ internal class Program
         {
             if (arg is DateTimeOffset dateTimeOffset)
             {
-                return dateTimeOffset.ToString(_activeDateTimeFormat);
+                //a format in the template ({Timestamp:HH:mm:ss.fff}) is kept: it was shown in --dt's format
+                return string.IsNullOrEmpty(format) ? dateTimeOffset.ToString(_activeDateTimeFormat) : dateTimeOffset.ToString(format, _innerFormatProvider);
             }
 
             if (arg is IFormattable formattable)
@@ -188,7 +195,7 @@ internal class Program
     }
 
     /// <returns>0, or 1 for bad arguments, a hive or database that could not be read, or no data</returns>
-    private static int DoWork(string f,bool i,string w,string b, string csv,string csvf,string dt,bool mp,bool nl,string temp,bool debug,bool trace)
+    private static int DoWork(string f,bool i,string w,string b, string csv,string csvf,string dt,bool mp,bool nl,string temp,bool debug,bool trace,bool co)
     {
         var levelSwitch = new LoggingLevelSwitch();
 
@@ -220,7 +227,13 @@ internal class Program
         var conf = new LoggerConfiguration()
             .WriteTo.Console(outputTemplate: template,formatProvider: formatter)
             .MinimumLevel.ControlledBy(levelSwitch);
-      
+
+        var consoleLog = co ? ConsoleLog.GetPath(DateTimeOffset.UtcNow, csv) : null;
+        if (consoleLog != null)
+        {
+            conf.WriteTo.File(consoleLog, outputTemplate: ConsoleLog.Template, formatProvider: formatter);
+        }
+
         Log.Logger = conf.CreateLogger();
         
         if (string.IsNullOrEmpty(f))
@@ -250,6 +263,17 @@ internal class Program
         Console.WriteLine();
         Log.Information("Command line: {Args}",string.Join(" ",Environment.GetCommandLineArgs().Skip(1)));
         Console.WriteLine();
+
+        if (consoleLog != null)
+        {
+            Log.Information("Console log: {Path}",consoleLog);
+            Console.WriteLine();
+        }
+        else if (co)
+        {
+            Log.Warning("--co: no output directory was given, so the console messages are not saved");
+            Console.WriteLine();
+        }
 
         if (mp)
         {

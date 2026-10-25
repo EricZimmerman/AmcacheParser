@@ -200,6 +200,31 @@ public class CliTests : TestData
     }
 
     [Test]
+    public void ConsoleLog()
+    {
+        //Issues #259: --co saves the console messages to <yyyyMMddHHmmss>_AmcacheParser_<version>_ConsoleLog.txt in the --csv directory
+        var hive = MuseumHive("Win10/APTSimulatorVM");
+        var (code, output) = Run("-f", hive, "--csv", Out, "--csvf", "a.csv");
+        code.Should().Be(0, output);
+        Directory.GetFiles(Out, "*_ConsoleLog.txt").Should().BeEmpty("--co is off by default");
+        output.Should().NotContain("Console log:");
+
+        (code, output) = Run("-f", hive, "--csv", Out, "--csvf", "a.csv", "--co");
+        code.Should().Be(0, output);
+        var log = Directory.GetFiles(Out, "*_ConsoleLog.txt").Should().ContainSingle().Subject;
+        Path.GetFileName(log).Should().MatchRegex(@"^\d{14}_AmcacheParser_\d+\.\d+\.\d+_ConsoleLog\.txt$");
+        output.Should().Contain("Console log: " + log);
+        var text = File.ReadAllText(log);
+        text.Should().MatchRegex(@"\[\d\d:\d\d:\d\d\.\d{3} INF\] AmcacheParser version ");
+        text.Should().Contain("Command line: -f ").And.Contain("is in new format (registry hive");
+
+        //--csv that can't be created: the same error as without --co
+        var file = Path.Combine(Dir, "a file");
+        File.WriteAllText(file, "x");
+        Run("-f", hive, "--csv", file, "--co").ExitCode.Should().Be(1);
+    }
+
+    [Test]
     public void ExitCodes()
     {
         Run("-f", Path.Combine(Dir, "missing"), "--csv", Out).ExitCode.Should().Be(1);

@@ -8,7 +8,7 @@ looked for.
 
 | | |
 |---|---|
-| **Version** | 2026.10.0 |
+| **Version** | 2026.10.1 |
 | **Download** | [.NET 10](https://download.ericzimmermanstools.com/net/AmcacheParser.zip) |
 | **All tools** | [ericzimmerman.github.io](https://ericzimmerman.github.io) or [Get-ZimmermanTools](https://download.ericzimmermanstools.com/Get-ZimmermanTools.zip), which downloads them all and keeps them current |
 | **Changes** | [ChangeLog](https://ericzimmerman.github.io/changelog/) |
@@ -42,6 +42,7 @@ Options:
   --temp <temp>   Folder for the temporary copies of the SQLite databases, which are opened instead of the evidence and deleted when done. Default: a Temp folder next to AmcacheParser. A folder that isn't there is created, and removed again when done. If that folder can't be written to, AmcacheParser stops: give a writable folder with --temp
   --debug         Show debug information during processing
   --trace         Show trace information during processing
+  --co            Save all console messages to <timestamp>_AmcacheParser_<version>_ConsoleLog.txt in the --csv directory
   -?, -h, --help  Show help and usage information
   --version       Show version information
 ```
@@ -119,6 +120,7 @@ files for generating whitelists or blacklists.
   `MsiInstallDate` for programs.
 - .NET 10 only, with the native SQLite library next to it for Windows x64, Linux x64 and macOS on Apple silicon.
 - Exit code 1 when the tool fails (it was always 0). Error reports include source file and line numbers.
+- `--co` saves all console messages to `<yyyyMMddHHmmss>_AmcacheParser_<version>_ConsoleLog.txt` in the `--csv` directory (time in UTC; Issues #259) (2026.10.1).
 
 The full list is in the [ChangeLog](https://ericzimmerman.github.io/changelog/).
 
