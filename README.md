@@ -8,7 +8,7 @@ looked for.
 
 | | |
 |---|---|
-| **Version** | 2026.10.1 |
+| **Version** | 2026.11.0 |
 | **Download** | [.NET 10](https://download.ericzimmermanstools.com/net/AmcacheParser.zip) |
 | **All tools** | [ericzimmerman.github.io](https://ericzimmerman.github.io) or [Get-ZimmermanTools](https://download.ericzimmermanstools.com/Get-ZimmermanTools.zip), which downloads them all and keeps them current |
 | **Changes** | [ChangeLog](https://ericzimmerman.github.io/changelog/) |
@@ -105,6 +105,10 @@ files for generating whitelists or blacklists.
 |---|---|
 | `0` | Success. Damaged hives and databases, entries that could not be parsed, and no Amcache data are reported but are not a failure |
 | `1` | The tool failed: invalid arguments, a missing `-f` path, a hive or database it can't access or read, a dirty hive without its transaction logs (unless `--nl`), or an export or `--temp` folder that can't be written |
+
+## What's new in 2026.11
+
+- Moved to CsvHelper 34, a rewrite of the CSV library; the CSV output is byte for byte the same as 2026.10's.
 
 ## What's new in 2026.10
 
