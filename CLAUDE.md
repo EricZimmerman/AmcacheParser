@@ -15,7 +15,7 @@ Input may be corrupt or hostile.
 
 ## Behavior to keep
 
-- CSV columns: `WriteNewFormat` pins every column with `Order(...)`: the columns of 2026.5 in their order, new ones at the end. Before, unindexed columns were placed automatically, and adding a property moved them. Every database column has a CSV column (unwanted ones are hidden in the Timeline Explorer layout instead).
+- CSV columns (CsvHelper 34): `AmcacheParser/CsvRecordWriters.cs` has a hand-written `CsvRecordWriter<T>` per library class (their properties are get-only, which generated record writers don't write, and times use `--dt`), listing every column in order: the columns of 2026.5 in their order, new ones at the end (the old-format associated and unassociated file CSVs have different orders, kept from CsvHelper 33's automatic placement). Every database column has a CSV column (unwanted ones are hidden in the Timeline Explorer layout instead). The writer options reproduce CsvHelper 33's text: True/False, and a `ShouldQuote` that quotes fields starting or ending with a space but not a tab (`CsvQuoting.WhenNeededOrWhitespace` also quotes tabs, and a value in a corpus hive ends with one). The library's `CustomNullTypeConverter<T>` is an `ICsvConverter<T>` now, kept for its users; the CLI doesn't use it.
 - A date that doesn't parse (Discord writes `53/16/2024`; some MSI dates hold two dates) is left empty and counted (`InvalidDates`), instead of losing the entry.
 - Times are UTC in the `--dt` format, including the FILETIMEs in the Metadata CSV (`lastFullSync`, `LastScanTime`, ...).
 - Transaction logs: `Helper.LogFiles` (`.LOG`, `.LOG1`, `.LOG2`, any case, not empty). Dirty: sequence numbers differ, or the header checksum is wrong and there are logs.

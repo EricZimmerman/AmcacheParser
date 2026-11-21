@@ -15,8 +15,6 @@ using System.Threading.Tasks;
 using Amcache;
 using Amcache.Classes;
 using CsvHelper;
-using CsvHelper.Configuration;
-using CsvHelper.TypeConversion;
 using Exceptionless;
 using Serilog;
 using Serilog.Core;
@@ -24,8 +22,6 @@ using Serilog.Events;
 
 
 namespace AmcacheParser;
-
-using Amcache.Converters;
 
 internal class Program
 {
@@ -594,15 +590,14 @@ internal class Program
             var timeIndex = table.Columns.IndexOf("LastModified");
             var isMetadata = table.Name == "Metadata";
 
-            using var sw = new StreamWriter(Path.Combine(csv, outbase));
-            using var csvWriter = new CsvWriter(sw, CultureInfo.InvariantCulture);
+            using var csvWriter = CsvWriter.ToFile(Path.Combine(csv, outbase), CsvOptions);
 
             foreach (var column in table.Columns)
             {
                 csvWriter.WriteField(column);
             }
 
-            csvWriter.NextRecord();
+            csvWriter.EndRecord();
 
             foreach (var row in table.Rows)
             {
@@ -632,30 +627,30 @@ internal class Program
                     });
                 }
 
-                csvWriter.NextRecord();
+                csvWriter.EndRecord();
             }
 
             Log.Information("{Name}: {Count:N0} rows",name,table.Rows.Count);
         }
     }
 
-    /// <summary>The columns in this order (2026.5's first, new ones at the end); members not named are left out</summary>
-    private static void Order<T>(ClassMap<T> map, params string[] columns)
+    /// <summary>
+    ///     CsvHelper 34 writing what CsvHelper 33 wrote: True/False, CRLF, no BOM, and fields that start or end with a
+    ///     space quoted. Not CsvQuoting.WhenNeededOrWhitespace: that also quotes a leading or trailing tab, which 33 did
+    ///     not (a value in the newformat corpus hive ends with a tab)
+    /// </summary>
+    private static readonly CsvWriterOptions CsvOptions = new()
     {
-        foreach (var memberMap in map.MemberMaps)
-        {
-            var index = Array.IndexOf(columns, memberMap.Data.Member.Name);
-            if (index < 0)
-            {
-                memberMap.Ignore();
-            }
-            else
-            {
-                //Publisher, DeviceState and ClassGuid were left out before
-                memberMap.Data.Ignore = false;
-                memberMap.Index(index);
-            }
-        }
+        ShouldQuote = (field, _, _, _) => field.Length > 0 && (field[0] == ' ' || field[field.Length - 1] == ' '),
+        TrueValue = "True",
+        FalseValue = "False"
+    };
+
+    /// <summary>The header and <paramref name="records" />, with the columns of <paramref name="recordWriter" /></summary>
+    private static void WriteCsv<T>(string outFile, IEnumerable<T> records, CsvRecordWriter<T> recordWriter)
+    {
+        using var csvWriter = CsvWriter.ToFile(outFile, CsvOptions);
+        csvWriter.WriteRecords(records, recordWriter);
     }
 
     private static bool IsFileTimeName(string name) =>
@@ -705,73 +700,7 @@ internal class Program
 
         var outFile = Path.Combine(csv, outbase);
 
-        using (var sw = new StreamWriter(outFile))
-        {
-            sw.AutoFlush = true;
-
-            var csvWriter = new CsvWriter(sw,CultureInfo.InvariantCulture);
-
-            var o = new TypeConverterOptions
-            {
-                DateTimeStyle = DateTimeStyles.AssumeUniversal & DateTimeStyles.AdjustToUniversal
-            };
-            csvWriter.Context.TypeConverterOptionsCache.AddOptions<FileEntryOld>(o);
-
-            var foo = csvWriter.Context.AutoMap<FileEntryOld>();
-
-            foo.Map(m => m.ProgramName).Index(0);
-            foo.Map(m => m.ProgramID).Index(1);
-            foo.Map(m => m.VolumeID).Index(2);
-            foo.Map(t => t.VolumeIDLastWriteTimestamp).Convert(t =>
-                t.Value.VolumeIDLastWriteTimestamp.ToString(dt)).Index(3);
-            foo.Map(m => m.FileID).Index(4);
-            foo.Map(t => t.FileIDLastWriteTimestamp).Convert(t =>
-                t.Value.FileIDLastWriteTimestamp.ToString(dt)).Index(5);
-            foo.Map(m => m.SHA1).Index(6);
-            foo.Map(m => m.FullPath).Index(7);
-            foo.Map(m => m.FileExtension).Index(8);
-            foo.Map(m => m.MFTEntryNumber).Index(9);
-            foo.Map(m => m.MFTSequenceNumber).Index(10);
-            foo.Map(m => m.FileSize).TypeConverter<CustomNullTypeConverter<string>>().Index(11);
-            foo.Map(m => m.FileVersionString).Index(12);
-            foo.Map(m => m.FileVersionNumber).Index(13);
-            foo.Map(m => m.FileDescription).Index(14);
-
-            foo.Map(m => m.SizeOfImage).TypeConverter<CustomNullTypeConverter<string>>().Index(15);
-            foo.Map(m => m.PEHeaderHash).Index(16);
-            foo.Map(m => m.PEHeaderChecksum).TypeConverter<CustomNullTypeConverter<string>>().Index(17);
-
-            foo.Map(m => m.BinProductVersion).Index(18);
-            foo.Map(m => m.BinFileVersion).Index(19);
-            foo.Map(m => m.LinkerVersion).Index(20);
-            foo.Map(m => m.BinaryType).Index(21);
-            foo.Map(m => m.IsLocal).Index(22);
-            foo.Map(m => m.GuessProgramID).Index(23);
-
-            foo.Map(t => t.Created)
-                .Convert(t => t.Value.Created == null ? string.Empty : t.Value.Created?.ToString(dt))
-                .Index(24);
-            foo.Map(t => t.LastModified).Convert(t =>
-                t.Value.LastModified == null ? string.Empty : t.Value.LastModified?.ToString(dt)).Index(25);
-            foo.Map(t => t.LastModifiedStore).Convert(t =>
-                t.Value.LastModifiedStore == null ? string.Empty : t.Value.LastModifiedStore?.ToString(dt)).Index(26);
-            foo.Map(t => t.LinkDate)
-                .Convert(t => t.Value.LinkDate == null ? string.Empty : t.Value.LinkDate?.ToString(dt))
-                .Index(27);
-            foo.Map(m => m.LanguageID).TypeConverter<CustomNullTypeConverter<string>>().Index(28);
-
-            foo.Map(m => m.ProductName).TypeConverter<CustomNullTypeConverter<string>>().Index(29);
-            foo.Map(m => m.CompanyName).TypeConverter<CustomNullTypeConverter<string>>().Index(30);
-            foo.Map(m => m.SwitchBackContext).TypeConverter<CustomNullTypeConverter<string>>().Index(31);
-
-            csvWriter.Context.RegisterClassMap(foo);
-
-           
-
-            csvWriter.WriteHeader<FileEntryOld>();
-            csvWriter.NextRecord();
-            csvWriter.WriteRecords(cleanList);
-        }
+        WriteCsv(outFile, cleanList, new FileEntryOldWriter(dt, true));
 
         if (i)
         {
@@ -785,45 +714,7 @@ internal class Program
 
             outFile = Path.Combine(csv, outbase);
 
-            using (var sw = new StreamWriter(outFile))
-            {
-                sw.AutoFlush = true;
-
-                var csvWriter = new CsvWriter(sw,CultureInfo.InvariantCulture);
-
-                var o = new TypeConverterOptions
-                {
-                    DateTimeStyle = DateTimeStyles.AssumeUniversal & DateTimeStyles.AdjustToUniversal
-                };
-                csvWriter.Context.TypeConverterOptionsCache.AddOptions<ProgramsEntryOld>(o);
-
-                var foo = csvWriter.Context.AutoMap<ProgramsEntryOld>();
-
-                foo.Map(m => m.ProgramID).Index(0);
-                foo.Map(t => t.LastWriteTimestamp).Convert(t =>
-                    t.Value.LastWriteTimestamp.ToString(dt)).Index(1);
-                foo.Map(m => m.ProgramName_0).Index(2);
-                foo.Map(m => m.ProgramVersion_1).Index(3);
-                foo.Map(m => m.VendorName_2).Index(4);
-
-                foo.Map(t => t.InstallDateEpoch_a).Convert(t =>
-                    t.Value.InstallDateEpoch_a?.ToString(dt)).Index(5);
-                foo.Map(t => t.InstallDateEpoch_b).Convert(t =>
-                    t.Value.InstallDateEpoch_b?.ToString(dt)).Index(6);
-
-                foo.Map(m => m.LanguageCode_3).Index(7);
-                foo.Map(m => m.InstallSource_6).Index(8);
-                foo.Map(m => m.UninstallRegistryKey_7).Index(9);
-                foo.Map(m => m.PathsList_d).Index(10);
-
-                csvWriter.Context.RegisterClassMap(foo);
-
-      
-
-                csvWriter.WriteHeader<ProgramsEntryOld>();
-                csvWriter.NextRecord();
-                csvWriter.WriteRecords(am.ProgramsEntries);
-            }
+            WriteCsv(outFile, am.ProgramsEntries, new ProgramsEntryOldWriter(dt));
 
             outbase = $"{ts1}_{hiveName}_AssociatedFileEntries.csv";
 
@@ -835,78 +726,7 @@ internal class Program
 
             outFile = Path.Combine(csv, outbase);
 
-            using (var sw = new StreamWriter(outFile))
-            {
-                var csvWriter = new CsvWriter(sw,CultureInfo.InvariantCulture);
-
-                var o = new TypeConverterOptions
-                {
-                    DateTimeStyle = DateTimeStyles.AssumeUniversal & DateTimeStyles.AdjustToUniversal
-                };
-                csvWriter.Context.TypeConverterOptionsCache.AddOptions<FileEntryOld>(o);
-
-                var foo = csvWriter.Context.AutoMap<FileEntryOld>();
-
-                foo.Map(m => m.ProgramName).Index(0);
-                foo.Map(m => m.ProgramID).Index(1);
-                foo.Map(m => m.VolumeID).Index(2);
-                foo.Map(t => t.VolumeIDLastWriteTimestamp).Convert(t =>
-                        t.Value.VolumeIDLastWriteTimestamp.ToString(dt))
-                    .Index(3);
-                foo.Map(m => m.FileID).Index(4);
-                foo.Map(t => t.FileIDLastWriteTimestamp).Convert(t =>
-                        t.Value.FileIDLastWriteTimestamp.ToString(dt))
-                    .Index(5);
-                foo.Map(m => m.SHA1).Index(6);
-                foo.Map(m => m.FullPath).Index(7);
-                foo.Map(m => m.FileExtension).Index(8);
-                foo.Map(m => m.MFTEntryNumber).Index(9);
-                foo.Map(m => m.MFTSequenceNumber).Index(10);
-                foo.Map(m => m.FileSize).Index(11);
-                foo.Map(m => m.FileVersionString).Index(12);
-                foo.Map(m => m.FileVersionNumber).Index(13);
-                foo.Map(m => m.FileDescription).Index(14);
-
-                foo.Map(m => m.SizeOfImage).Index(15);
-                foo.Map(m => m.PEHeaderHash).Index(16);
-                foo.Map(m => m.PEHeaderChecksum).Index(17);
-
-                foo.Map(m => m.BinProductVersion).Index(18);
-                foo.Map(m => m.BinFileVersion).Index(19);
-                foo.Map(m => m.LinkerVersion).Index(20);
-                foo.Map(m => m.BinaryType).Index(21);
-                foo.Map(m => m.IsLocal).Index(22);
-                foo.Map(m => m.GuessProgramID).Index(23);
-
-                foo.Map(t => t.Created)
-                    .Convert(t => t.Value.Created?.ToString(dt))
-                    .Index(24);
-                foo.Map(t => t.LastModified).Convert(t =>
-                    t.Value.LastModified?.ToString(dt)).Index(25);
-                foo.Map(t => t.LastModifiedStore).Convert(t =>
-                    t.Value.LastModifiedStore?.ToString(dt)).Index(26);
-                foo.Map(t => t.LinkDate)
-                    .Convert(t => t.Value.LinkDate?.ToString(dt))
-                    .Index(27);
-                foo.Map(m => m.LanguageID).Index(28);
-
-
-                csvWriter.Context.RegisterClassMap(foo);
-
-
-                csvWriter.WriteHeader<FileEntryOld>();
-                csvWriter.NextRecord();
-
-                sw.AutoFlush = true;
-
-                foreach (var pe in am.ProgramsEntries)
-                {
-                    var cleanList2 =
-                        pe.FileEntries.Where(t => whitelistHashes.Contains(t.SHA1) == useBlacklist).ToList();
-
-                    csvWriter.WriteRecords(cleanList2);
-                }
-            }
+            WriteCsv(outFile, am.ProgramsEntries.SelectMany(pe => pe.FileEntries.Where(t => whitelistHashes.Contains(t.SHA1) == useBlacklist)), new FileEntryOldWriter(dt, false));
         }
 
         Console.WriteLine();
@@ -1010,66 +830,7 @@ internal class Program
 
         var outFile1 = Path.Combine(csv, outbase1);
 
-        using (var sw = new StreamWriter(outFile1))
-        {
-            sw.AutoFlush = true;
-
-            var csvWriter = new CsvWriter(sw,CultureInfo.InvariantCulture);
-
-            var o = new TypeConverterOptions
-            {
-                DateTimeStyle = DateTimeStyles.AssumeUniversal & DateTimeStyles.AdjustToUniversal
-            };
-            csvWriter.Context.TypeConverterOptionsCache.AddOptions<FileEntryNew>(o);
-
-            var foo = csvWriter.Context.AutoMap<FileEntryNew>();
-
-            foo.Map(m => m.ApplicationName).Index(0);
-
-            foo.Map(m => m.ProgramId).Index(1);
-            foo.Map(t => t.FileKeyLastWriteTimestamp).Convert(t =>
-                    t.Value.FileKeyLastWriteTimestamp.ToString(dt))
-                .Index(2);
-            foo.Map(m => m.SHA1).Index(3);
-            foo.Map(m => m.IsOsComponent).Index(4);
-            foo.Map(m => m.FullPath).Index(5);
-            foo.Map(m => m.Name).Index(6);
-            foo.Map(m => m.FileExtension).Index(7);
-
-            foo.Map(t => t.LinkDate).Convert(
-                t => t.Value.LinkDate == null ? string.Empty : t.Value.LinkDate?.ToString(dt)).Index(8);
-            foo.Map(m => m.ProductName).TypeConverter<CustomNullTypeConverter<string>>().Index(9);
-
-            foo.Map(m => m.Size).Index(10);
-
-            foo.Map(m => m.Version).Index(11);
-            foo.Map(m => m.ProductVersion).Index(12);
-
-            foo.Map(m => m.LongPathHash).Index(13);
-
-            foo.Map(m => m.BinaryType).Index(14);
-            foo.Map(m => m.IsPeFile).Index(15);
-
-            foo.Map(m => m.BinFileVersion).Index(16);
-            foo.Map(m => m.BinProductVersion).Index(17);
-                
-
-            foo.Map(m => m.Usn).Index(18);
-            foo.Map(m => m.Language).Index(19);
-            foo.Map(m => m.Description).Index(20);
-            foo.Map(m => m.OriginalFileName).Index(21);
-            //new columns go at the end
-            foo.Map(m => m.Sha256).Index(22);
-            foo.Map(m => m.Publisher).Ignore();
-
-            csvWriter.Context.RegisterClassMap(foo);
-                
-            //the columns of 2026.5 in their order, new ones at the end
-            Order(foo, "ApplicationName", "ProgramId", "FileKeyLastWriteTimestamp", "SHA1", "IsOsComponent", "FullPath", "Name", "FileExtension", "LinkDate", "ProductName", "Size", "Version", "ProductVersion", "LongPathHash", "BinaryType", "IsPeFile", "BinFileVersion", "BinProductVersion", "Usn", "Language", "Description", "OriginalFileName", "Publisher", "Sha256", "KeyName", "AppxPackageFullName", "AppxPackageRelativeId");
-            csvWriter.WriteHeader<FileEntryNew>();
-            csvWriter.NextRecord();
-            csvWriter.WriteRecords(cleanList2);
-        }
+        WriteCsv(outFile1, cleanList2, new FileEntryNewWriter(dt));
 
         if (i)
         {
@@ -1083,69 +844,7 @@ internal class Program
 
             outFile1 = Path.Combine(csv, outbase1);
 
-            using (var sw = new StreamWriter(outFile1))
-            {
-                sw.AutoFlush = true;
-
-                var csvWriter = new CsvWriter(sw,CultureInfo.InvariantCulture);
-
-                var o = new TypeConverterOptions
-                {
-                    DateTimeStyle = DateTimeStyles.AssumeUniversal & DateTimeStyles.AdjustToUniversal
-                };
-                csvWriter.Context.TypeConverterOptionsCache.AddOptions<ProgramsEntryNew>(o);
-
-                var foo = csvWriter.Context.AutoMap<ProgramsEntryNew>();
-
-                foo.Map(m => m.ProgramId).Index(0);
-                foo.Map(t => t.KeyLastWriteTimestamp).Convert(t =>
-                        t.Value.KeyLastWriteTimestamp.ToString(dt))
-                    .Index(1);
-                foo.Map(m => m.Name).Index(2);
-                foo.Map(m => m.Version).Index(3);
-                foo.Map(m => m.Publisher).Index(4);
-
-                foo.Map(t => t.InstallDate).Convert(row =>
-                {
-                    if (row.Value.InstallDate.HasValue)
-                    {
-                        return row.Value.InstallDate.Value.ToString(
-                            dt);
-                    }
-
-                    return "";
-                }).Index(5);
-
-                foo.Map(m => m.OSVersionAtInstallTime).Index(6);
-
-                foo.Map(m => m.BundleManifestPath).Index(7);
-                foo.Map(m => m.HiddenArp).Index(8);
-                foo.Map(m => m.InboxModernApp).Index(9);
-                foo.Map(m => m.Language).Index(10);
-                foo.Map(m => m.ManifestPath).Index(11);
-                foo.Map(m => m.MsiPackageCode).Index(12);
-                foo.Map(m => m.MsiProductCode).Index(13);
-
-                foo.Map(m => m.PackageFullName).Index(14);
-                foo.Map(m => m.ProgramInstanceId).Index(15);
-                foo.Map(m => m.RegistryKeyPath).Index(16);
-                foo.Map(m => m.RootDirPath).Index(17);
-
-                foo.Map(m => m.Type).Index(18);
-                foo.Map(m => m.Source).Index(19);
-                foo.Map(m => m.StoreAppType).Index(20);
-
-                foo.Map(m => m.UninstallString).Index(21);
-                foo.Map(t => t.MsiInstallDate).Convert(row => row.Value.MsiInstallDate?.ToString(dt) ?? string.Empty);
-
-                csvWriter.Context.RegisterClassMap(foo);
-                    
-                //the columns of 2026.5 in their order, new ones at the end
-                Order(foo, "ProgramId", "KeyLastWriteTimestamp", "Name", "Version", "Publisher", "InstallDateArpLastModified", "InstallDate", "InstallDateMsi", "OSVersionAtInstallTime", "InstallDateFromLinkFile", "BundleManifestPath", "HiddenArp", "InboxModernApp", "Language", "ManifestPath", "MsiPackageCode", "MsiProductCode", "PackageFullName", "ProgramInstanceId", "RegistryKeyPath", "RootDirPath", "Type", "Source", "StoreAppType", "UninstallString", "Manufacturer", "KeyName", "UserSid", "MsiInstallDate");
-                csvWriter.WriteHeader<ProgramsEntryNew>();
-                csvWriter.NextRecord();
-                csvWriter.WriteRecords(amNew.ProgramsEntries);
-            }
+            WriteCsv(outFile1, amNew.ProgramsEntries, new ProgramsEntryNewWriter(dt));
 
             outbase1 = $"{ts1}_{hiveName1}_AssociatedFileEntries.csv";
 
@@ -1157,73 +856,7 @@ internal class Program
 
             outFile1 = Path.Combine(csv, outbase1);
 
-            using (var sw = new StreamWriter(outFile1))
-            {
-                var csvWriter = new CsvWriter(sw,CultureInfo.InvariantCulture);
-
-                var o = new TypeConverterOptions
-                {
-                    DateTimeStyle = DateTimeStyles.AssumeUniversal & DateTimeStyles.AdjustToUniversal
-                };
-                csvWriter.Context.TypeConverterOptionsCache.AddOptions<FileEntryNew>(o);
-
-                var foo = csvWriter.Context.AutoMap<FileEntryNew>();
-
-                foo.Map(m => m.ApplicationName).Index(0);
-
-                foo.Map(m => m.ProgramId).Index(1);
-                foo.Map(t => t.FileKeyLastWriteTimestamp).Convert(t =>
-                        t.Value.FileKeyLastWriteTimestamp.ToString(dt))
-                    .Index(2);
-                foo.Map(m => m.SHA1).Index(3);
-                foo.Map(m => m.IsOsComponent).Index(4);
-                foo.Map(m => m.FullPath).Index(5);
-                foo.Map(m => m.Name).Index(6);
-                foo.Map(m => m.FileExtension).Index(7);
-
-                foo.Map(t => t.LinkDate).Convert(t =>
-                    t.Value.LinkDate?.ToString(dt)).Index(8);
-                foo.Map(m => m.ProductName).Index(9);
-
-                foo.Map(m => m.Size).Index(10);
-
-                foo.Map(m => m.Version).Index(11);
-                foo.Map(m => m.ProductVersion).Index(12);
-
-                foo.Map(m => m.LongPathHash).Index(13);
-
-                foo.Map(m => m.BinaryType).Index(14);
-                foo.Map(m => m.IsPeFile).Index(15);
-
-                foo.Map(m => m.BinFileVersion).Index(16);
-                foo.Map(m => m.BinProductVersion).Index(17);
-
-                foo.Map(m => m.Usn).Index(18);
-                foo.Map(m => m.Language).Index(19);
-                foo.Map(m => m.Description).Index(20);
-                foo.Map(m => m.OriginalFileName).Index(21);
-                //new columns go at the end
-                foo.Map(m => m.Sha256).Index(22);
-                foo.Map(m => m.Publisher).Ignore();
-
-                csvWriter.Context.RegisterClassMap(foo);
-                    
-                //the columns of 2026.5 in their order, new ones at the end
-                Order(foo, "ApplicationName", "ProgramId", "FileKeyLastWriteTimestamp", "SHA1", "IsOsComponent", "FullPath", "Name", "FileExtension", "LinkDate", "ProductName", "Size", "Version", "ProductVersion", "LongPathHash", "BinaryType", "IsPeFile", "BinFileVersion", "BinProductVersion", "Usn", "Language", "Description", "OriginalFileName", "Publisher", "Sha256", "KeyName", "AppxPackageFullName", "AppxPackageRelativeId");
-                csvWriter.WriteHeader<FileEntryNew>();
-                csvWriter.NextRecord();
-
-                sw.AutoFlush = true;
-
-                foreach (var pe in amNew.ProgramsEntries)
-                {
-                    var cleanList22 =
-                        pe.FileEntries.Where(t => whitelistHashes1.Contains(t.SHA1) == useBlacklist2)
-                            .ToList();
-
-                    csvWriter.WriteRecords(cleanList22);
-                }
-            }
+            WriteCsv(outFile1, amNew.ProgramsEntries.SelectMany(pe => pe.FileEntries.Where(t => whitelistHashes1.Contains(t.SHA1) == useBlacklist2)), new FileEntryNewWriter(dt));
         }
 
 
@@ -1237,38 +870,7 @@ internal class Program
 
         outFile1 = Path.Combine(csv, outbase1);
 
-        using (var sw = new StreamWriter(outFile1))
-        {
-            var csvWriter = new CsvWriter(sw,CultureInfo.InvariantCulture);
-
-            var o = new TypeConverterOptions
-            {
-                DateTimeStyle = DateTimeStyles.AssumeUniversal & DateTimeStyles.AdjustToUniversal
-            };
-            csvWriter.Context.TypeConverterOptionsCache.AddOptions<Shortcut>(o);
-
-            var foo = csvWriter.Context.AutoMap<Shortcut>();
-
-            foo.Map(m => m.KeyName).Index(0);
-            foo.Map(m => m.LnkName).Index(1);
-
-            foo.Map(t => t.KeyLastWriteTimestamp).Convert(t =>
-                t.Value.KeyLastWriteTimestamp.ToString(dt)).Index(2);
-
-            csvWriter.Context.RegisterClassMap(foo);
-                
-            //the columns of 2026.5 in their order, new ones at the end
-            Order(foo, "KeyName", "LnkName", "KeyLastWriteTimestamp", "ShortcutTargetPath", "ShortcutAumid", "ShortcutProgramId");
-            csvWriter.WriteHeader<Shortcut>();
-            csvWriter.NextRecord();
-            sw.AutoFlush = true;
-
-            foreach (var sc in amNew.ShortCuts)
-            {
-                csvWriter.WriteRecord(sc);
-                csvWriter.NextRecord();
-            }
-        }
+        WriteCsv(outFile1, amNew.ShortCuts, new ShortcutWriter(dt));
 
         outbase1 = $"{ts1}_{hiveName1}_DriverBinaries.csv";
 
@@ -1280,59 +882,7 @@ internal class Program
 
         outFile1 = Path.Combine(csv, outbase1);
 
-        using (var sw = new StreamWriter(outFile1))
-        {
-            var csvWriter = new CsvWriter(sw,CultureInfo.InvariantCulture);
-
-
-            var o = new TypeConverterOptions
-            {
-                DateTimeStyle = DateTimeStyles.AssumeUniversal & DateTimeStyles.AdjustToUniversal
-            };
-            csvWriter.Context.TypeConverterOptionsCache.AddOptions<DriverBinary>(o);
-
-            var foo = csvWriter.Context.AutoMap<DriverBinary>();
-
-            foo.Map(m => m.KeyName).Index(0);
-            foo.Map(t => t.KeyLastWriteTimestamp).Convert(t =>
-                t.Value.KeyLastWriteTimestamp.ToString(dt)).Index(1);
-            foo.Map(t => t.DriverTimeStamp).Convert(t =>
-                t.Value.DriverTimeStamp?.ToString(dt)).Index(2);
-            foo.Map(t => t.DriverLastWriteTime).Convert(t =>
-                t.Value.DriverLastWriteTime?.ToString(dt)).Index(3);
-
-            foo.Map(m => m.DriverName).Index(4);
-
-            foo.Map(m => m.DriverInBox).Index(5);
-            foo.Map(m => m.DriverIsKernelMode).Index(6);
-            foo.Map(m => m.DriverSigned).Index(7);
-            foo.Map(m => m.DriverCheckSum).Index(8);
-            foo.Map(m => m.DriverCompany).Index(9);
-            foo.Map(m => m.DriverId).Index(10);
-            foo.Map(m => m.DriverPackageStrongName).Index(11);
-            foo.Map(m => m.DriverType).Index(12);
-            foo.Map(m => m.DriverVersion).Index(13);
-            foo.Map(m => m.ImageSize).Index(14);
-            foo.Map(m => m.Inf).Index(15);
-            foo.Map(m => m.Product).Index(16);
-            foo.Map(m => m.ProductVersion).Index(17);
-            foo.Map(m => m.Service).Index(18);
-            foo.Map(m => m.WdfVersion).Index(19);
-
-            csvWriter.Context.RegisterClassMap(foo);
-                
-            //the columns of 2026.5 in their order, new ones at the end
-            Order(foo, "KeyName", "KeyLastWriteTimestamp", "DriverTimeStamp", "DriverLastWriteTime", "DriverName", "DriverInBox", "DriverIsKernelMode", "DriverSigned", "DriverCheckSum", "DriverCompany", "DriverId", "DriverPackageStrongName", "DriverType", "DriverVersion", "ImageSize", "Inf", "Product", "ProductVersion", "Service", "WdfVersion");
-            csvWriter.WriteHeader<DriverBinary>();
-            csvWriter.NextRecord();
-            sw.AutoFlush = true;
-
-            foreach (var sc in amNew.DriveBinaries)
-            {
-                csvWriter.WriteRecord(sc);
-                csvWriter.NextRecord();
-            }
-        }
+        WriteCsv(outFile1, amNew.DriveBinaries, new DriverBinaryWriter(dt));
 
 
         outbase1 = $"{ts1}_{hiveName1}_DeviceContainers.csv";
@@ -1345,54 +895,7 @@ internal class Program
 
         outFile1 = Path.Combine(csv, outbase1);
 
-        using (var sw = new StreamWriter(outFile1))
-        {
-            var csvWriter = new CsvWriter(sw,CultureInfo.InvariantCulture);
-
-
-            var o = new TypeConverterOptions
-            {
-                DateTimeStyle = DateTimeStyles.AssumeUniversal & DateTimeStyles.AdjustToUniversal
-            };
-            csvWriter.Context.TypeConverterOptionsCache.AddOptions<DeviceContainer>(o);
-
-            var foo = csvWriter.Context.AutoMap<DeviceContainer>();
-
-            foo.Map(m => m.KeyName).Index(0);
-            foo.Map(t => t.KeyLastWriteTimestamp).Convert(t =>
-                t.Value.KeyLastWriteTimestamp.ToString(dt)).Index(1);
-
-            foo.Map(m => m.Categories).Index(2);
-
-            foo.Map(m => m.DiscoveryMethod).Index(3);
-            foo.Map(m => m.FriendlyName).Index(4);
-            foo.Map(m => m.Icon).Index(5);
-            foo.Map(m => m.IsActive).Index(6);
-            foo.Map(m => m.IsConnected).Index(7);
-            foo.Map(m => m.IsMachineContainer).Index(8);
-            foo.Map(m => m.IsNetworked).Index(9);
-            foo.Map(m => m.IsPaired).Index(10);
-            foo.Map(m => m.Manufacturer).Index(11);
-            foo.Map(m => m.ModelId).Index(12);
-            foo.Map(m => m.ModelName).Index(13);
-            foo.Map(m => m.ModelNumber).Index(14);
-            foo.Map(m => m.PrimaryCategory).Index(15);
-            foo.Map(m => m.State).Index(16);
-
-            csvWriter.Context.RegisterClassMap(foo);
-                
-            //the columns of 2026.5 in their order, new ones at the end
-            Order(foo, "KeyName", "KeyLastWriteTimestamp", "Categories", "DiscoveryMethod", "FriendlyName", "Icon", "IsActive", "IsConnected", "IsMachineContainer", "IsNetworked", "IsPaired", "Manufacturer", "ModelId", "ModelName", "ModelNumber", "PrimaryCategory", "State");
-            csvWriter.WriteHeader<DeviceContainer>();
-            csvWriter.NextRecord();
-            sw.AutoFlush = true;
-
-            foreach (var sc in amNew.DeviceContainers)
-            {
-                csvWriter.WriteRecord(sc);
-                csvWriter.NextRecord();
-            }
-        }
+        WriteCsv(outFile1, amNew.DeviceContainers, new DeviceContainerWriter(dt));
 
         outbase1 = $"{ts1}_{hiveName1}_DriverPackages.csv";
 
@@ -1404,51 +907,7 @@ internal class Program
 
         outFile1 = Path.Combine(csv, outbase1);
 
-        using (var sw = new StreamWriter(outFile1))
-        {
-            var csvWriter = new CsvWriter(sw,CultureInfo.InvariantCulture);
-
-            var o = new TypeConverterOptions
-            {
-                DateTimeStyle = DateTimeStyles.AssumeUniversal & DateTimeStyles.AdjustToUniversal
-            };
-            csvWriter.Context.TypeConverterOptionsCache.AddOptions<DriverPackage>(o);
-
-            var foo = csvWriter.Context.AutoMap<DriverPackage>();
-
-            csvWriter.Context.RegisterClassMap(foo);
-
-            foo.Map(m => m.KeyName).Index(0);
-            foo.Map(t => t.KeyLastWriteTimestamp).Convert(t =>
-                t.Value.KeyLastWriteTimestamp.ToString(dt)).Index(1);
-            foo.Map(t => t.Date)
-                .Convert(t => t.Value.Date?.ToString(dt))
-                .Index(2);
-
-            foo.Map(m => m.Class).Index(3);
-
-            foo.Map(m => m.Directory).Index(4);
-            foo.Map(m => m.DriverInBox).Index(5);
-            foo.Map(m => m.Hwids).Index(6);
-            foo.Map(m => m.Inf).Index(7);
-            foo.Map(m => m.Provider).Index(8);
-            foo.Map(m => m.SubmissionId).Index(9);
-            foo.Map(m => m.SYSFILE).Index(10);
-            foo.Map(m => m.Version).Index(11);
-            foo.Map(m => m.ClassGuid).Ignore();
-
-            //the columns of 2026.5 in their order, new ones at the end
-            Order(foo, "KeyName", "KeyLastWriteTimestamp", "Date", "Class", "Directory", "DriverInBox", "Hwids", "Inf", "Provider", "SubmissionId", "SYSFILE", "Version", "ClassGuid", "DriverPackageStrongName", "FlightIds", "RecoveryIds", "IsActive");
-            csvWriter.WriteHeader<DriverPackage>();
-            csvWriter.NextRecord();
-            sw.AutoFlush = true;
-
-            foreach (var sc in amNew.DriverPackages)
-            {
-                csvWriter.WriteRecord(sc);
-                csvWriter.NextRecord();
-            }
-        }
+        WriteCsv(outFile1, amNew.DriverPackages, new DriverPackageWriter(dt));
 
         outbase1 = $"{ts1}_{hiveName1}_DevicePnps.csv";
 
@@ -1461,62 +920,7 @@ internal class Program
 
         outFile1 = Path.Combine(csv, outbase1);
 
-        using (var sw = new StreamWriter(outFile1))
-        {
-            var csvWriter = new CsvWriter(sw,CultureInfo.InvariantCulture);
-
-            var o = new TypeConverterOptions
-            {
-                DateTimeStyle = DateTimeStyles.AssumeUniversal & DateTimeStyles.AdjustToUniversal
-            };
-            csvWriter.Context.TypeConverterOptionsCache.AddOptions<DevicePnp>(o);
-
-            var foo = csvWriter.Context.AutoMap<DevicePnp>();
-
-            foo.Map(m => m.KeyName).Index(0);
-            foo.Map(t => t.KeyLastWriteTimestamp).Convert(t =>
-                t.Value.KeyLastWriteTimestamp.ToString(dt)).Index(1);
-
-            foo.Map(m => m.BusReportedDescription).Index(2);
-
-            foo.Map(m => m.Class).Index(3);
-            foo.Map(m => m.ClassGuid).Index(4);
-            foo.Map(m => m.Compid).Index(5);
-            foo.Map(m => m.ContainerId).Index(6);
-            foo.Map(m => m.Description).Index(7);
-            foo.Map(m => m.DriverId).Index(8);
-            foo.Map(m => m.DriverPackageStrongName).Index(9);
-            foo.Map(m => m.DriverName).Index(10);
-            foo.Map(m => m.DriverVerDate).Index(11);
-            foo.Map(m => m.DriverVerVersion).Index(12);
-            foo.Map(m => m.Enumerator).Index(13);
-            foo.Map(m => m.HWID).Index(14);
-            foo.Map(m => m.Inf).Index(15);
-            foo.Map(m => m.InstallState).Index(16);
-            foo.Map(m => m.Manufacturer).Index(17);
-            foo.Map(m => m.MatchingId).Index(18);
-            foo.Map(m => m.Model).Index(19);
-            foo.Map(m => m.ParentId).Index(20);
-            foo.Map(m => m.ProblemCode).Index(21);
-            foo.Map(m => m.Provider).Index(22);
-            foo.Map(m => m.Service).Index(23);
-            foo.Map(m => m.Stackid).Index(24);
-            foo.Map(m => m.DeviceState).Ignore();
-
-            csvWriter.Context.RegisterClassMap(foo);
-                
-            //the columns of 2026.5 in their order, new ones at the end
-            Order(foo, "KeyName", "KeyLastWriteTimestamp", "BusReportedDescription", "Class", "ClassGuid", "Compid", "ContainerId", "Description", "DriverId", "DriverPackageStrongName", "DriverName", "DriverVerDate", "DriverVerVersion", "Enumerator", "HWID", "Inf", "InstallState", "Manufacturer", "MatchingId", "Model", "ParentId", "ProblemCode", "Provider", "Service", "Stackid", "DeviceState", "InstallDate", "FirstInstallDate", "ExtendedInfs", "UpperClassFilters", "LowerClassFilters", "UpperFilters", "LowerFilters", "DeviceInterfaceClasses", "LocationPaths");
-            csvWriter.WriteHeader<DevicePnp>();
-            csvWriter.NextRecord();
-            sw.AutoFlush = true;
-
-            foreach (var sc in amNew.DevicePnps)
-            {
-                csvWriter.WriteRecord(sc);
-                csvWriter.NextRecord();
-            }
-        }
+        WriteCsv(outFile1, amNew.DevicePnps, new DevicePnpWriter(dt));
 
         Console.WriteLine();
         if (csvfSuffix.Length == 0)
